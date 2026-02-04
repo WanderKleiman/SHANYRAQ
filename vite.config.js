@@ -1,20 +1,13 @@
+cat > vite.config.js << 'EOF'
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: '/',
+  root: process.cwd(),
   build: {
     outDir: 'dist',
-    minify: 'terser',
-    sourcemap: false,
-    emptyOutDir: true,
-    assetsDir: 'assets'
-  },
-  server: {
-    port: 3000
-  },
-  preview: {
-    port: 4173
+    emptyOutDir: true
   }
 });
+EOF
