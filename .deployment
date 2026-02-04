@@ -1,0 +1,13 @@
+# Deployment Configuration
+
+## Build Command
+npm run build
+
+## Output Directory
+dist/
+
+## Notes
+- Always run `npm install` first
+- Then run `npm run build`
+- Upload contents of `dist/` folder to hosting
+- The build process compiles React + Vite for production
