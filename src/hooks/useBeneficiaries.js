@@ -24,9 +24,10 @@ export function useBeneficiaries(category = null, city = null) {
           query = query.eq('category', category)
         }
         
-        if (city && city !== 'all' && city !== 'Все города') {
-          query = query.eq('city', city)
-        }
+       if (city && city !== 'all' && city !== 'Все города') {
+  // Показываем подопечных из выбранного города ИЛИ тех, кто для всех городов
+  query = query.or(`city.eq.${city},is_nationwide.eq.true`)
+}
         
         const { data, error } = await query
         
