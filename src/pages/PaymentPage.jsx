@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function PaymentPage() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ function PaymentPage() {
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>Сделать пожертвование</h1>
         </div>
@@ -104,7 +105,7 @@ function PaymentPage() {
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className='text-[var(--primary-color)]'
               />
-              <div className='icon-credit-card text-lg text-[var(--primary-color)]' />
+              <Icon name="credit-card" size={20} className="text-[var(--primary-color)]" />
               <span>Банковской картой</span>
             </label>
           </div>

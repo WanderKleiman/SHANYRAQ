@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function BottomNavigation({ selectedCity, onCityChange }) {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
             onClick={() => setShowCitySelector(true)}
             className='flex flex-col items-center space-y-1 py-2 px-4 text-[var(--text-secondary)]'
           >
-            <div className='icon-map-pin text-lg' />
+            <Icon name="map-pin" size={20} />
             <span className='text-xs'>{selectedCity}</span>
           </button>
           
@@ -54,7 +55,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               isActive('/reports') ? 'text-[var(--primary-color)]' : 'text-[var(--text-secondary)]'
             }`}
           >
-            <div className='icon-file-text text-lg' />
+            <Icon name="file-text" size={20} />
             <span className='text-xs'>Отчеты</span>
           </button>
           
@@ -62,7 +63,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
             onClick={() => setShowMoreMenu(true)}
             className='flex flex-col items-center space-y-1 py-2 px-4 text-[var(--text-secondary)]'
           >
-            <div className='icon-menu text-lg' />
+            <Icon name="menu" size={20} />
             <span className='text-xs'>Еще</span>
           </button>
         </div>
@@ -80,7 +81,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
                 onClick={() => setShowCitySelector(false)}
                 className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'
               >
-                <div className='icon-x text-sm' />
+                <Icon name="x" size={16} />
               </button>
             </div>
             
@@ -112,7 +113,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
                 onClick={() => setShowMoreMenu(false)}
                 className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'
               >
-                <div className='icon-x text-sm' />
+                <Icon name="x" size={16} />
               </button>
             </div>
             
@@ -120,7 +121,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => {navigate('/about'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-info text-lg text-[var(--primary-color)]' />
+              <Icon name="info" size={20} className="text-[var(--primary-color)]" />
               <span>О фонде "Шанырак"</span>
             </button>
 
@@ -128,7 +129,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => {navigate('/partner-funds'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-users text-lg text-[var(--primary-color)]' />
+              <Icon name="users" size={20} className="text-[var(--primary-color)]" />
               <span>Фонды партнеры</span>
             </button>
 
@@ -136,7 +137,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => {navigate('/documents'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-file-text text-lg text-[var(--primary-color)]' />
+              <Icon name="file-text" size={20} className="text-[var(--primary-color)]" />
               <span>Документы</span>
             </button>
 
@@ -144,7 +145,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => {navigate('/contacts'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-phone text-lg text-[var(--primary-color)]' />
+              <Icon name="phone" size={20} className="text-[var(--primary-color)]" />
               <span>Контакты</span>
             </button>
 
@@ -152,7 +153,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => window.location.href = 'companies.html'}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-building text-lg text-[var(--primary-color)]' />
+              <Icon name="building" size={20} className="text-[var(--primary-color)]" />
               <span>Спонсоры</span>
             </button>
 
@@ -160,7 +161,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               onClick={() => {navigate('/admin-access'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >
-              <div className='icon-shield text-lg text-[var(--primary-color)]' />
+              <Icon name="shield" size={20} className="text-[var(--primary-color)]" />
               <span>Админ</span>
             </button>
           </div>

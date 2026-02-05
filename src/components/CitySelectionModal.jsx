@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from '../components/Icon';
 
 function CitySelectionModal({ onCitySelect }) {
   const cities = [
@@ -15,12 +16,12 @@ function CitySelectionModal({ onCitySelect }) {
           onClick={() => window.location.reload()}
           className='absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200'
         >
-          <div className='icon-x text-sm' />
+          <Icon name="x" size={16} />
         </button>
         
         <div className='text-center mb-6'>
           <div className='w-16 h-16 bg-[var(--primary-color)] bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <div className='icon-map text-2xl text-[var(--primary-color)]' />
+            <Icon name="map" size={28} className="text-[var(--primary-color)]" />
           </div>
           <h2 className='text-xl font-bold mb-2'>Помогайте тем, кто рядом</h2>
           <p className='text-sm text-[var(--text-secondary)]'>

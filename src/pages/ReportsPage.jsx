@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCachedData, setCachedData } from '../utils/dataCache';
+import Icon from '../components/Icon';
 
 function ReportsPage() {
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ function ReportsPage() {
             onClick={() => navigate('/')}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>Отчеты</h1>
         </div>
@@ -86,12 +87,12 @@ function ReportsPage() {
 
         {isLoading ? (
           <div className='text-center py-8'>
-            <div className='icon-loader text-2xl text-[var(--primary-color)] animate-spin mx-auto mb-2' />
+            <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin mx-auto mb-2" />
             <p className='text-[var(--text-secondary)]'>Загрузка отчетов...</p>
           </div>
         ) : reports.length === 0 ? (
           <div className='text-center py-8'>
-            <div className='icon-file-text text-3xl text-gray-400 mx-auto mb-4' />
+            <Icon name="file-text" size={32} className="text-gray-400 mx-auto mb-4" />
             <h3 className='text-lg font-medium mb-2'>Нет отчетов</h3>
             <p className='text-[var(--text-secondary)]'>Пока нет опубликованных отчетов</p>
           </div>

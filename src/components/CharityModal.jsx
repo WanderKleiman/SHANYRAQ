@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Icon from '../components/Icon';
 
 function CharityModal({ data, onClose }) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -150,7 +151,7 @@ function CharityModal({ data, onClose }) {
           onClick={onClose}
           className='absolute top-4 right-4 w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center z-30 hover:bg-opacity-100 shadow-lg'
         >
-          <div className='icon-x text-sm' />
+          <Icon name="x" size={16} />
         </button>
 
         <div 
@@ -196,13 +197,13 @@ function CharityModal({ data, onClose }) {
                   onClick={prevMedia}
                   className='absolute left-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
                 >
-                  <div className='icon-chevron-left text-lg' />
+                  <Icon name="chevron-left" size={20} />
                 </button>
                 <button 
                   onClick={nextMedia}
                   className='absolute right-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
                 >
-                  <div className='icon-chevron-right text-lg' />
+                  <Icon name="chevron-right" size={20} />
                 </button>
                 <div className='absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10'>
                   {media.map((_, index) => (
@@ -229,16 +230,16 @@ function CharityModal({ data, onClose }) {
                   rel='noopener noreferrer'
                   className='flex items-center space-x-2 text-sm bg-green-50 text-green-700 p-3 rounded-xl hover:bg-green-100 transition-colors'
                 >
-                  <div className='icon-file-text text-lg text-green-600' />
+                  <Icon name="file-text" size={20} className="text-green-600" />
                   <span className='flex-1'>Документы, подтверждающие сбор</span>
-                  <div className='icon-external-link text-sm' />
+                  <Icon name="external-link" size={16} />
                 </a>
               )}
               
               <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
               
               <div className='flex items-center space-x-2 text-sm'>
-                <div className='icon-shield-check text-lg text-[var(--primary-color)]' />
+                <Icon name="shield" size={20} className="-check  text-[var(--primary-color)]" />
                 <a 
                   href={`fund.html?name=${encodeURIComponent(data.partnerFund)}`}
                   className='text-[var(--primary-color)] hover:underline'
@@ -284,7 +285,7 @@ function CharityModal({ data, onClose }) {
             onClick={handleShare}
             className='btn-secondary w-12 h-12 flex items-center justify-center p-0 shadow-lg'
           >
-            <div className='icon-share-2 text-lg' />
+            <Icon name="share-2" size={20} />
           </button>
         </div>
       </div>

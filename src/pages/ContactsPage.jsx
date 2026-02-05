@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function ContactsPage() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ function ContactsPage() {
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>Контакты</h1>
         </div>
@@ -31,7 +32,7 @@ function ContactsPage() {
               rel='noopener noreferrer'
               className='inline-flex items-center justify-center space-x-2 bg-[var(--primary-color)] text-white px-6 py-3 rounded-[var(--button-radius)] font-medium transition-all duration-200 hover:opacity-90 active:scale-95 no-underline'
             >
-              <div className='icon-file-edit text-lg' />
+              <Icon name="file-edit" size={20} />
               <span>Заполните форму</span>
             </a>
           </div>
@@ -47,7 +48,7 @@ function ContactsPage() {
               rel='noopener noreferrer'
               className='inline-flex items-center justify-center space-x-2 bg-[var(--primary-color)] text-white px-6 py-3 rounded-[var(--button-radius)] font-medium transition-all duration-200 hover:opacity-90 active:scale-95 no-underline'
             >
-              <div className='icon-users text-lg' />
+              <Icon name="users" size={20} />
               <span>Волонтерам</span>
             </a>
           </div>
@@ -64,15 +65,15 @@ function ContactsPage() {
                 rel='noopener noreferrer'
                 className='flex items-center space-x-2 text-[var(--primary-color)] hover:underline'
               >
-                <div className='icon-message-circle text-lg' />
+                <Icon name="message-circle" size={20} />
                 <span>Связаться в WhatsApp</span>
-                <div className='icon-external-link text-sm' />
+                <Icon name="external-link" size={16} />
               </a>
               <a 
                 href='mailto:info@shanyraq.ru'
                 className='flex items-center space-x-2 text-[var(--primary-color)] hover:underline'
               >
-                <div className='icon-mail text-lg' />
+                <Icon name="mail" size={20} />
                 <span>Написать на почту info@shanyraq.ru</span>
               </a>
             </div>
@@ -82,13 +83,13 @@ function ContactsPage() {
             <h3 className='text-lg font-bold mb-4'>Общая информация</h3>
             <div className='space-y-3'>
               <div className='flex items-center space-x-3'>
-                <div className='icon-mail text-lg text-[var(--primary-color)]' />
+                <Icon name="mail" size={20} className="text-[var(--primary-color)]" />
                 <a href='mailto:info@shanyraq.ru' className='text-[var(--primary-color)] hover:underline'>
                   info@shanyraq.ru
                 </a>
               </div>
               <div className='flex items-center space-x-3'>
-                <div className='icon-instagram text-lg text-[var(--primary-color)]' />
+                <Icon name="instagram" size={20} className="text-[var(--primary-color)]" />
                 <span className='text-[var(--text-secondary)]'>Скоро появится</span>
               </div>
             </div>

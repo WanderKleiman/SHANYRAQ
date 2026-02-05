@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function DocumentsPage() {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ function DocumentsPage() {
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>Документы</h1>
         </div>
@@ -85,7 +86,7 @@ function DocumentsPage() {
                   </div>
                 </div>
                 
-                <div className='icon-external-link text-lg text-[var(--text-secondary)]' />
+                <Icon name="external-link" size={20} className="text-[var(--text-secondary)]" />
               </div>
             </a>
           ))}

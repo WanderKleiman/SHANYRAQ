@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCachedData, setCachedData } from '../utils/dataCache';
+import Icon from '../components/Icon';
 
 function PartnerFundsPage() {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ function PartnerFundsPage() {
     return (
       <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
         <div className='text-center'>
-          <div className='icon-loader text-2xl text-[var(--primary-color)] animate-spin mx-auto mb-2' />
+          <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin mx-auto mb-2" />
           <p>Загрузка фондов...</p>
         </div>
       </div>
@@ -61,7 +62,7 @@ function PartnerFundsPage() {
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>Фонды партнеры</h1>
         </div>
@@ -86,7 +87,7 @@ function PartnerFundsPage() {
                   />
                   {fund.verified && (
                     <div className='absolute -top-1 -right-1 w-6 h-6 bg-[var(--success-color)] rounded-full flex items-center justify-center'>
-                      <div className='icon-check text-xs text-white' />
+                      <Icon name="check" size={12} className="text-white" />
                     </div>
                   )}
                 </div>
@@ -100,7 +101,7 @@ function PartnerFundsPage() {
                   </p>
                 </div>
                 
-                <div className='icon-chevron-right text-lg text-[var(--text-secondary)]' />
+                <Icon name="chevron-right" size={20} className="text-[var(--text-secondary)]" />
               </div>
             </div>
           ))}

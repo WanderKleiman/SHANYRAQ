@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function AboutFundPage() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ function AboutFundPage() {
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
-            <div className='icon-arrow-left text-lg' />
+            <Icon name="arrow-left" size={20} />
           </button>
           <h1 className='text-xl font-bold'>О фонде "Шанырак"</h1>
         </div>
@@ -45,19 +46,19 @@ function AboutFundPage() {
             <h3 className='text-lg font-semibold mb-3'>Что мы делаем</h3>
             <div className='space-y-3'>
               <div className='flex items-center space-x-3'>
-                <div className='icon-heart text-lg text-[var(--primary-color)]' />
+                <Icon name="heart" size={20} className="text-[var(--primary-color)]" />
                 <span>Помощь детям в сложных жизненных ситуациях</span>
               </div>
               <div className='flex items-center space-x-3'>
-                <div className='icon-activity text-lg text-[var(--primary-color)]' />
+                <Icon name="activity" size={20} className="text-[var(--primary-color)]" />
                 <span>Сбор средств на медицинские операции</span>
               </div>
               <div className='flex items-center space-x-3'>
-                <div className='icon-zap text-lg text-[var(--primary-color)]' />
+                <Icon name="zap" size={20} className="text-[var(--primary-color)]" />
                 <span>Экстренная помощь в чрезвычайных ситуациях</span>
               </div>
               <div className='flex items-center space-x-3'>
-                <div className='icon-heart text-lg text-[var(--primary-color)]' />
+                <Icon name="heart" size={20} className="text-[var(--primary-color)]" />
                 <span>Поддержка приютов для животных</span>
               </div>
             </div>

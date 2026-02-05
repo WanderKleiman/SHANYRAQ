@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../components/Icon';
 
 function AdminAccessPage() {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ function AdminAccessPage() {
       <div className='w-full max-w-md'>
         <div className='card text-center'>
           <div className='w-20 h-20 bg-[var(--primary-color)] rounded-full flex items-center justify-center mx-auto mb-6'>
-            <div className='icon-shield text-3xl text-white' />
+            <Icon name="shield" size={32} className="text-white" />
           </div>
           
           <h1 className='text-2xl font-bold text-[var(--text-primary)] mb-4'>
@@ -27,7 +28,7 @@ function AdminAccessPage() {
               onClick={() => navigate('/admin')}
               className='btn-primary w-full flex items-center justify-center space-x-2'
             >
-              <div className='icon-settings text-lg' />
+              <Icon name="settings" size={20} />
               <span>Перейти в админ-панель</span>
             </button>
             
@@ -35,7 +36,7 @@ function AdminAccessPage() {
               onClick={() => navigate('/')}
               className='btn-secondary w-full flex items-center justify-center space-x-2'
             >
-              <div className='icon-arrow-left text-lg' />
+              <Icon name="arrow-left" size={20} />
               <span>Вернуться на главную</span>
             </button>
           </div>

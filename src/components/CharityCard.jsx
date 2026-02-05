@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ymTrackHelpClick, ymTrackShareClick } from '../utils/yandexMetrika';
+import Icon from '../components/Icon';
 
 function CharityCard({ data, onCardClick }) {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ function CharityCard({ data, onCardClick }) {
         <h3 className='text-lg font-semibold text-[var(--text-primary)] leading-tight'>{data.title}</h3>
         <p className='text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-4'>{data.description}</p>
         <div className='flex items-center space-x-2 text-xs'>
-          <div className='icon-shield-check text-sm text-[var(--primary-color)]' />
+          <Icon name="shield" size={16} className="-check  text-[var(--primary-color)]" />
           <a
             href={`fund.html?name=${encodeURIComponent(data.partnerFund)}`}
             onClick={(e) => e.stopPropagation()}
@@ -98,7 +99,7 @@ function CharityCard({ data, onCardClick }) {
             }}
             className='btn-secondary w-12 h-12 flex items-center justify-center p-0'
           >
-            <div className='icon-share-2 text-lg' />
+            <Icon name="share-2" size={20} />
           </button>
         </div>
       </div>

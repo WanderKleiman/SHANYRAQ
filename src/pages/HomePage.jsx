@@ -6,6 +6,7 @@ import CitySelectionModal from '../components/CitySelectionModal';
 import { getCharityData } from '../utils/charityData';
 import { clearCache } from '../utils/dataCache';
 import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMetrika';
+import Icon from '../components/Icon';
 
 function HomePage() {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -100,12 +101,12 @@ function HomePage() {
       <div className='px-4 mt-4'>
         {isLoading ? (
           <div className='text-center py-8'>
-            <div className='icon-loader text-2xl text-[var(--primary-color)] animate-spin mx-auto mb-2' />
+            <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin mx-auto mb-2" />
             <p className='text-[var(--text-secondary)]'>Загрузка подопечных...</p>
           </div>
         ) : filteredData.length === 0 ? (
           <div className='text-center py-8'>
-            <div className='icon-users text-3xl text-gray-400 mx-auto mb-4' />
+            <Icon name="users" size={32} className="text-gray-400 mx-auto mb-4" />
             <h3 className='text-lg font-medium mb-2'>Нет подопечных</h3>
             <p className='text-[var(--text-secondary)]'>
               {activeCategory === 'all' 
