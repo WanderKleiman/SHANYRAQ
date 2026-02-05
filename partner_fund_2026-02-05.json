@@ -1,0 +1,44 @@
+[
+  {
+    "objectType": "partner_fund",
+    "objectId": "1769351015049000",
+    "objectData": {
+      "name": "Котопес",
+      "description": "Общественный Фонд «Котопес» был создан в 2012 г.\n\nОсновной деятельностью фонда является спасение, лечение и социализация бездомных животных, а также поиск хозяев для них. За это время мы добились немалых успехов: было спасено более 3000 животных, почти каждый из которых обрел новую семью.",
+      "created_at": "2026-01-25T14:23:34.308Z",
+      "logo_url": "https://static.tildacdn.com/tild3061-3166-4163-a338-643439613131/logo-mini.png",
+      "is_verified": true
+    },
+    "projectId": "proj_1IFJyVB18sb",
+    "createdAt": "2026-01-25T14:23:35.049615+0000",
+    "updatedAt": "2026-01-25T14:23:35.049615+0000"
+  },
+  {
+    "objectType": "partner_fund",
+    "objectId": "1768247790009000",
+    "objectData": {
+      "name": "Совет Ветеранов ",
+      "description": "Забота о героях — наше общее дело.\nФонд оказывает адресную поддержку ветеранам Великой Отечественной войны. \n\nКак помогаем: уход на домом / патронаж / покупка продуктов и лекарств ",
+      "created_at": "2026-01-12T19:56:29.751Z",
+      "logo_url": "https://static.tildacdn.com/tild6364-3032-4163-a230-386232353737/logo-2.png",
+      "is_verified": true
+    },
+    "projectId": "proj_1IFJyVB18sb",
+    "createdAt": "2026-01-12T19:56:30.009485+0000",
+    "updatedAt": "2026-01-12T20:02:52.283283+0000"
+  },
+  {
+    "objectType": "partner_fund",
+    "objectId": "1758451391939002",
+    "objectData": {
+      "name": "Шанырак",
+      "description": "Основной фонд платформы, объединяющий усилия всех партнеров",
+      "created_at": "2025-01-15T10:00:00Z",
+      "logo_url": "https://app.trickle.so/storage/public/images/usr_140a45f300000001/86eeabeb-ea74-4381-9f41-405f827fda21.png",
+      "is_verified": "true"
+    },
+    "projectId": "proj_1IFJyVB18sb",
+    "createdAt": "2025-09-21T10:43:11.939947+0000",
+    "updatedAt": "2025-09-21T10:43:11.939947+0000"
+  }
+]

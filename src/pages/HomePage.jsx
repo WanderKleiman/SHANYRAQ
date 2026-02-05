@@ -3,8 +3,7 @@ import CategoryTabs from '../components/CategoryTabs';
 import CharityCard from '../components/CharityCard';
 import CharityModal from '../components/CharityModal';
 import CitySelectionModal from '../components/CitySelectionModal';
-import { getCharityData } from '../utils/charityData';
-import { clearCache } from '../utils/dataCache';
+import { useBeneficiaries } from '../hooks/useBeneficiaries';
 import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 
@@ -14,58 +13,22 @@ function HomePage() {
     return localStorage.getItem('selectedCity') || 'Алматы';
   });
   const [showCitySelector, setShowCitySelector] = useState(false);
-  const [charityData, setCharityData] = useState([]);
   const [selectedCharity, setSelectedCharity] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Загружаем данные из Supabase
+  const { beneficiaries, loading, error } = useBeneficiaries(
+    activeCategory === 'all' ? null : activeCategory,
+    selectedCity
+  );
 
   useEffect(() => {
     localStorage.setItem('activeTab', 'home');
-    clearCache('beneficiaries');
     
     const hasSelectedCity = localStorage.getItem('selectedCity');
     if (!hasSelectedCity) {
       setTimeout(() => setShowCitySelector(true), 15000);
     }
-    
-    const params = new URLSearchParams(window.location.search);
-    const beneficiaryId = params.get('beneficiary');
-    if (beneficiaryId) loadBeneficiaryById(beneficiaryId);
   }, []);
-
-  const loadBeneficiaryById = async (id) => {
-    try {
-      const beneficiary = await window.trickleGetObject('charity_beneficiary', id);
-      setSelectedCharity({
-        id: beneficiary.objectId,
-        title: beneficiary.objectData.title,
-        description: beneficiary.objectData.description,
-        category: beneficiary.objectData.category,
-        categoryName: getCategoryName(beneficiary.objectData.category),
-        partnerFund: beneficiary.objectData.partner_fund,
-        image: beneficiary.objectData.image_url,
-        images: beneficiary.objectData.images || [beneficiary.objectData.image_url],
-        videos: beneficiary.objectData.videos || [],
-        helpersCount: beneficiary.objectData.helpers_count,
-        documentsLink: beneficiary.objectData.documents_link,
-        raised: beneficiary.objectData.raised_amount || 0,
-        target: beneficiary.objectData.target_amount || 0
-      });
-    } catch (error) {
-      console.error('Error loading beneficiary:', error);
-    }
-  };
-
-  const loadCharityData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getCharityData(selectedCity);
-      setCharityData(data);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleCityChange = (city) => {
     setSelectedCity(city);
@@ -73,14 +36,26 @@ function HomePage() {
     setShowCitySelector(false);
   };
 
-  useEffect(() => {
-    if (selectedCity) loadCharityData();
-  }, [selectedCity]);
-
-  const filteredData = useMemo(() => {
-    if (activeCategory === 'all') return charityData;
-    return charityData.filter(item => item.category === activeCategory);
-  }, [charityData, activeCategory]);
+  // Преобразуем данные из Supabase в формат компонентов
+  const formattedData = useMemo(() => {
+    return beneficiaries.map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      category: item.category,
+      categoryName: getCategoryName(item.category),
+      partnerFund: item.partner_fund,
+      image: item.image_url,
+      images: item.images || [item.image_url],
+      videos: item.videos || [],
+      helpersCount: item.helpers_count,
+      documentsLink: item.documents_link,
+      raised: item.raised_amount || 0,
+      target: item.target_amount || 0,
+      isUrgent: item.is_urgent,
+      collectionStatus: item.collection_status
+    }));
+  }, [beneficiaries]);
 
   useEffect(() => {
     if (selectedCharity) {
@@ -99,12 +74,16 @@ function HomePage() {
       </div>
       
       <div className='px-4 mt-4'>
-        {isLoading ? (
+        {loading ? (
           <div className='text-center py-8'>
             <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin mx-auto mb-2" />
             <p className='text-[var(--text-secondary)]'>Загрузка подопечных...</p>
           </div>
-        ) : filteredData.length === 0 ? (
+        ) : error ? (
+          <div className='text-center py-8 text-red-500'>
+            <p>Ошибка загрузки данных: {error}</p>
+          </div>
+        ) : formattedData.length === 0 ? (
           <div className='text-center py-8'>
             <Icon name="users" size={32} className="text-gray-400 mx-auto mb-4" />
             <h3 className='text-lg font-medium mb-2'>Нет подопечных</h3>
@@ -116,7 +95,7 @@ function HomePage() {
           </div>
         ) : (
           <div className='cards-grid'>
-            {filteredData.map(item => (
+            {formattedData.map(item => (
               <CharityCard key={item.id} data={item} onCardClick={() => setSelectedCharity(item)} />
             ))}
           </div>
@@ -127,6 +106,18 @@ function HomePage() {
       {selectedCharity && <CharityModal data={selectedCharity} onClose={() => setSelectedCharity(null)} />}
     </>
   );
+}
+
+// Хелпер для названий категорий
+function getCategoryName(category) {
+  const categories = {
+    'children': 'Дети',
+    'animals': 'Животные',
+    'operations': 'Операции',
+    'urgent': 'Срочно',
+    'non_material': 'Нематериальная помощь'
+  };
+  return categories[category] || category;
 }
 
 export default HomePage;
