@@ -1,4 +1,5 @@
 import React from 'react';
+import Icon from './Icon';
 
 function CategoryTabs({ activeCategory, onCategoryChange }) {
   const categories = [
@@ -12,7 +13,7 @@ function CategoryTabs({ activeCategory, onCategoryChange }) {
   ];
 
   return (
-    <div className='px-4' data-name='category-tabs' data-file='src/components/CategoryTabs.jsx'>
+    <div className='px-4'>
       <div className='flex space-x-2 overflow-x-auto scrollbar-hide'>
         {categories.map(category => (
           <button
@@ -22,7 +23,7 @@ function CategoryTabs({ activeCategory, onCategoryChange }) {
               activeCategory === category.id ? 'active' : 'inactive'
             }`}
           >
-            <div className={`icon-${category.icon} text-sm`} />
+            <Icon name={category.icon} size={16} />
             <span>{category.name}</span>
           </button>
         ))}

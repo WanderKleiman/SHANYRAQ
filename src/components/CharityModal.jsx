@@ -36,7 +36,7 @@ function CharityModal({ data, onClose }) {
   }
 
   const handleHelp = () => {
-    window.location.href = `payment.html?id=${data.id}`;
+    window.location.href = `/payment?id=${data.id}`;
   };
 
   const handleShare = () => {

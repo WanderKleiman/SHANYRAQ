@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
 export function useBeneficiaries(category = null, city = null) {
+  console.log('Hook получил:', { category, city }); // для отладки
+  
   const [beneficiaries, setBeneficiaries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,7 +24,7 @@ export function useBeneficiaries(category = null, city = null) {
           query = query.eq('category', category)
         }
         
-        if (city && city !== 'all') {
+        if (city && city !== 'all' && city !== 'Все города') {
           query = query.eq('city', city)
         }
         

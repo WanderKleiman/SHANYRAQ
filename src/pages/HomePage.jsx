@@ -7,11 +7,8 @@ import { useBeneficiaries } from '../hooks/useBeneficiaries';
 import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 
-function HomePage() {
+function HomePage({ selectedCity, onCityChange }) {
   const [activeCategory, setActiveCategory] = useState('all');
-  const [selectedCity, setSelectedCity] = useState(() => {
-    return localStorage.getItem('selectedCity') || 'Алматы';
-  });
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState(null);
 
@@ -21,6 +18,8 @@ function HomePage() {
     selectedCity
   );
 
+  console.log('HomePage рендер:', { selectedCity, beneficiariesCount: beneficiaries.length });
+
   useEffect(() => {
     localStorage.setItem('activeTab', 'home');
     
@@ -29,12 +28,6 @@ function HomePage() {
       setTimeout(() => setShowCitySelector(true), 15000);
     }
   }, []);
-
-  const handleCityChange = (city) => {
-    setSelectedCity(city);
-    localStorage.setItem('selectedCity', city);
-    setShowCitySelector(false);
-  };
 
   // Преобразуем данные из Supabase в формат компонентов
   const formattedData = useMemo(() => {
@@ -102,7 +95,7 @@ function HomePage() {
         )}
       </div>
 
-      {showCitySelector && <CitySelectionModal onCitySelect={handleCityChange} />}
+      {showCitySelector && <CitySelectionModal onCitySelect={(city) => { onCityChange(city); setShowCitySelector(false); }} />}
       {selectedCharity && <CharityModal data={selectedCharity} onClose={() => setSelectedCharity(null)} />}
     </>
   );

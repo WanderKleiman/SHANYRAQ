@@ -42,7 +42,23 @@ class ErrorBoundary extends Component {
   }
 }
 
-function AppLayout({ children }) {
+function AppLayout({ children, selectedCity, onCityChange }) {
+  return (
+    <div className='min-h-screen bg-[var(--bg-secondary)]'>
+      <div className='mobile-hide'>
+        <Header />
+      </div>
+      
+      <main className='pb-20'>
+        {React.cloneElement(children, { selectedCity, onCityChange })}
+      </main>
+      
+      <BottomNavigation selectedCity={selectedCity} onCityChange={onCityChange} />
+    </div>
+  );
+}
+
+function App() {
   const [selectedCity, setSelectedCity] = React.useState(() => {
     return localStorage.getItem('selectedCity') || 'Алматы';
   });
@@ -53,37 +69,62 @@ function AppLayout({ children }) {
   };
 
   return (
-    <div className='min-h-screen bg-[var(--bg-secondary)]'>
-      <div className='mobile-hide'>
-        <Header />
-      </div>
-      
-      <main className='pb-20'>
-        {children}
-      </main>
-      
-      <BottomNavigation selectedCity={selectedCity} onCityChange={handleCityChange} />
-    </div>
-  );
-}
-
-function App() {
-  return (
     <ErrorBoundary>
       <BrowserRouter>
         <Routes>
-          <Route path='/' element={<AppLayout><HomePage /></AppLayout>} />
+          <Route 
+            path='/' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <HomePage />
+              </AppLayout>
+            } 
+          />
           <Route path='/payment' element={<PaymentPage />} />
-          <Route path='/reports' element={<AppLayout><ReportsPage /></AppLayout>} />
+          <Route 
+            path='/reports' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <ReportsPage />
+              </AppLayout>
+            } 
+          />
           <Route path='/admin-access' element={<AdminAccessPage />} />
-          <Route path='/about' element={<AppLayout><AboutFundPage /></AppLayout>} />
-          <Route path='/documents' element={<AppLayout><DocumentsPage /></AppLayout>} />
-          <Route path='/contacts' element={<AppLayout><ContactsPage /></AppLayout>} />
-          <Route path='/partner-funds' element={<AppLayout><PartnerFundsPage /></AppLayout>} />
+          <Route 
+            path='/about' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <AboutFundPage />
+              </AppLayout>
+            } 
+          />
+          <Route 
+            path='/documents' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <DocumentsPage />
+              </AppLayout>
+            } 
+          />
+          <Route 
+            path='/contacts' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <ContactsPage />
+              </AppLayout>
+            } 
+          />
+          <Route 
+            path='/partner-funds' 
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <PartnerFundsPage />
+              </AppLayout>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
   );
 }
-
 export default App;
