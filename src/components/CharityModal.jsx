@@ -241,7 +241,8 @@ function CharityModal({ data, onClose }) {
               <div className='flex items-center space-x-2 text-sm'>
                 <Icon name="shield" size={20} className="-check  text-[var(--primary-color)]" />
                 <a 
-                  href={`fund.html?name=${encodeURIComponent(data.partnerFund)}`}
+                  href={`/fund/${encodeURIComponent(data.partnerFund)}`}
+  onClick={(e) => { e.stopPropagation(); }}
                   className='text-[var(--primary-color)] hover:underline'
                 >
                   Фонд "{data.partnerFund}"

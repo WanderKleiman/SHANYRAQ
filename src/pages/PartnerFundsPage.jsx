@@ -1,49 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCachedData, setCachedData } from '../utils/dataCache';
+import { usePartnerFunds } from '../hooks/usePartnerFunds';
 import Icon from '../components/Icon';
 
 function PartnerFundsPage() {
   const navigate = useNavigate();
-  const [funds, setFunds] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { funds, loading, error } = usePartnerFunds();
 
-  useEffect(() => {
-    loadFunds();
-  }, []);
-
-  const loadFunds = async () => {
-    try {
-      const cached = getCachedData('partner_funds');
-      if (cached) {
-        setFunds(cached);
-        setIsLoading(false);
-        return;
-      }
-
-      const result = await window.trickleListObjects('partner_fund', 50, true);
-      const fundsData = result.items.map(item => ({
-        id: item.objectId,
-        name: item.objectData.name,
-        description: item.objectData.description,
-        logo: item.objectData.logo_url,
-        verified: item.objectData.is_verified
-      }));
-      
-      setCachedData('partner_funds', fundsData);
-      setFunds(fundsData);
-    } catch (error) {
-      console.error('Error loading funds:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFundClick = (fundName) => {
-    navigate(`/fund/${encodeURIComponent(fundName)}`);
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
         <div className='text-center'>
@@ -54,11 +18,21 @@ function PartnerFundsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
+        <div className='text-center text-red-500'>
+          <p>Ошибка загрузки: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen bg-[var(--bg-secondary)]'>
       <header className='bg-[var(--bg-primary)] border-b border-[var(--border-color)] p-4'>
         <div className='flex items-center space-x-3'>
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className='w-10 h-10 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center'
           >
@@ -75,37 +49,49 @@ function PartnerFundsPage() {
           </p>
         </div>
 
-        <div className='space-y-4'>
-          {funds.map(fund => (
-            <div key={fund.id} className='card cursor-pointer' onClick={() => handleFundClick(fund.name)}>
-              <div className='flex items-center space-x-4'>
-                <div className='relative'>
-                  <img 
-                    src={fund.logo}
-                    alt={fund.name}
-                    className='w-16 h-16 object-cover rounded-xl'
-                  />
-                  {fund.verified && (
-                    <div className='absolute -top-1 -right-1 w-6 h-6 bg-[var(--success-color)] rounded-full flex items-center justify-center'>
-                      <Icon name="check" size={12} className="text-white" />
-                    </div>
-                  )}
-                </div>
-                
-                <div className='flex-1'>
-                  <div className='flex items-center space-x-2 mb-1'>
-                    <h3 className='font-semibold text-lg'>{fund.name}</h3>
+        {funds.length === 0 ? (
+          <div className='text-center py-8'>
+            <Icon name="users" size={32} className="text-gray-400 mx-auto mb-4" />
+            <p className='text-[var(--text-secondary)]'>Нет фондов-партнёров</p>
+          </div>
+        ) : (
+          <div className='space-y-4'>
+            {funds.map(fund => (
+              <div
+                key={fund.id}
+                className='card cursor-pointer'
+                onClick={() => navigate(`/fund/${encodeURIComponent(fund.name)}`)}
+              >
+                <div className='flex items-center space-x-4'>
+                  <div className='relative'>
+                    <img
+                      src={fund.logo_url}
+                      alt={fund.name}
+                      className='w-16 h-16 object-cover rounded-xl'
+                      onError={(e) => {
+                        e.target.src = 'https://via.placeholder.com/64?text=' + fund.name.charAt(0);
+                      }}
+                    />
+                    {fund.is_verified && (
+                      <div className='absolute -top-1 -right-1 w-6 h-6 bg-[var(--success-color)] rounded-full flex items-center justify-center'>
+                        <Icon name="check" size={12} className="text-white" />
+                      </div>
+                    )}
                   </div>
-                  <p className='text-[var(--text-secondary)] text-sm leading-relaxed'>
-                    {fund.description}
-                  </p>
+                  
+                  <div className='flex-1'>
+                    <div className='flex items-center space-x-2 mb-1'>
+                      <h3 className='font-semibold text-lg'>{fund.name}</h3>
+                    </div>
+                    <p className='text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-2'>
+                      {fund.description}
+                    </p>
+                  </div>
                 </div>
-                
-                <Icon name="chevron-right" size={20} className="text-[var(--text-secondary)]" />
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

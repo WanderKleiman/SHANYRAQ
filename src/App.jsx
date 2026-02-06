@@ -10,6 +10,7 @@ import AboutFundPage from './pages/AboutFundPage';
 import DocumentsPage from './pages/DocumentsPage';
 import ContactsPage from './pages/ContactsPage';
 import PartnerFundsPage from './pages/PartnerFundsPage';
+import FundDetailPage from './pages/FundDetailPage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -122,9 +123,11 @@ function App() {
               </AppLayout>
             } 
           />
+          <Route path='/fund/:name' element={<FundDetailPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
   );
 }
+
 export default App;
