@@ -2,7 +2,8 @@ import {
   MapPin, FileText, Menu, X, Info, Users, Phone, Building, Shield,
   Map, ChevronLeft, ChevronRight, ExternalLink, ShieldCheck, Share2,
   ArrowLeft, Heart, Activity, Zap, Loader, CreditCard, Check,
-  FileEdit, MessageCircle, Mail, Instagram, Settings
+  FileEdit, MessageCircle, Mail, Instagram, Settings,
+  Grid3x3, Baby, HandHeart, FileBadge, ScrollText, FileCheck, Database
 } from 'lucide-react';
 
 // Маппинг старых CSS классов на React компоненты
@@ -34,6 +35,13 @@ const iconMap = {
   'mail': Mail,
   'instagram': Instagram,
   'settings': Settings,
+  'grid-3x3': Grid3x3,
+  'baby': Baby,
+  'hand-helping': HandHeart,
+ 'file-badge': FileBadge,
+  'scroll-text': ScrollText,
+  'file-check': FileCheck,
+  'database': Database,
 };
 
 // Универсальный компонент иконки

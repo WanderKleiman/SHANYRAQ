@@ -76,7 +76,7 @@ function DocumentsPage() {
             >
               <div className='flex items-center space-x-4'>
                 <div className='w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center'>
-                  <div className={`icon-${doc.icon} text-xl text-[var(--primary-color)]`} />
+                 <Icon name={doc.icon} size={24} className="text-[var(--primary-color)]" />
                 </div>
                 
                 <div className='flex-1'>
