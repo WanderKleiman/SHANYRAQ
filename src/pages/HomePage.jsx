@@ -20,14 +20,39 @@ function HomePage({ selectedCity, onCityChange }) {
 
   console.log('HomePage рендер:', { selectedCity, beneficiariesCount: beneficiaries.length });
 
-  useEffect(() => {
-    localStorage.setItem('activeTab', 'home');
-    
-    const hasSelectedCity = localStorage.getItem('selectedCity');
-    if (!hasSelectedCity) {
-      setTimeout(() => setShowCitySelector(true), 15000);
+useEffect(() => {
+  localStorage.setItem('activeTab', 'home');
+  
+  const hasSelectedCity = localStorage.getItem('selectedCity');
+  if (!hasSelectedCity) {
+    setTimeout(() => setShowCitySelector(true), 15000);
+  }
+  
+  // Открываем подопечного из URL
+  const params = new URLSearchParams(window.location.search);
+  const beneficiaryId = params.get('beneficiary');
+  if (beneficiaryId && beneficiaries.length > 0) {
+    const beneficiary = beneficiaries.find(b => b.id == beneficiaryId);
+    if (beneficiary) {
+      const formatted = {
+        id: beneficiary.id,
+        title: beneficiary.title,
+        description: beneficiary.description,
+        category: beneficiary.category,
+        categoryName: getCategoryName(beneficiary.category),
+        partnerFund: beneficiary.partner_fund,
+        image: beneficiary.image_url,
+        images: beneficiary.images || [beneficiary.image_url],
+        videos: beneficiary.videos || [],
+        helpersCount: beneficiary.helpers_count,
+        documentsLink: beneficiary.documents_link,
+        raised: beneficiary.raised_amount || 0,
+        target: beneficiary.target_amount || 0
+      };
+      setSelectedCharity(formatted);
     }
-  }, []);
+  }
+}, [beneficiaries]);
 
   // Преобразуем данные из Supabase в формат компонентов
   const formattedData = useMemo(() => {
