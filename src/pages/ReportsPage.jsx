@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCachedData, setCachedData } from '../utils/dataCache';
+import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 
 function ReportsPage() {
@@ -10,7 +10,6 @@ function ReportsPage() {
   const [selectedReport, setSelectedReport] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('activeTab', 'reports');
     loadReports();
   }, []);
 
@@ -18,32 +17,29 @@ function ReportsPage() {
     try {
       setIsLoading(true);
       
-      const cached = getCachedData('reports');
-      if (cached) {
-        setReports(cached);
-        setIsLoading(false);
-        return;
-      }
-
-      const result = await window.trickleListObjects('charity_beneficiary', 50, true);
-      const reportedBeneficiaries = result.items
-        .filter(item => item.objectData.collection_status === 'reported')
-        .map(item => ({
-          id: item.objectId,
-          title: item.objectData.title,
-          description: item.objectData.report_description,
-          amount: item.objectData.raised_amount,
-          completedDate: item.objectData.completion_date,
-          image: item.objectData.report_photos?.[0] || item.objectData.image_url,
-          category: getCategoryName(item.objectData.category),
-          categoryName: getCategoryName(item.objectData.category),
-          reportPhotos: item.objectData.report_photos || [item.objectData.image_url],
-          reportVideos: item.objectData.report_videos || [],
-          partnerFund: item.objectData.partner_fund
-        }));
+      const { data, error } = await supabase
+        .from('beneficiaries')
+        .select('*')
+        .eq('collection_status', 'reported')
+        .order('completion_date', { ascending: false });
       
-      setCachedData('reports', reportedBeneficiaries);
-      setReports(reportedBeneficiaries);
+      if (error) throw error;
+
+      const formatted = (data || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        description: item.report_description,
+        amount: item.raised_amount,
+        completedDate: item.completion_date,
+        image: item.report_photos?.[0] || item.image_url,
+        category: getCategoryName(item.category),
+        categoryName: getCategoryName(item.category),
+        reportPhotos: item.report_photos || [item.image_url],
+        reportVideos: item.report_videos || [],
+        partnerFund: item.partner_fund
+      }));
+      
+      setReports(formatted);
     } catch (error) {
       console.error('Error loading reports:', error);
     } finally {
@@ -128,12 +124,14 @@ function ReportsPage() {
                       <div className='text-sm'>
                         <span className='text-[var(--text-secondary)]'>Собрано: </span>
                         <span className='font-medium text-[var(--primary-color)]'>
-                          {report.amount.toLocaleString()} ₸
+                          {report.amount?.toLocaleString()} ₸
                         </span>
                       </div>
-                      <span className='text-xs text-[var(--text-secondary)]'>
-                        {new Date(report.completedDate).toLocaleDateString('ru-RU')}
-                      </span>
+                      {report.completedDate && (
+                        <span className='text-xs text-[var(--text-secondary)]'>
+                          {new Date(report.completedDate).toLocaleDateString('ru-RU')}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -11,6 +11,8 @@ import DocumentsPage from './pages/DocumentsPage';
 import ContactsPage from './pages/ContactsPage';
 import PartnerFundsPage from './pages/PartnerFundsPage';
 import FundDetailPage from './pages/FundDetailPage';
+import AdminLoginPage from './pages/admin/AdminLoginPage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -124,6 +126,8 @@ function App() {
             } 
           />
           <Route path='/fund/:name' element={<FundDetailPage />} />
+          <Route path='/admin' element={<AdminLoginPage />} />
+<Route path='/admin/dashboard' element={<AdminDashboardPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>
