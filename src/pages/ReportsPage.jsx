@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
+import ReportModal from '../components/ReportModal';
 
 function ReportsPage() {
   const navigate = useNavigate();
@@ -139,7 +140,14 @@ function ReportsPage() {
             ))}
           </div>
         )}
-      </div>
+</div>
+
+      {selectedReport && (
+        <ReportModal 
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+        />
+      )}
     </div>
   );
 }
