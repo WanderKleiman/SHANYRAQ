@@ -113,9 +113,14 @@ useEffect(() => {
           </div>
         ) : (
           <div className='cards-grid'>
-            {formattedData.map(item => (
-              <CharityCard key={item.id} data={item} onCardClick={() => setSelectedCharity(item)} />
-            ))}
+           {formattedData.map((item, index) => (
+  <CharityCard 
+    key={item.id} 
+    data={item}
+    index={index}
+    onCardClick={() => setSelectedCharity(item)} 
+  />
+))}
           </div>
         )}
       </div>

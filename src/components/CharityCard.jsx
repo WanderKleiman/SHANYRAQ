@@ -4,7 +4,7 @@ import { ymTrackHelpClick, ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
 
-function CharityCard({ data, onCardClick }) {
+function CharityCard({ data, onCardClick, index = 0 }) {
   const navigate = useNavigate();
   const progressPercentage = (data.raised / data.target) * 100;
   const remainingAmount = data.target - data.raised;
@@ -38,15 +38,16 @@ function CharityCard({ data, onCardClick }) {
       onClick={onCardClick}
     >
       <div className='relative mb-4'>
-     <img 
+  <img
   src={optimizeImage(data.image, { width: 400, quality: 75 })}
-          alt={data.title}
-          loading='lazy'
-          decoding='async'
-          width='400'
-          height='192'
-          className='w-full h-48 object-cover rounded-xl'
-        />
+  alt={data.title}
+  loading={index === 0 ? 'eager' : 'lazy'}
+  fetchpriority={index === 0 ? 'high' : 'auto'}
+  decoding={index === 0 ? 'sync' : 'async'}
+  width='400'
+  height='192'
+  className='w-full h-48 object-cover rounded-xl'
+/>
         <div className='absolute top-3 left-3'>
           <span className='bg-[var(--primary-color)] text-white px-2 py-1 rounded-full text-xs font-medium'>
             {data.categoryName}
