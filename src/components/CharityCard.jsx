@@ -37,8 +37,10 @@ function CharityCard({ data, onCardClick }) {
       onClick={onCardClick}
     >
       <div className='relative mb-4'>
-        <img
-          src={data.image}
+     <img 
+  src={data.image?.includes('tildacdn.com') 
+    ? `${data.image}?w=400&q=70` 
+    : data.image}
           alt={data.title}
           loading='lazy'
           decoding='async'
