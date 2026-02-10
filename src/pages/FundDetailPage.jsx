@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import CharityCard from '../components/CharityCard';
 import CharityModal from '../components/CharityModal';
 import Icon from '../components/Icon';
+import { optimizeImage } from '../utils/imageUtils';
 
 function FundDetailPage() {
   const navigate = useNavigate();
@@ -107,7 +108,7 @@ function FundDetailPage() {
           <div className='card mb-6'>
             <div className='flex items-start space-x-4'>
               <img
-                src={fund.logo_url}
+                src={optimizeImage(fund.logo_url, { width: 80, quality: 75 })}
                 alt={fund.name}
                 className='w-20 h-20 object-cover rounded-xl'
                 onError={(e) => {

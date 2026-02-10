@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePartnerFunds } from '../hooks/usePartnerFunds';
 import Icon from '../components/Icon';
+import { optimizeImage } from '../utils/imageUtils';
 
 function PartnerFundsPage() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ function PartnerFundsPage() {
                 <div className='flex items-center space-x-4'>
                   <div className='relative'>
                     <img
-                      src={fund.logo_url}
+                      src={optimizeImage(fund.logo_url, { width: 80, quality: 75 })}
                       alt={fund.name}
                       className='w-16 h-16 object-cover rounded-xl'
                       onError={(e) => {

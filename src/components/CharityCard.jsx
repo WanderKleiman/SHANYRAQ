@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ymTrackHelpClick, ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
+import { optimizeImage } from '../utils/imageUtils';
 
 function CharityCard({ data, onCardClick }) {
   const navigate = useNavigate();
@@ -38,9 +39,7 @@ function CharityCard({ data, onCardClick }) {
     >
       <div className='relative mb-4'>
      <img 
-  src={data.image?.includes('tildacdn.com') 
-    ? `${data.image}?w=400&q=70` 
-    : data.image}
+  src={optimizeImage(data.image, { width: 400, quality: 75 })}
           alt={data.title}
           loading='lazy'
           decoding='async'
