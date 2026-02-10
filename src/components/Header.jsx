@@ -8,7 +8,7 @@ function Header() {
           <div className='flex items-center space-x-3'>
             <div className='w-10 h-10 rounded-full flex items-center justify-center'>
               <img
-                src='https://app.trickle.so/storage/public/images/usr_140a45f300000001/86eeabeb-ea74-4381-9f41-405f827fda21.png'
+                src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png'
                 alt='Шанырак логотип'
                 className='w-10 h-10 object-contain'
               />

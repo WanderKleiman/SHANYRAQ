@@ -34,7 +34,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
             }`}
           >
             <img 
-              src='https://app.trickle.so/storage/public/images/usr_140a45f300000001/86eeabeb-ea74-4381-9f41-405f827fda21.png' 
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png' 
               alt='Главное'
               className='w-5 h-5 object-contain'
             />

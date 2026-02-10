@@ -23,7 +23,7 @@ function AboutFundPage() {
         <div className='card mb-4'>
           <div className='text-center mb-6'>
             <img 
-              src='https://app.trickle.so/storage/public/images/usr_140a45f300000001/86eeabeb-ea74-4381-9f41-405f827fda21.png' 
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png' 
               alt='Шанырак логотип'
               className='w-20 h-20 object-contain mx-auto mb-4'
             />
