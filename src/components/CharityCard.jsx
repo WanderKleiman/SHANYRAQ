@@ -42,7 +42,7 @@ function CharityCard({ data, onCardClick, index = 0 }) {
   src={optimizeImage(data.image, { width: 400, quality: 75 })}
   alt={data.title}
   loading={index === 0 ? 'eager' : 'lazy'}
-  fetchpriority={index === 0 ? 'high' : 'auto'}
+fetchPriority={index === 0 ? 'high' : 'auto'}
   decoding={index === 0 ? 'sync' : 'async'}
   width='400'
   height='192'
