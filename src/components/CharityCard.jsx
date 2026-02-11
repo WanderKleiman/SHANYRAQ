@@ -99,7 +99,7 @@ fetchPriority={index === 0 ? 'high' : 'auto'}
               e.stopPropagation();
               handleShare();
             }}
-            className='btn-secondary w-12 h-12 flex items-center justify-center p-0'
+            aria-label="Поделиться" className='btn-secondary w-12 h-12 flex items-center justify-center p-0'
           >
             <Icon name="share-2" size={20} />
           </button>
