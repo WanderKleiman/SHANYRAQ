@@ -19,7 +19,7 @@ export function initYandexMetrika() {
             accurateTrackBounce: true
           });
         }
-      }, 2000);
+      }, 4000);
     });
   }
 }

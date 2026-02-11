@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 
 export function useBeneficiaries(category = null, city = null) {
-  console.log('Hook получил:', { category, city }); // для отладки
-  
   const [beneficiaries, setBeneficiaries] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchBeneficiaries() {
       setLoading(true)
       setError(null)
@@ -16,7 +16,7 @@ export function useBeneficiaries(category = null, city = null) {
       try {
         let query = supabase
           .from('beneficiaries')
-          .select('*')
+          .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, is_urgent, is_nationwide, collection_status, helpers_count')
           .eq('is_active', true)
           .order('created_at', { ascending: false })
         
@@ -24,25 +24,35 @@ export function useBeneficiaries(category = null, city = null) {
           query = query.eq('category', category)
         }
         
-       if (city && city !== 'all' && city !== 'Все города') {
-  // Показываем подопечных из выбранного города ИЛИ тех, кто для всех городов
-  query = query.or(`city.eq.${city},is_nationwide.eq.true`)
-}
+        if (city && city !== 'all' && city !== 'Все города') {
+          query = query.or(`city.eq.${city},is_nationwide.eq.true`)
+        }
         
         const { data, error } = await query
         
         if (error) throw error
-        
-        setBeneficiaries(data || [])
+        if (!cancelled) {
+          setBeneficiaries(data || [])
+        }
       } catch (err) {
         console.error('Ошибка загрузки данных:', err)
-        setError(err.message)
+        if (!cancelled) {
+          setError(err.message)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+        }
       }
     }
 
-    fetchBeneficiaries()
+    // Небольшая задержка чтобы браузер сначала отрисовал UI
+    const timer = setTimeout(fetchBeneficiaries, 50);
+    
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    }
   }, [category, city])
 
   return { beneficiaries, loading, error }
