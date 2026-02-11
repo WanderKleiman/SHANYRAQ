@@ -34,7 +34,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
             }`}
           >
             <img 
-              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png' 
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.webp' 
               alt='Главное'
               className='w-5 h-5 object-contain'
             />

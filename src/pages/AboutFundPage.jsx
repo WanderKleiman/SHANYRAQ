@@ -23,7 +23,7 @@ function AboutFundPage() {
         <div className='card mb-4'>
           <div className='text-center mb-6'>
             <img 
-              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png' 
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.webp' 
               alt='Шанырак логотип'
               className='w-20 h-20 object-contain mx-auto mb-4'
             />
