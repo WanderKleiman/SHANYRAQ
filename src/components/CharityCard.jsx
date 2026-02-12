@@ -16,7 +16,7 @@ function CharityCard({ data, onCardClick, index = 0 }) {
 
   const handleShare = () => {
     ymTrackShareClick(data.id, data.title);
-    const shareUrl = `${window.location.origin}${window.location.pathname}?beneficiary=${data.id}`;
+    const shareUrl = `${window.location.origin}/?beneficiary=${data.id}`;
     if (navigator.share) {
       navigator.share({ url: shareUrl }).catch(() => {
         navigator.clipboard.writeText(shareUrl).then(() => {
@@ -60,7 +60,7 @@ fetchPriority={index === 0 ? 'high' : 'auto'}
         <div className='flex items-center space-x-2 text-xs'>
           <Icon name="shield" size={16} className="-check  text-[var(--primary-color)]" />
           <a
-            href={`fund.html?name=${encodeURIComponent(data.partnerFund)}`}
+         href={`/fund/${encodeURIComponent(data.partnerFund)}`}
             onClick={(e) => e.stopPropagation()}
             className='text-[var(--primary-color)] hover:underline'
           >
