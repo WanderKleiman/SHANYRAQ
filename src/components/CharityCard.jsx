@@ -60,7 +60,7 @@ fetchPriority={index === 0 ? 'high' : 'auto'}
         <div className='flex items-center space-x-2 text-xs'>
           <Icon name="shield" size={16} className="-check  text-[var(--primary-color)]" />
           <a
-         href={`/fund/${encodeURIComponent(data.partnerFund)}`}
+href={`/fund/${encodeURIComponent(data.partnerFund)}`}
             onClick={(e) => e.stopPropagation()}
             className='text-[var(--primary-color)] hover:underline'
           >
