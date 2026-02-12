@@ -61,7 +61,7 @@ function PartnerFundsPage() {
               <div
                 key={fund.id}
                 className='card cursor-pointer'
-                onClick={() => navigate(`/fund/${encodeURIComponent(fund.name)}`)}
+                onClick={() => navigate (`/fund/${encodeURIComponent(fund.name)}`)}
               >
                 <div className='flex items-center space-x-4'>
                   <div className='relative'>
