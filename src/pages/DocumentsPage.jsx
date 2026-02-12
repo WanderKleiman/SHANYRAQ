@@ -28,13 +28,13 @@ function DocumentsPage() {
       id: 4,
       name: "Публичная оферта",
       icon: "file-check",
-      url: "https://doc.shanyrak.world/soglashenie"
+      url: "http://doc.shanyrak.world/oferta"
     },
     {
       id: 5,
       name: "Пользовательское соглашение",
       icon: "file-text",
-      url: "https://doc.shanyrak.world/soglashenie"
+      url: "http://doc.shanyrak.world/oferta"
     },
     {
       id: 6,
