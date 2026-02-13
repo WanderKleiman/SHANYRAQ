@@ -40,7 +40,7 @@ function CharityModal({ data, onClose }) {
   };
 
   const handleShare = () => {
-    const shareUrl = `${window.location.origin}${window.location.pathname}?beneficiary=${data.id}`;
+    const shareUrl = `${window.location.origin}/?beneficiary=${data.id}`;
     if (navigator.share) {
       navigator.share({ url: shareUrl }).catch(() => {
         navigator.clipboard.writeText(shareUrl).then(() => {
