@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick, ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
@@ -9,9 +10,28 @@ function CharityCard({ data, onCardClick, index = 0 }) {
   const progressPercentage = (data.raised / data.target) * 100;
   const remainingAmount = data.target - data.raised;
 
-  const handleHelp = () => {
-    ymTrackHelpClick(data.id, data.title, data.target);
-    navigate('/payment', { state: { beneficiaryId: data.id } });
+  const handleHelp = async () => {
+    try {
+      // 1. Сохраняем в Supabase
+      await supabase.from('donation_intents').insert({
+        beneficiary_id: data.id,
+        beneficiary_title: data.title,
+        payment_method: 'kaspi'
+      });
+
+      // 2. Яндекс Метрика
+      ymTrackHelpClick(data.id, data.title, data.target);
+
+      // 3. Открываем Kaspi в новой вкладке
+      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
+
+      // 4. Редирект на главную с параметром
+      setTimeout(() => {
+        navigate('/?donated=true');
+      }, 300);
+    } catch (error) {
+      console.error('Ошибка при переходе на оплату:', error);
+    }
   };
 
   const handleShare = () => {

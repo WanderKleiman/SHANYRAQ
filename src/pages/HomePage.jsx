@@ -11,6 +11,7 @@ function HomePage({ selectedCity, onCityChange }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState(null);
+  const [showThankYou, setShowThankYou] = useState(false);
 
   // Загружаем данные из Supabase
   const { beneficiaries, loading, error } = useBeneficiaries(
@@ -20,39 +21,62 @@ function HomePage({ selectedCity, onCityChange }) {
 
   console.log('HomePage рендер:', { selectedCity, beneficiariesCount: beneficiaries.length });
 
-useEffect(() => {
-  localStorage.setItem('activeTab', 'home');
-  
-  const hasSelectedCity = localStorage.getItem('selectedCity');
-  if (!hasSelectedCity) {
-    setTimeout(() => setShowCitySelector(true), 15000);
-  }
+  useEffect(() => {
+    localStorage.setItem('activeTab', 'home');
+  }, []);
+
+  // Проверяем параметр donated
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('donated') === 'true') {
+      setShowThankYou(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Проверяем параметр donated
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('donated') === 'true') {
+      setShowThankYou(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  // Показываем выбор города если не выбран
+  useEffect(() => {
+    const hasSelectedCity = localStorage.getItem('selectedCity');
+    if (!hasSelectedCity) {
+      setTimeout(() => setShowCitySelector(true), 15000);
+    }
+  }, []);
   
   // Открываем подопечного из URL
-  const params = new URLSearchParams(window.location.search);
-  const beneficiaryId = params.get('beneficiary');
-  if (beneficiaryId && beneficiaries.length > 0) {
-    const beneficiary = beneficiaries.find(b => b.id == beneficiaryId);
-    if (beneficiary) {
-      const formatted = {
-        id: beneficiary.id,
-        title: beneficiary.title,
-        description: beneficiary.description,
-        category: beneficiary.category,
-        categoryName: getCategoryName(beneficiary.category),
-        partnerFund: beneficiary.partner_fund,
-        image: beneficiary.image_url,
-        images: beneficiary.images || [beneficiary.image_url],
-        videos: beneficiary.videos || [],
-        helpersCount: beneficiary.helpers_count,
-        documentsLink: beneficiary.documents_link,
-        raised: beneficiary.raised_amount || 0,
-        target: beneficiary.target_amount || 0
-      };
-      setSelectedCharity(formatted);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const beneficiaryId = params.get('beneficiary');
+    if (beneficiaryId && beneficiaries.length > 0) {
+      const beneficiary = beneficiaries.find(b => b.id == beneficiaryId);
+      if (beneficiary) {
+        const formatted = {
+          id: beneficiary.id,
+          title: beneficiary.title,
+          description: beneficiary.description,
+          category: beneficiary.category,
+          categoryName: getCategoryName(beneficiary.category),
+          partnerFund: beneficiary.partner_fund,
+          image: beneficiary.image_url,
+          images: beneficiary.images || [beneficiary.image_url],
+          videos: beneficiary.videos || [],
+          helpersCount: beneficiary.helpers_count,
+          documentsLink: beneficiary.documents_link,
+          raised: beneficiary.raised_amount || 0,
+          target: beneficiary.target_amount || 0
+        };
+        setSelectedCharity(formatted);
+      }
     }
-  }
-}, [beneficiaries]);
+  }, [beneficiaries]);
 
   // Преобразуем данные из Supabase в формат компонентов
   const formattedData = useMemo(() => {
@@ -127,6 +151,35 @@ useEffect(() => {
 
       {showCitySelector && <CitySelectionModal onCitySelect={(city) => { onCityChange(city); setShowCitySelector(false); }} />}
       {selectedCharity && <CharityModal data={selectedCharity} onClose={() => setSelectedCharity(null)} />}
+
+      {showThankYou && (
+        <div 
+          className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
+          onClick={() => setShowThankYou(false)}
+        >
+          <div 
+            className='bg-white rounded-3xl p-8 max-w-sm w-full text-center'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Group%20270988349.jpg" 
+              alt="Спасибо" 
+              className="w-32 h-32 mx-auto mb-6"
+            />
+            <h2 className='text-2xl font-bold mb-3'>Спасибо</h2>
+            <p className="text-gray-600 mb-4">Сегодня вы сделали этот мир немного лучше!</p>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+              <p className="text-sm text-gray-700">После оказания помощи мы опубликуем отчёт на сайте в разделе «Отчёты», чтобы вы могли увидеть результат вашей поддержки</p>
+            </div>
+            <button 
+              onClick={() => setShowThankYou(false)}
+              className='bg-[var(--primary-color)] text-white w-full py-4 rounded-2xl font-semibold text-lg'
+            >
+              Отлично!
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
