@@ -59,8 +59,8 @@ function FundDetailPage() {
         setBeneficiaries(formatted);
       } catch (err) {
         console.error('Ошибка загрузки данных:', err);
-        setError(err.message);
       } finally {
+        setLoading(false);
       }
     }
     
@@ -71,20 +71,6 @@ function FundDetailPage() {
     return (
       <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
         <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center p-4'>
-        <div className='text-center'>
-          <Icon name="alert-circle" size={48} className="text-red-500 mx-auto mb-4" />
-          <p className='text-[var(--text-secondary)] mb-4'>Ошибка: {error}</p>
-          <button onClick={() => navigate(-1)} className='btn-primary'>
-            Назад
-          </button>
-        </div>
       </div>
     );
   }
