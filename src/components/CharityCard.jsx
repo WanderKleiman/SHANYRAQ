@@ -12,25 +12,25 @@ function CharityCard({ data, onCardClick, index = 0 }) {
 
   const handleHelp = async () => {
     try {
-      // 1. Сохраняем в Supabase
+      // 1. Открываем Kaspi ПЕРВЫМ (синхронно, до await)
+      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
+
+      // 2. Яндекс Метрика
+      ymTrackHelpClick(data.id, data.title, data.target);
+
+      // 3. Сохраняем в Supabase (асинхронно)
       await supabase.from('donation_intents').insert({
         beneficiary_id: data.id,
         beneficiary_title: data.title,
         payment_method: 'kaspi'
       });
 
-      // 2. Яндекс Метрика
-      ymTrackHelpClick(data.id, data.title, data.target);
-
-      // 3. Открываем Kaspi в новой вкладке
-      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
-
-      // 4. Редирект на главную с параметром
+      // 4. Редирект на главную
       setTimeout(() => {
         navigate('/?donated=true');
       }, 300);
     } catch (error) {
-      console.error('Ошибка при переходе на оплату:', error);
+      console.error('Ошибка:', error);
     }
   };
 

@@ -34,33 +34,31 @@ function CharityModal({ data, onClose }) {
     });
   }
   if (data.videos && data.videos.length > 0) {
-    data.videos.forEach(video => media.push({ type: 'video', url: video }));
-  }
-
+    data.videos.forEach(video => media.push({ type: 'video', url: video }));}
   const handleHelp = async () => {
     try {
-      // 1. Сохраняем в Supabase
+      // 1. Открываем Kaspi ПЕРВЫМ
+      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
+
+      // 2. Яндекс Метрика
+      if (typeof ymTrackHelpClick !== 'undefined') {
+        ymTrackHelpClick(data.id, data.title, data.target);
+      }
+
+      // 3. Сохраняем в Supabase
       await supabase.from('donation_intents').insert({
         beneficiary_id: data.id,
         beneficiary_title: data.title,
         payment_method: 'kaspi'
       });
 
-      // 2. Яндекс Метрика (если есть функция)
-      if (typeof ymTrackHelpClick !== 'undefined') {
-        ymTrackHelpClick(data.id, data.title, data.target);
-      }
-
-      // 3. Открываем Kaspi в новой вкладке
-      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
-
-      // 4. Закрываем модалку и редирект на главную
+      // 4. Закрываем модалку и редирект
       onClose();
       setTimeout(() => {
         window.location.href = '/?donated=true';
       }, 300);
     } catch (error) {
-      console.error('Ошибка при переходе на оплату:', error);
+      console.error('Ошибка:', error);
     }
   };
 
