@@ -4,6 +4,7 @@ import CharityCard from '../components/CharityCard';
 import CharityModal from '../components/CharityModal';
 import CitySelectionModal from '../components/CitySelectionModal';
 import { useBeneficiaries } from '../hooks/useBeneficiaries';
+import { supabase } from '../supabaseClient';
 import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 
@@ -51,14 +52,21 @@ function HomePage({ selectedCity, onCityChange }) {
     }
   }, []);
   
-  // Открываем подопечного из URL
+  // Открываем подопечного из URL (загружаем напрямую, без фильтра по городу)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const beneficiaryId = params.get('beneficiary');
-    if (beneficiaryId && beneficiaries.length > 0) {
-      const beneficiary = beneficiaries.find(b => b.id == beneficiaryId);
+    if (!beneficiaryId) return;
+
+    async function fetchBeneficiary() {
+      const { data: beneficiary } = await supabase
+        .from('beneficiaries')
+        .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, images, videos, is_urgent, is_nationwide, collection_status, helpers_count, documents_link')
+        .eq('id', beneficiaryId)
+        .single();
+
       if (beneficiary) {
-        const formatted = {
+        setSelectedCharity({
           id: beneficiary.id,
           title: beneficiary.title,
           description: beneficiary.description,
@@ -72,11 +80,12 @@ function HomePage({ selectedCity, onCityChange }) {
           documentsLink: beneficiary.documents_link,
           raised: beneficiary.raised_amount || 0,
           target: beneficiary.target_amount || 0
-        };
-        setSelectedCharity(formatted);
+        });
       }
     }
-  }, [beneficiaries]);
+
+    fetchBeneficiary();
+  }, []);
 
   // Преобразуем данные из Supabase в формат компонентов
   const formattedData = useMemo(() => {

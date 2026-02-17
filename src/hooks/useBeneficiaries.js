@@ -16,7 +16,7 @@ export function useBeneficiaries(category = null, city = null) {
       try {
         let query = supabase
           .from('beneficiaries')
-          .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, is_urgent, is_nationwide, collection_status, helpers_count')
+          .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, images, videos, is_urgent, is_nationwide, collection_status, helpers_count, documents_link')
           .eq('is_active', true)
           .order('created_at', { ascending: false })
         
