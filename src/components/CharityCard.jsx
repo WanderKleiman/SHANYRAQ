@@ -66,7 +66,7 @@ fetchPriority={index === 0 ? 'high' : 'auto'}
   decoding={index === 0 ? 'sync' : 'async'}
   width='400'
   height='192'
-  className='w-full h-48 object-cover object-top rounded-xl'
+  className='w-full h-48 object-cover object-center rounded-xl'
 />
         <div className='absolute top-3 left-3'>
           <span className='bg-[var(--primary-color)] text-white px-2 py-1 rounded-full text-xs font-medium'>
