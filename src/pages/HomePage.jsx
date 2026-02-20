@@ -198,8 +198,8 @@ function getCategoryName(category) {
   const categories = {
     'children': 'Дети',
     'animals': 'Животные',
-    'operations': 'Операции',
-    'urgent': 'Срочно',
+    'operations': 'Пожилые',
+    'urgent': 'Взрослые',
     'non_material': 'Нематериальная помощь'
   };
   return categories[category] || category;

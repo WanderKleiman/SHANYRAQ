@@ -5,9 +5,9 @@ function CategoryTabs({ activeCategory, onCategoryChange }) {
   const categories = [
     { id: 'all', name: 'Все', icon: 'grid-3x3' },
     { id: 'children', name: 'Дети', icon: 'baby' },
-    { id: 'urgent', name: 'Срочные', icon: 'zap' },
-    { id: 'operations', name: 'Операции', icon: 'activity' },
-    { id: 'animals', name: 'Животные', icon: 'heart' },
+    { id: 'urgent', name: 'Взрослые', icon: 'user' },
+    { id: 'operations', name: 'Пожилые', icon: 'accessibility' },
+    { id: 'animals', name: 'Животные', icon: 'paw-print' },
     { id: 'social', name: 'Социальные программы', icon: 'users' },
     { id: 'non_material', name: 'Не материальная помощь', icon: 'hand-helping' }
   ];

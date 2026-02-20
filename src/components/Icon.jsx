@@ -3,7 +3,8 @@ import {
   Map, ChevronLeft, ChevronRight, ExternalLink, ShieldCheck, Share2,
   ArrowLeft, Heart, Activity, Zap, Loader, CreditCard, Check,
   FileEdit, MessageCircle, Mail, Instagram, Settings,
-  Grid3x3, Baby, HandHeart, FileBadge, ScrollText, FileCheck, Database
+  Grid3x3, Baby, HandHeart, FileBadge, ScrollText, FileCheck, Database,
+  User, HeartHandshake, PersonStanding, PawPrint, Accessibility
 } from 'lucide-react';
 
 // Маппинг старых CSS классов на React компоненты
@@ -42,6 +43,11 @@ const iconMap = {
   'scroll-text': ScrollText,
   'file-check': FileCheck,
   'database': Database,
+  'user': User,
+  'heart-handshake': HeartHandshake,
+  'person-standing': PersonStanding,
+  'accessibility': Accessibility,
+  'paw-print': PawPrint,
 };
 
 // Универсальный компонент иконки

@@ -26,8 +26,8 @@ images: beneficiary?.images?.join('\n') || '',
 
   const categories = [
     { value: 'children', label: 'Дети' },
-    { value: 'urgent', label: 'Срочные' },
-    { value: 'operations', label: 'Операции' },
+    { value: 'urgent', label: 'Взрослые' },
+    { value: 'operations', label: 'Пожилые' },
     { value: 'animals', label: 'Животные' },
     { value: 'social', label: 'Социальные программы' },
     { value: 'non_material', label: 'Не материальная помощь' }

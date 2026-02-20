@@ -51,8 +51,8 @@ function ReportsPage() {
   const getCategoryName = (category) => {
     const categories = {
       children: 'Дети',
-      urgent: 'Срочные',
-      operations: 'Операции',
+      urgent: 'Взрослые',
+      operations: 'Пожилые',
       animals: 'Животные',
       social: 'Социальные программы',
       non_material: 'Не материальная помощь'
