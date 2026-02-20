@@ -149,6 +149,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               <span>Контакты</span>
             </button>
 
+            {/* Спонсоры — скрыто до появления данных
             <button
               onClick={() => window.location.href = 'companies.html'}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
@@ -156,6 +157,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               <Icon name="building" size={20} className="text-[var(--primary-color)]" />
               <span>Спонсоры</span>
             </button>
+            */}
 
             <button
               onClick={() => {navigate('/admin-access'); setShowMoreMenu(false);}}
