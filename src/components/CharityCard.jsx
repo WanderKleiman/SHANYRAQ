@@ -1,37 +1,16 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { ymTrackHelpClick, ymTrackShareClick } from '../utils/yandexMetrika';
+import React, { useState } from 'react';
+import { ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
+import PaymentModal from '../components/PaymentModal';
 
 function CharityCard({ data, onCardClick, index = 0 }) {
-  const navigate = useNavigate();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const progressPercentage = (data.raised / data.target) * 100;
   const remainingAmount = data.target - data.raised;
 
-  const handleHelp = async () => {
-    try {
-      // 1. Открываем Kaspi ПЕРВЫМ (синхронно, до await)
-      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
-
-      // 2. Яндекс Метрика
-      ymTrackHelpClick(data.id, data.title, data.target);
-
-      // 3. Сохраняем в Supabase (асинхронно)
-      await supabase.from('donation_intents').insert({
-        beneficiary_id: data.id,
-        beneficiary_title: data.title,
-        payment_method: 'kaspi'
-      });
-
-      // 4. Редирект на главную
-      setTimeout(() => {
-        navigate('/?donated=true');
-      }, 300);
-    } catch (error) {
-      console.error('Ошибка:', error);
-    }
+  const handleHelp = () => {
+    setShowPaymentModal(true);
   };
 
   const handleShare = () => {
@@ -125,6 +104,12 @@ href={`/fund/${encodeURIComponent(data.partnerFund)}`}
           </button>
         </div>
       </div>
+      {showPaymentModal && (
+        <PaymentModal
+          beneficiary={data}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Icon from '../components/Icon';
-import { supabase } from '../supabaseClient';
-import { ymTrackHelpClick } from '../utils/yandexMetrika';
+import PaymentModal from '../components/PaymentModal';
 
 function CharityModal({ data, onClose }) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -35,31 +34,10 @@ function CharityModal({ data, onClose }) {
   }
   if (data.videos && data.videos.length > 0) {
     data.videos.forEach(video => media.push({ type: 'video', url: video }));}
-  const handleHelp = async () => {
-    try {
-      // 1. Открываем Kaspi ПЕРВЫМ
-      window.open('https://pay.kaspi.kz/pay/fbkc2gyp', '_blank');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
-      // 2. Яндекс Метрика
-      if (typeof ymTrackHelpClick !== 'undefined') {
-        ymTrackHelpClick(data.id, data.title, data.target);
-      }
-
-      // 3. Сохраняем в Supabase
-      await supabase.from('donation_intents').insert({
-        beneficiary_id: data.id,
-        beneficiary_title: data.title,
-        payment_method: 'kaspi'
-      });
-
-      // 4. Закрываем модалку и редирект
-      onClose();
-      setTimeout(() => {
-        window.location.href = '/?donated=true';
-      }, 300);
-    } catch (error) {
-      console.error('Ошибка:', error);
-    }
+  const handleHelp = () => {
+    setShowPaymentModal(true);
   };
 
   const handleShare = () => {
@@ -313,6 +291,12 @@ function CharityModal({ data, onClose }) {
           </button>
         </div>
       </div>
+      {showPaymentModal && (
+        <PaymentModal
+          beneficiary={data}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
     </div>
   );
 }
