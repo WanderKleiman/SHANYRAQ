@@ -39,7 +39,7 @@ function PaymentModal({ beneficiary, onClose }) {
     setIsDragging(false);
     if (dragOffset > 100) {
       setIsClosing(true);
-      setTimeout(() => onClose(), 200);
+      setTimeout(() => onClose(), 300);
     } else {
       setDragOffset(0);
     }
@@ -116,12 +116,12 @@ function PaymentModal({ beneficiary, onClose }) {
   };
 
   return (
-    <div className='fixed inset-0 z-[60] flex items-end md:items-center md:justify-center p-0 md:p-4' onClick={onClose}>
+    <div className='fixed inset-0 z-[60] flex items-end md:items-center md:justify-center p-0 md:p-4' style={{ touchAction: 'none' }} onClick={onClose}>
       <div
         className='absolute inset-0 bg-black transition-opacity'
         style={{
           opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
-          transition: isClosing || isDragging ? 'none' : 'opacity 0.2s ease-out'
+          transition: isDragging ? 'none' : 'opacity 0.3s ease-out'
         }}
       />
       <div
@@ -132,7 +132,8 @@ function PaymentModal({ beneficiary, onClose }) {
         onTouchEnd={handleTouchEnd}
         style={{
           transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
-          transition: isClosing ? 'transform 0.2s ease-out' : isDragging && dragOffset > 0 ? 'none' : 'transform 0.2s ease-out'
+          transition: isClosing ? 'transform 0.3s ease-out' : isDragging && dragOffset > 0 ? 'none' : 'transform 0.3s ease-out',
+          overscrollBehavior: 'contain'
         }}
       >
         <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-1 md:hidden' />
@@ -201,8 +202,7 @@ function PaymentModal({ beneficiary, onClose }) {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className='w-5 h-5 text-[var(--primary-color)]'
                 />
-                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-5 w-5 object-contain" />
-                <span className='text-[var(--text-primary)]'>Kaspi</span>
+                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-7 object-contain" />
               </label>
             </div>
           </div>

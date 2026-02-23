@@ -63,13 +63,15 @@ function CharityModal({ data, onClose }) {
     setCurrentMediaIndex((prev) => (prev - 1 + media.length) % media.length);
   };
 
+  const [isDragMode, setIsDragMode] = useState(false);
+  const scrollTopAtStart = useRef(0);
+
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
     setTouchStartY(e.targetTouches[0].clientY);
     setIsDragging(true);
+    scrollTopAtStart.current = scrollContainerRef.current ? scrollContainerRef.current.scrollTop : 0;
   };
-
-  const [isDragMode, setIsDragMode] = useState(false);
 
   const handleTouchMove = (e) => {
     const currentX = e.targetTouches[0].clientX;
@@ -78,16 +80,14 @@ function CharityModal({ data, onClose }) {
     setTouchEndY(currentY);
 
     if (isDragging && scrollContainerRef.current) {
-      const scrollTop = scrollContainerRef.current.scrollTop;
       const offsetY = currentY - touchStartY;
       const offsetX = Math.abs(currentX - touchStart);
+      const canDrag = scrollTopAtStart.current <= 0;
 
-      if ((isDragMode || (scrollTop === 0 && offsetY > 10 && offsetY > offsetX)) && offsetY > 0) {
+      if (canDrag && (isDragMode || (offsetY > 10 && offsetY > offsetX)) && offsetY > 0) {
         e.preventDefault();
         setIsDragMode(true);
         setDragOffset(offsetY);
-      } else if (!isDragMode && (scrollTop > 0 || offsetY < 0)) {
-        setDragOffset(0);
       }
     }
   };
@@ -101,7 +101,7 @@ function CharityModal({ data, onClose }) {
       setIsClosing(true);
       setTimeout(() => {
         onClose();
-      }, 200);
+      }, 300);
       return;
     }
 
@@ -135,7 +135,7 @@ function CharityModal({ data, onClose }) {
         className='absolute inset-0 bg-black transition-opacity'
         style={{ 
           opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
-          transition: isClosing || isDragging ? 'none' : 'opacity 0.2s ease-out'
+          transition: isDragging ? 'none' : 'opacity 0.3s ease-out'
         }}
       />
       
@@ -147,7 +147,7 @@ function CharityModal({ data, onClose }) {
         onTouchEnd={handleTouchEnd}
         style={{
           transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
-          transition: isClosing ? 'transform 0.2s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.2s ease-out',
+          transition: isClosing ? 'transform 0.3s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.3s ease-out',
           touchAction: dragOffset > 0 ? 'none' : 'auto'
         }}
       >
