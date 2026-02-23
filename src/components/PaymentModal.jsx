@@ -8,14 +8,42 @@ function PaymentModal({ beneficiary, onClose }) {
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('kaspi');
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
+
+  const handleTouchStart = (e) => {
+    setTouchStartY(e.targetTouches[0].clientY);
+    setIsDragging(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const currentY = e.targetTouches[0].clientY;
+    const offset = currentY - touchStartY;
+    if (offset > 0) {
+      setDragOffset(offset);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    if (dragOffset > 100) {
+      setIsClosing(true);
+      setTimeout(() => onClose(), 200);
+    } else {
+      setDragOffset(0);
+    }
+  };
 
   const presetAmounts = [500, 1000, 2000, 5000];
 
@@ -89,8 +117,25 @@ function PaymentModal({ beneficiary, onClose }) {
 
   return (
     <div className='fixed inset-0 z-[60] flex items-end md:items-center md:justify-center p-0 md:p-4' onClick={onClose}>
-      <div className='absolute inset-0 bg-black bg-opacity-50' />
-      <div className='bg-[var(--bg-primary)] w-full md:max-w-md rounded-t-3xl md:rounded-2xl relative z-10 overflow-y-auto max-h-[90vh]' onClick={(e) => e.stopPropagation()}>
+      <div
+        className='absolute inset-0 bg-black transition-opacity'
+        style={{
+          opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
+          transition: isClosing || isDragging ? 'none' : 'opacity 0.2s ease-out'
+        }}
+      />
+      <div
+        className='bg-[var(--bg-primary)] w-full md:max-w-md rounded-t-3xl md:rounded-2xl relative z-10 overflow-y-auto max-h-[90vh]'
+        onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={{
+          transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
+          transition: isClosing ? 'transform 0.2s ease-out' : isDragging && dragOffset > 0 ? 'none' : 'transform 0.2s ease-out'
+        }}
+      >
+        <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mt-3 mb-1 md:hidden' />
         <button onClick={onClose} className='absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center z-30'>
           <Icon name="x" size={16} />
         </button>
@@ -134,17 +179,6 @@ function PaymentModal({ beneficiary, onClose }) {
           <div>
             <h3 className='text-sm font-semibold text-[var(--text-primary)] mb-3'>Способ оплаты</h3>
             <div className='space-y-2'>
-              <label className={`flex items-center space-x-3 p-4 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
-                <input
-                  type='radio'
-                  name='payment'
-                  value='kaspi'
-                  checked={paymentMethod === 'kaspi'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className='w-5 h-5 text-[var(--primary-color)]'
-                />
-                <span className='text-[var(--text-primary)]'>Kaspi перевод</span>
-              </label>
               <label className={`flex items-center space-x-3 p-4 rounded-xl cursor-pointer ${paymentMethod === 'card' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
                 <input
                   type='radio'
@@ -154,8 +188,21 @@ function PaymentModal({ beneficiary, onClose }) {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className='w-5 h-5 text-[var(--primary-color)]'
                 />
+                <Icon name="credit-card" size={20} className="text-[var(--text-primary)]" />
                 <span className='text-[var(--text-primary)]'>Банковская карта</span>
                 <span className='text-xs text-[var(--text-secondary)] ml-auto'>скоро</span>
+              </label>
+              <label className={`flex items-center space-x-3 p-4 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
+                <input
+                  type='radio'
+                  name='payment'
+                  value='kaspi'
+                  checked={paymentMethod === 'kaspi'}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className='w-5 h-5 text-[var(--primary-color)]'
+                />
+                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/i.webp" alt="Kaspi" className="h-5 w-5 object-contain" />
+                <span className='text-[var(--text-primary)]'>Kaspi</span>
               </label>
             </div>
           </div>
