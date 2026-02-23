@@ -69,21 +69,24 @@ function CharityModal({ data, onClose }) {
     setIsDragging(true);
   };
 
+  const [isDragMode, setIsDragMode] = useState(false);
+
   const handleTouchMove = (e) => {
     const currentX = e.targetTouches[0].clientX;
     const currentY = e.targetTouches[0].clientY;
     setTouchEnd(currentX);
     setTouchEndY(currentY);
-    
+
     if (isDragging && scrollContainerRef.current) {
       const scrollTop = scrollContainerRef.current.scrollTop;
       const offsetY = currentY - touchStartY;
       const offsetX = Math.abs(currentX - touchStart);
-      
-      if (scrollTop === 0 && offsetY > 0 && offsetY > offsetX) {
+
+      if ((isDragMode || (scrollTop === 0 && offsetY > 10 && offsetY > offsetX)) && offsetY > 0) {
         e.preventDefault();
+        setIsDragMode(true);
         setDragOffset(offsetY);
-      } else if (scrollTop > 0 || offsetY < 0) {
+      } else if (!isDragMode && (scrollTop > 0 || offsetY < 0)) {
         setDragOffset(0);
       }
     }
@@ -91,24 +94,23 @@ function CharityModal({ data, onClose }) {
 
   const handleTouchEnd = () => {
     setIsDragging(false);
-    
-    if (touchStartY && touchEndY && scrollContainerRef.current) {
-      const scrollTop = scrollContainerRef.current.scrollTop;
-      const distanceY = touchEndY - touchStartY;
-      
-      if (scrollTop === 0 && distanceY > 100) {
-        setIsClosing(true);
-        setTimeout(() => {
-          onClose();
-        }, 200);
-        return;
-      }
+    const wasDragMode = isDragMode;
+    setIsDragMode(false);
+
+    if (wasDragMode && dragOffset > 100) {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+      }, 200);
+      return;
     }
-    
+
     setDragOffset(0);
-    
+
+    if (wasDragMode) return;
+
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -128,7 +130,7 @@ function CharityModal({ data, onClose }) {
   };
 
   return (
-    <div className='fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-4' onClick={onClose}>
+    <div className='fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-4' style={{ touchAction: 'none' }} onClick={onClose}>
       <div 
         className='absolute inset-0 bg-black transition-opacity'
         style={{ 
@@ -137,15 +139,16 @@ function CharityModal({ data, onClose }) {
         }}
       />
       
-      <div 
-        className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] relative z-10'
+      <div
+        className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] relative z-10 overflow-hidden'
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ 
+        style={{
           transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
-          transition: isClosing ? 'transform 0.2s ease-out' : isDragging && dragOffset > 0 ? 'none' : 'transform 0.2s ease-out'
+          transition: isClosing ? 'transform 0.2s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.2s ease-out',
+          touchAction: dragOffset > 0 ? 'none' : 'auto'
         }}
       >
         <button 
@@ -158,6 +161,7 @@ function CharityModal({ data, onClose }) {
         <div 
           ref={scrollContainerRef}
           className='overflow-y-auto max-h-[85vh] md:max-h-[90vh] pb-20'
+          style={{ overscrollBehavior: 'contain' }}
         >
           <div className='relative h-64 md:h-96'>
             {media[currentMediaIndex]?.type === 'image' ? (
