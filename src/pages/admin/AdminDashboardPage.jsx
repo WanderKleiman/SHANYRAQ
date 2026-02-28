@@ -5,6 +5,7 @@ import BeneficiaryFormModal from '../../components/admin/BeneficiaryFormModal';
 import BeneficiaryList from '../../components/admin/BeneficiaryList';
 import ReportFormModal from '../../components/admin/ReportFormModal';
 import Icon from '../../components/Icon';
+import { supabase } from '../../supabaseClient';
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ function AdminDashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [showReportForm, setShowReportForm] = useState(false);
   const [reportingBeneficiary, setReportingBeneficiary] = useState(null);
+  const [kaspiNewCount, setKaspiNewCount] = useState(0);
 
   useEffect(() => {
     const authData = checkAuth();
@@ -22,6 +24,11 @@ function AdminDashboardPage() {
       navigate('/admin');
     } else {
       setUser(authData);
+      supabase
+        .from('kaspi_payment_requests')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'new')
+        .then(({ count }) => setKaspiNewCount(count || 0));
     }
   }, [navigate]);
 
@@ -132,6 +139,21 @@ function AdminDashboardPage() {
           >
             Фонды
           </button>
+          <button
+            onClick={() => setActiveTab('kaspi')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap flex items-center space-x-1 ${
+              activeTab === 'kaspi'
+                ? 'border-[var(--primary-color)] text-[var(--primary-color)]'
+                : 'border-transparent text-[var(--text-secondary)]'
+            }`}
+          >
+            <span>Kaspi</span>
+            {kaspiNewCount > 0 && (
+              <span className='bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center'>
+                {kaspiNewCount}
+              </span>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -195,6 +217,20 @@ function AdminDashboardPage() {
         {activeTab === 'funds' && (
           <div className='card text-center py-8'>
             <p className='text-[var(--text-secondary)]'>Управление фондами</p>
+          </div>
+        )}
+
+        {activeTab === 'kaspi' && (
+          <div className='text-center py-8'>
+            <p className='text-[var(--text-secondary)] mb-4'>
+              {kaspiNewCount > 0 ? `Новых запросов: ${kaspiNewCount}` : 'Нет новых запросов'}
+            </p>
+            <button
+              onClick={() => navigate('/admin/kaspi-requests')}
+              className='btn-primary'
+            >
+              Открыть Kaspi запросы
+            </button>
           </div>
         )}
       </main>

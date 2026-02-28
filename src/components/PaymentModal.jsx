@@ -96,16 +96,16 @@ function PaymentModal({ beneficiary, onClose }) {
       try {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
-        await supabase.from('pending_kaspi_payments').insert({
+        await supabase.from('kaspi_payment_requests').insert({
           beneficiary_id: beneficiary.id,
           beneficiary_title: beneficiary.title,
           phone: phoneNumber,
           amount: amount,
-          payment_method: 'kaspi'
+          status: 'new'
         });
 
         onClose();
-        navigate('/?donated=true');
+        navigate('/?donated=kaspi');
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         alert('Произошла ошибка. Попробуйте ещё раз.');

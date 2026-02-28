@@ -13,6 +13,7 @@ import PartnerFundsPage from './pages/PartnerFundsPage';
 import FundDetailPage from './pages/FundDetailPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -128,6 +129,7 @@ function App() {
           <Route path='/fund/:name' element={<FundDetailPage />} />
           <Route path='/admin' element={<AdminLoginPage />} />
 <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
+          <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

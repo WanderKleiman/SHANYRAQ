@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import CategoryTabs from '../components/CategoryTabs';
 import CharityCard from '../components/CharityCard';
 import CharityModal from '../components/CharityModal';
@@ -9,10 +10,12 @@ import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMe
 import Icon from '../components/Icon';
 
 function HomePage({ selectedCity, onCityChange }) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState('all');
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [donationType, setDonationType] = useState(null);
 
   // Загружаем данные из Supabase
   const { beneficiaries, loading, error } = useBeneficiaries(
@@ -28,21 +31,13 @@ function HomePage({ selectedCity, onCityChange }) {
 
   // Проверяем параметр donated
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('donated') === 'true') {
+    const donated = searchParams.get('donated');
+    if (donated === 'kaspi' || donated === 'true') {
+      setDonationType(donated);
       setShowThankYou(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      setSearchParams({}, { replace: true });
     }
-  }, []);
-
-  // Проверяем параметр donated
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('donated') === 'true') {
-      setShowThankYou(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
+  }, [searchParams, setSearchParams]);
 
   // Показываем выбор города если не выбран
   useEffect(() => {
@@ -176,10 +171,21 @@ function HomePage({ selectedCity, onCityChange }) {
               className="w-32 h-32 mx-auto mb-6"
             />
             <h2 className='text-2xl font-bold mb-3'>Спасибо</h2>
-            <p className="text-gray-600 mb-4">Сегодня вы сделали этот мир немного лучше!</p>
-            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
-              <p className="text-sm text-gray-700">После оказания помощи мы опубликуем отчёт на сайте в разделе «Отчёты», чтобы вы могли увидеть результат вашей поддержки</p>
-            </div>
+            {donationType === 'kaspi' ? (
+              <>
+                <p className="text-gray-600 mb-4">В течение 1 минуты вам придёт счёт на оплату в приложение Kaspi</p>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-gray-700">Подтвердите платёж — и ваше пожертвование отобразится в разделе «Профиль», где вы сможете увидеть всю историю вашей поддержки ❤️</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-gray-600 mb-4">Сегодня вы сделали этот мир немного лучше!</p>
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-gray-700">После оказания помощи мы опубликуем отчёт на сайте в разделе «Отчёты», чтобы вы могли увидеть результат вашей поддержки</p>
+                </div>
+              </>
+            )}
             <button 
               onClick={() => setShowThankYou(false)}
               className='bg-[var(--primary-color)] text-white w-full py-4 rounded-2xl font-semibold text-lg'
