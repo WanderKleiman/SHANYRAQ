@@ -4,7 +4,8 @@ import {
   ArrowLeft, Heart, Activity, Zap, Loader, CreditCard, Check,
   FileEdit, MessageCircle, Mail, Instagram, Settings,
   Grid3x3, Baby, HandHeart, FileBadge, ScrollText, FileCheck, Database,
-  User, HeartHandshake, PersonStanding, PawPrint, Accessibility
+  User, HeartHandshake, PersonStanding, PawPrint, Accessibility,
+  Plus, UserRound, Lock, Pencil, Camera
 } from 'lucide-react';
 
 // Маппинг старых CSS классов на React компоненты
@@ -48,6 +49,11 @@ const iconMap = {
   'person-standing': PersonStanding,
   'accessibility': Accessibility,
   'paw-print': PawPrint,
+  'plus': Plus,
+  'user-round': UserRound,
+  'lock': Lock,
+  'pencil': Pencil,
+  'camera': Camera,
 };
 
 // Универсальный компонент иконки

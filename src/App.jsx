@@ -11,6 +11,7 @@ import DocumentsPage from './pages/DocumentsPage';
 import ContactsPage from './pages/ContactsPage';
 import PartnerFundsPage from './pages/PartnerFundsPage';
 import FundDetailPage from './pages/FundDetailPage';
+import ProfilePage from './pages/ProfilePage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
@@ -125,6 +126,14 @@ function App() {
                 <PartnerFundsPage />
               </AppLayout>
             } 
+          />
+          <Route
+            path='/profile'
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <ProfilePage />
+              </AppLayout>
+            }
           />
           <Route path='/fund/:name' element={<FundDetailPage />} />
           <Route path='/admin' element={<AdminLoginPage />} />

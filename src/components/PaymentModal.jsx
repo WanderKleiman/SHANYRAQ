@@ -104,6 +104,7 @@ function PaymentModal({ beneficiary, onClose }) {
           status: 'new'
         });
 
+        localStorage.setItem('userPhone', phoneNumber);
         onClose();
         navigate('/?donated=kaspi');
       } catch (error) {
