@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 
+const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
+
 const CATEGORIES = [
   { key: 'children', name: 'Дети', icon: 'baby' },
   { key: 'urgent', name: 'Взрослые', icon: 'user' },
@@ -30,7 +32,8 @@ function ProfilePage() {
   // Donation state
   const [totalHelp, setTotalHelp] = useState(0);
   const [helpedByCategory, setHelpedByCategory] = useState({});
-  const [pendingRequests, setPendingRequests] = useState([]);
+  const [newRequests, setNewRequests] = useState([]);
+  const [invoiceSentRequests, setInvoiceSentRequests] = useState([]);
 
   useEffect(() => {
     if (userPhone) {
@@ -60,14 +63,33 @@ function ProfilePage() {
       }
 
       const paidPayments = allPayments.filter(p => p.status === 'paid');
-      const pending = allPayments.filter(p => p.status === 'new' || p.status === 'invoice_sent');
-      setPendingRequests(pending);
+      const newRequests = allPayments.filter(p => p.status === 'new');
+      const invoiceSent = allPayments.filter(p => p.status === 'invoice_sent');
+
+      // Fetch beneficiary images for pending requests
+      const pendingAll = [...newRequests, ...invoiceSent];
+      if (pendingAll.length > 0) {
+        const pendingBenIds = [...new Set(pendingAll.map(p => p.beneficiary_id))];
+        const { data: pendingBens } = await supabase
+          .from('beneficiaries')
+          .select('id, image_url')
+          .in('id', pendingBenIds);
+
+        const benImageMap = {};
+        (pendingBens || []).forEach(b => { benImageMap[b.id] = b.image_url; });
+
+        const addImage = (p) => ({ ...p, beneficiary_image: benImageMap[p.beneficiary_id] || '' });
+        setNewRequests(newRequests.map(addImage));
+        setInvoiceSentRequests(invoiceSent.map(addImage));
+      } else {
+        setNewRequests([]);
+        setInvoiceSentRequests([]);
+      }
 
       const hasPaid = paidPayments.length > 0;
       setIsActivated(hasPaid);
 
       if (hasPaid) {
-        // Load or create user profile
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('*')
@@ -87,7 +109,6 @@ function ProfilePage() {
           setDisplayName(defaultName);
         }
 
-        // Build donation data
         const beneficiaryIds = [...new Set(paidPayments.map(p => p.beneficiary_id))];
         const { data: beneficiaries } = await supabase
           .from('beneficiaries')
@@ -288,36 +309,73 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* Pending / Invoice sent requests */}
-      {pendingRequests.length > 0 && (
+      {/* New requests — forming invoice */}
+      {newRequests.length > 0 && (
+        <div className='px-4 mt-6'>
+          <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Формируется счёт</h2>
+          <div className='space-y-3'>
+            {newRequests.map(req => (
+              <div key={req.id} className='bg-orange-50 rounded-2xl p-4 border border-orange-200'>
+                <div className='flex items-center space-x-3'>
+                  {req.beneficiary_image ? (
+                    <img
+                      src={req.beneficiary_image}
+                      alt={req.beneficiary_title}
+                      className='w-12 h-12 rounded-xl object-cover flex-shrink-0'
+                    />
+                  ) : (
+                    <div className='w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0'>
+                      <Icon name="user" size={20} className="text-gray-400" />
+                    </div>
+                  )}
+                  <div className='flex-1 min-w-0'>
+                    <p className='font-medium text-[var(--text-primary)] text-sm truncate'>{req.beneficiary_title}</p>
+                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                  </div>
+                  <div className='flex-shrink-0'>
+                    <span className='text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded-lg'>Формируется</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Invoice sent requests */}
+      {invoiceSentRequests.length > 0 && (
         <div className='px-4 mt-6'>
           <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Ожидают оплаты</h2>
           <div className='space-y-3'>
-            {pendingRequests.map(req => (
+            {invoiceSentRequests.map(req => (
               <div key={req.id} className='bg-gray-50 rounded-2xl p-4 border border-gray-200'>
-                <div className='flex items-center justify-between mb-2'>
-                  <p className='font-medium text-[var(--text-primary)] text-sm'>{req.beneficiary_title}</p>
-                  <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                <div className='flex items-center space-x-3 mb-3'>
+                  {/* Beneficiary avatar */}
+                  {req.beneficiary_image ? (
+                    <img
+                      src={req.beneficiary_image}
+                      alt={req.beneficiary_title}
+                      className='w-12 h-12 rounded-xl object-cover flex-shrink-0'
+                    />
+                  ) : (
+                    <div className='w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0'>
+                      <Icon name="user" size={20} className="text-gray-400" />
+                    </div>
+                  )}
+                  <div className='flex-1 min-w-0'>
+                    <p className='font-medium text-[var(--text-primary)] text-sm truncate'>{req.beneficiary_title}</p>
+                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                  </div>
                 </div>
-                {req.status === 'new' ? (
-                  <a
-                    href='https://kaspi.kz'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='block w-full text-center py-3 bg-orange-500 text-white rounded-xl text-sm font-medium'
-                  >
-                    Оплатите счёт в Каспи, перейти
-                  </a>
-                ) : (
-                  <a
-                    href='https://kaspi.kz'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='block w-full text-center py-3 bg-blue-500 text-white rounded-xl text-sm font-medium'
-                  >
-                    Счёт выставлен, оплатить
-                  </a>
-                )}
+                <a
+                  href='https://kaspi.kz'
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center justify-center space-x-2 w-full py-3 bg-red-500 text-white rounded-xl text-sm font-medium'
+                >
+                  <img src={KASPI_LOGO} alt='Kaspi' className='h-5 object-contain' />
+                  <span>Счёт выставлен, оплатить</span>
+                </a>
               </div>
             ))}
           </div>
@@ -334,7 +392,7 @@ function ProfilePage() {
               Перейти к подопечным
             </button>
           </div>
-        ) : !isActivated && pendingRequests.length === 0 ? (
+        ) : !isActivated && invoiceSentRequests.length === 0 && newRequests.length === 0 ? (
           <div className='text-center py-8'>
             <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
             <p className='text-[var(--text-secondary)] mb-4'>У вас пока нет подтверждённых пожертвований</p>
