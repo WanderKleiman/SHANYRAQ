@@ -352,7 +352,7 @@ function ProfilePage() {
           <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Ожидают оплаты</h2>
           <div className='space-y-3'>
             {invoiceSentRequests.map(req => (
-              <div key={req.id} className='bg-gray-50 rounded-2xl p-4 border border-gray-200'>
+              <div key={req.id} className='bg-green-50 rounded-2xl p-4 border border-green-200'>
                 <div className='flex items-center space-x-3 mb-3'>
                   {/* Beneficiary avatar */}
                   {req.beneficiary_image ? (
@@ -375,10 +375,9 @@ function ProfilePage() {
                   href='https://kaspi.kz'
                   target='_blank'
                   rel='noopener noreferrer'
-                  className='flex items-center justify-center space-x-2 w-full py-3 bg-red-500 text-white rounded-xl text-sm font-medium'
+                  className='flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-xl text-sm font-medium'
                 >
-                  <img src={KASPI_LOGO} alt='Kaspi' className='h-5 object-contain' />
-                  <span>Счёт выставлен, оплатить</span>
+                  Счёт выставлен, оплатить
                 </a>
               </div>
             ))}
