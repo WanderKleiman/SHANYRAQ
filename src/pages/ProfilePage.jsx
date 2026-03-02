@@ -478,6 +478,14 @@ function ProfilePage() {
             </div>
 
             <button
+              onClick={() => {navigate('/profile/settings'); setShowMoreMenu(false);}}
+              className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
+            >
+              <Icon name="settings" size={20} className="text-[var(--primary-color)]" />
+              <span>Мой профиль</span>
+            </button>
+
+            <button
               onClick={() => {navigate('/about'); setShowMoreMenu(false);}}
               className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
             >

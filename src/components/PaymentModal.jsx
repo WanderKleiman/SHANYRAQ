@@ -16,11 +16,45 @@ function PaymentModal({ beneficiary, onClose }) {
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [savedPhone, setSavedPhone] = useState(null);
+  const [phoneLoading, setPhoneLoading] = useState(true);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    loadSavedPhone();
     return () => { document.body.style.overflow = ''; };
   }, []);
+
+  const loadSavedPhone = async () => {
+    try {
+      const visitorId = await getVisitorId();
+      // Check if user has at least 1 paid request
+      const { data: paid } = await supabase
+        .from('kaspi_payment_requests')
+        .select('id')
+        .eq('visitor_id', visitorId)
+        .eq('status', 'paid')
+        .limit(1);
+
+      if (paid && paid.length > 0) {
+        // Get phone from visitors table
+        const { data: visitor } = await supabase
+          .from('visitors')
+          .select('phone')
+          .eq('visitor_id', visitorId)
+          .single();
+
+        if (visitor?.phone) {
+          setSavedPhone(visitor.phone);
+          setPhoneNumber(visitor.phone);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved phone:', error);
+    } finally {
+      setPhoneLoading(false);
+    }
+  };
 
   const handleTouchStart = (e) => {
     setTouchStartY(e.targetTouches[0].clientY);
@@ -218,17 +252,30 @@ function PaymentModal({ beneficiary, onClose }) {
             </div>
           </div>
 
-          {paymentMethod === 'kaspi' && (
+          {paymentMethod === 'kaspi' && !phoneLoading && (
             <div className='bg-blue-50 p-4 rounded-xl space-y-3'>
-              <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
-              <input
-                type='tel'
-                value={formatPhone(phoneNumber)}
-                onChange={handlePhoneChange}
-                placeholder='+7'
-                className='w-full px-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]'
-              />
-              <p className='text-xs text-blue-600'>На указанный номер придёт счёт на оплату в Kaspi</p>
+              {savedPhone ? (
+                <>
+                  <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
+                  <div className='flex items-center space-x-2 px-4 py-3 bg-white rounded-xl'>
+                    <Icon name="check-circle" size={16} className="text-green-500" />
+                    <span className='text-[var(--text-primary)] font-medium'>{formatPhone(savedPhone)}</span>
+                  </div>
+                  <p className='text-xs text-blue-600'>Счёт будет выставлен на этот номер</p>
+                </>
+              ) : (
+                <>
+                  <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
+                  <input
+                    type='tel'
+                    value={formatPhone(phoneNumber)}
+                    onChange={handlePhoneChange}
+                    placeholder='+7'
+                    className='w-full px-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]'
+                  />
+                  <p className='text-xs text-blue-600'>На указанный номер придёт счёт на оплату в Kaspi</p>
+                </>
+              )}
             </div>
           )}
 
