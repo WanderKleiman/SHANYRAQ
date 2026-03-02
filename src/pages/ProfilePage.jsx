@@ -15,21 +15,29 @@ const CATEGORIES = [
 function ProfilePage() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [totalHelp, setTotalHelp] = useState(0);
-  const [helpedByCategory, setHelpedByCategory] = useState({});
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const userPhone = localStorage.getItem('userPhone');
+
+  // Profile state
   const [isActivated, setIsActivated] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const userPhone = localStorage.getItem('userPhone');
+
+  // Donation state
+  const [totalHelp, setTotalHelp] = useState(0);
+  const [helpedByCategory, setHelpedByCategory] = useState({});
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   useEffect(() => {
-    loadProfile();
+    if (userPhone) {
+      loadProfile();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const formatPhoneDisplay = (phone) => {
@@ -40,78 +48,74 @@ function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      if (!userPhone) {
-        setLoading(false);
-        return;
-      }
-
-      // Check if user has any paid payments
-      const { data: payments } = await supabase
+      const { data: allPayments } = await supabase
         .from('kaspi_payment_requests')
         .select('*')
         .eq('phone', userPhone)
-        .eq('status', 'paid')
         .order('created_at', { ascending: false });
 
-      if (!payments || payments.length === 0) {
-        // No paid payments — profile not activated
-        setIsActivated(false);
+      if (!allPayments || allPayments.length === 0) {
         setLoading(false);
         return;
       }
 
-      setIsActivated(true);
+      const paidPayments = allPayments.filter(p => p.status === 'paid');
+      const pending = allPayments.filter(p => p.status === 'new' || p.status === 'invoice_sent');
+      setPendingRequests(pending);
 
-      // Load or create user profile
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('phone', userPhone)
-        .single();
+      const hasPaid = paidPayments.length > 0;
+      setIsActivated(hasPaid);
 
-      if (profile) {
-        setDisplayName(profile.display_name || formatPhoneDisplay(userPhone));
-        setAvatarUrl(profile.avatar_url || '');
-      } else {
-        // Create profile with phone as default name
-        const defaultName = formatPhoneDisplay(userPhone);
-        await supabase.from('user_profiles').insert({
-          phone: userPhone,
-          display_name: defaultName,
-          avatar_url: ''
+      if (hasPaid) {
+        // Load or create user profile
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('phone', userPhone)
+          .single();
+
+        if (profile) {
+          setDisplayName(profile.display_name || formatPhoneDisplay(userPhone));
+          setAvatarUrl(profile.avatar_url || '');
+        } else {
+          const defaultName = formatPhoneDisplay(userPhone);
+          await supabase.from('user_profiles').insert({
+            phone: userPhone,
+            display_name: defaultName,
+            avatar_url: ''
+          });
+          setDisplayName(defaultName);
+        }
+
+        // Build donation data
+        const beneficiaryIds = [...new Set(paidPayments.map(p => p.beneficiary_id))];
+        const { data: beneficiaries } = await supabase
+          .from('beneficiaries')
+          .select('id, category, image_url, title')
+          .in('id', beneficiaryIds);
+
+        const beneficiaryMap = {};
+        (beneficiaries || []).forEach(b => { beneficiaryMap[b.id] = b; });
+
+        const donationList = paidPayments.map(p => ({
+          id: p.id,
+          beneficiaryId: p.beneficiary_id,
+          name: p.beneficiary_title,
+          amount: p.amount,
+          category: beneficiaryMap[p.beneficiary_id]?.category || 'other',
+          image: beneficiaryMap[p.beneficiary_id]?.image_url || '',
+          date: p.created_at
+        }));
+
+        setTotalHelp(donationList.reduce((sum, d) => sum + d.amount, 0));
+
+        const grouped = {};
+        donationList.forEach(d => {
+          if (!grouped[d.category]) grouped[d.category] = [];
+          grouped[d.category].push(d);
         });
-        setDisplayName(defaultName);
+        setHelpedByCategory(grouped);
       }
-
-      // Build donation data
-      const beneficiaryIds = [...new Set(payments.map(p => p.beneficiary_id))];
-      const { data: beneficiaries } = await supabase
-        .from('beneficiaries')
-        .select('id, category, image_url, title')
-        .in('id', beneficiaryIds);
-
-      const beneficiaryMap = {};
-      (beneficiaries || []).forEach(b => { beneficiaryMap[b.id] = b; });
-
-      const donationList = payments.map(p => ({
-        id: p.id,
-        beneficiaryId: p.beneficiary_id,
-        name: p.beneficiary_title,
-        amount: p.amount,
-        category: beneficiaryMap[p.beneficiary_id]?.category || 'other',
-        image: beneficiaryMap[p.beneficiary_id]?.image_url || '',
-        date: p.created_at
-      }));
-
-      setTotalHelp(donationList.reduce((sum, d) => sum + d.amount, 0));
-
-      const grouped = {};
-      donationList.forEach(d => {
-        if (!grouped[d.category]) grouped[d.category] = [];
-        grouped[d.category].push(d);
-      });
-      setHelpedByCategory(grouped);
-      setDonations(donationList);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -132,7 +136,7 @@ function ProfilePage() {
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || !isActivated) return;
 
     setUploadingAvatar(true);
     try {
@@ -172,7 +176,6 @@ function ProfilePage() {
 
   return (
     <div className='min-h-screen bg-white'>
-      {/* Hidden file input for avatar */}
       <input
         ref={fileInputRef}
         type='file'
@@ -191,7 +194,6 @@ function ProfilePage() {
           />
         </div>
 
-        {/* Menu button */}
         <button
           onClick={() => setShowMoreMenu(true)}
           className='absolute top-4 right-4 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md z-10'
@@ -202,30 +204,38 @@ function ProfilePage() {
         <div className='px-6 text-center'>
           {/* Avatar */}
           <div className='relative w-20 h-20 mx-auto -mt-14 mb-2'>
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt='Avatar'
-                className='w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg'
-              />
+            {isActivated ? (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar}
+                className='w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg block'
+              >
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt='Avatar' className='w-full h-full object-cover' />
+                ) : (
+                  <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
+                    {uploadingAvatar ? (
+                      <Icon name="loader" size={24} className="text-gray-400 animate-spin" />
+                    ) : (
+                      <Icon name="camera" size={24} className="text-gray-400" />
+                    )}
+                  </div>
+                )}
+              </button>
             ) : (
               <div className='w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center border-4 border-white shadow-lg'>
                 <Icon name="user" size={32} className="text-gray-400" />
               </div>
             )}
-            {isActivated ? (
+            {isActivated && (
               <button
                 onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar}
                 className='absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--primary-color)] rounded-full flex items-center justify-center border-2 border-white'
               >
-                {uploadingAvatar ? (
-                  <Icon name="loader" size={12} className="text-white animate-spin" />
-                ) : (
-                  <Icon name="camera" size={12} className="text-white" />
-                )}
+                <Icon name="camera" size={12} className="text-white" />
               </button>
-            ) : (
+            )}
+            {!isActivated && (
               <div className='absolute -bottom-1 -right-1 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center border-2 border-white'>
                 <Icon name="lock" size={12} className="text-white" />
               </div>
@@ -263,39 +273,76 @@ function ProfilePage() {
             </div>
           ) : (
             <>
-              {!isActivated && (
-                <p className='text-[10px] text-[var(--text-secondary)] mb-2'>Подтвердите аккаунт для добавления фото</p>
-              )}
               <h1 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Мой профиль</h1>
+              {!userPhone && (
+                <p className='text-sm text-[var(--text-secondary)]'>Сделайте первое пожертвование</p>
+              )}
             </>
           )}
 
-          {isActivated ? (
+          {isActivated && (
             <p className='text-sm text-[var(--text-secondary)]'>
               Помог на сумму: <span className='font-bold text-[var(--text-primary)]'>{totalHelp.toLocaleString()} ₸</span>
-            </p>
-          ) : (
-            <p className='text-sm text-[var(--text-secondary)]'>
-              Сделайте первое пожертвование
             </p>
           )}
         </div>
       </div>
 
+      {/* Pending / Invoice sent requests */}
+      {pendingRequests.length > 0 && (
+        <div className='px-4 mt-6'>
+          <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Ожидают оплаты</h2>
+          <div className='space-y-3'>
+            {pendingRequests.map(req => (
+              <div key={req.id} className='bg-gray-50 rounded-2xl p-4 border border-gray-200'>
+                <div className='flex items-center justify-between mb-2'>
+                  <p className='font-medium text-[var(--text-primary)] text-sm'>{req.beneficiary_title}</p>
+                  <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                </div>
+                {req.status === 'new' ? (
+                  <a
+                    href='https://kaspi.kz'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block w-full text-center py-3 bg-orange-500 text-white rounded-xl text-sm font-medium'
+                  >
+                    Оплатите счёт в Каспи, перейти
+                  </a>
+                ) : (
+                  <a
+                    href='https://kaspi.kz'
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='block w-full text-center py-3 bg-blue-500 text-white rounded-xl text-sm font-medium'
+                  >
+                    Счёт выставлен, оплатить
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Category Sections */}
       <div className='px-4 mt-6 space-y-6 pb-4'>
-        {!isActivated ? (
+        {!userPhone ? (
           <div className='text-center py-8'>
             <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
             <p className='text-[var(--text-secondary)] mb-4'>Здесь будет отображаться история вашей помощи</p>
-            <button
-              onClick={() => navigate('/')}
-              className='btn-primary'
-            >
+            <button onClick={() => navigate('/')} className='btn-primary'>
               Перейти к подопечным
             </button>
           </div>
-        ) : (
+        ) : !isActivated && pendingRequests.length === 0 ? (
+          <div className='text-center py-8'>
+            <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
+            <p className='text-[var(--text-secondary)] mb-4'>У вас пока нет подтверждённых пожертвований</p>
+            <button onClick={() => navigate('/')} className='btn-primary'>
+              Помочь подопечным
+            </button>
+          </div>
+        ) : isActivated && (
           CATEGORIES.map(cat => {
             const items = helpedByCategory[cat.key] || [];
             return (
@@ -329,11 +376,7 @@ function ProfilePage() {
                           >
                             <div className='relative mb-2'>
                               {item.image ? (
-                                <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  className='w-32 h-32 object-cover rounded-2xl'
-                                />
+                                <img src={item.image} alt={item.name} className='w-32 h-32 object-cover rounded-2xl' />
                               ) : (
                                 <div className='w-32 h-32 bg-gray-200 rounded-2xl flex items-center justify-center'>
                                   <Icon name="user" size={24} className="text-gray-400" />
