@@ -16,6 +16,7 @@ function HomePage({ selectedCity, onCityChange }) {
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
   const [donationType, setDonationType] = useState(null);
+  const [donatedPhone, setDonatedPhone] = useState('');
 
   // Загружаем данные из Supabase
   const { beneficiaries, loading, error } = useBeneficiaries(
@@ -32,8 +33,10 @@ function HomePage({ selectedCity, onCityChange }) {
   // Проверяем параметр donated
   useEffect(() => {
     const donated = searchParams.get('donated');
+    const phone = searchParams.get('phone');
     if (donated === 'kaspi' || donated === 'true') {
       setDonationType(donated);
+      if (phone) setDonatedPhone(phone);
       setShowThankYou(true);
       setSearchParams({}, { replace: true });
     }
@@ -173,6 +176,9 @@ function HomePage({ selectedCity, onCityChange }) {
             <h2 className='text-2xl font-bold mb-3'>Спасибо</h2>
             {donationType === 'kaspi' ? (
               <>
+                {donatedPhone && (
+                  <p className="text-gray-600 mb-2">На номер <span className="font-semibold">{donatedPhone.length >= 11 ? `+7 ${donatedPhone.slice(1,4)} ${donatedPhone.slice(4,7)} ${donatedPhone.slice(7)}` : donatedPhone}</span> формируется счёт на оплату</p>
+                )}
                 <p className="text-gray-600 mb-4">В течение 1 минуты вам придёт счёт на оплату в приложение Kaspi</p>
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <p className="text-sm text-gray-700">Подтвердите платёж — и ваше пожертвование отобразится в разделе «Профиль», где вы сможете увидеть всю историю вашей поддержки ❤️</p>

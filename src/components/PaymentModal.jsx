@@ -150,7 +150,7 @@ function PaymentModal({ beneficiary, onClose }) {
         }, { onConflict: 'visitor_id' });
 
         onClose();
-        navigate('/?donated=kaspi');
+        navigate(`/?donated=kaspi&phone=${encodeURIComponent(phoneNumber)}`);
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         alert('Произошла ошибка. Попробуйте ещё раз.');
@@ -252,30 +252,17 @@ function PaymentModal({ beneficiary, onClose }) {
             </div>
           </div>
 
-          {paymentMethod === 'kaspi' && !phoneLoading && (
+          {paymentMethod === 'kaspi' && !phoneLoading && !savedPhone && (
             <div className='bg-blue-50 p-4 rounded-xl space-y-3'>
-              {savedPhone ? (
-                <>
-                  <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
-                  <div className='flex items-center space-x-2 px-4 py-3 bg-white rounded-xl'>
-                    <Icon name="check-circle" size={16} className="text-green-500" />
-                    <span className='text-[var(--text-primary)] font-medium'>{formatPhone(savedPhone)}</span>
-                  </div>
-                  <p className='text-xs text-blue-600'>Счёт будет выставлен на этот номер</p>
-                </>
-              ) : (
-                <>
-                  <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
-                  <input
-                    type='tel'
-                    value={formatPhone(phoneNumber)}
-                    onChange={handlePhoneChange}
-                    placeholder='+7'
-                    className='w-full px-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]'
-                  />
-                  <p className='text-xs text-blue-600'>На указанный номер придёт счёт на оплату в Kaspi</p>
-                </>
-              )}
+              <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
+              <input
+                type='tel'
+                value={formatPhone(phoneNumber)}
+                onChange={handlePhoneChange}
+                placeholder='+7'
+                className='w-full px-4 py-3 bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)]'
+              />
+              <p className='text-xs text-blue-600'>На указанный номер придёт счёт на оплату в Kaspi</p>
             </div>
           )}
 
