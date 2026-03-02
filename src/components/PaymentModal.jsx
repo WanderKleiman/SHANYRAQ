@@ -96,14 +96,20 @@ function PaymentModal({ beneficiary, onClose }) {
       try {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
-        await supabase.from('kaspi_payment_requests').insert({
+        const { data: inserted } = await supabase.from('kaspi_payment_requests').insert({
           beneficiary_id: beneficiary.id,
           beneficiary_title: beneficiary.title,
           phone: phoneNumber,
           amount: amount,
           status: 'new'
-        });
+        }).select('id').single();
 
+        // Save request ID to localStorage for profile verification
+        const myRequests = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
+        if (inserted?.id) {
+          myRequests.push(inserted.id);
+          localStorage.setItem('myRequestIds', JSON.stringify(myRequests));
+        }
         localStorage.setItem('userPhone', phoneNumber);
         onClose();
         navigate('/?donated=kaspi');

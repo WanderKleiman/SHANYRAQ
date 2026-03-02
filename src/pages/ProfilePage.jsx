@@ -34,9 +34,11 @@ function ProfilePage() {
   const [helpedByCategory, setHelpedByCategory] = useState({});
   const [newRequests, setNewRequests] = useState([]);
   const [invoiceSentRequests, setInvoiceSentRequests] = useState([]);
+  const [verifiedPhone, setVerifiedPhone] = useState('');
 
   useEffect(() => {
-    if (userPhone) {
+    const myRequestIds = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
+    if (myRequestIds.length > 0) {
       loadProfile();
     } else {
       setLoading(false);
@@ -51,10 +53,18 @@ function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
+      // Get only MY request IDs (created from this browser)
+      const myRequestIds = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
+
+      if (myRequestIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+
       const { data: allPayments } = await supabase
         .from('kaspi_payment_requests')
         .select('*')
-        .eq('phone', userPhone)
+        .in('id', myRequestIds)
         .order('created_at', { ascending: false });
 
       if (!allPayments || allPayments.length === 0) {
@@ -90,19 +100,24 @@ function ProfilePage() {
       setIsActivated(hasPaid);
 
       if (hasPaid) {
+        // Use phone from the paid payment (verified phone)
+        const vPhone = paidPayments[0].phone;
+        setVerifiedPhone(vPhone);
+        const verifiedPhone = vPhone;
+
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('*')
-          .eq('phone', userPhone)
+          .eq('phone', verifiedPhone)
           .single();
 
         if (profile) {
-          setDisplayName(profile.display_name || formatPhoneDisplay(userPhone));
+          setDisplayName(profile.display_name || formatPhoneDisplay(verifiedPhone));
           setAvatarUrl(profile.avatar_url || '');
         } else {
-          const defaultName = formatPhoneDisplay(userPhone);
+          const defaultName = formatPhoneDisplay(verifiedPhone);
           await supabase.from('user_profiles').insert({
-            phone: userPhone,
+            phone: verifiedPhone,
             display_name: defaultName,
             avatar_url: ''
           });
@@ -152,7 +167,7 @@ function ProfilePage() {
     await supabase
       .from('user_profiles')
       .update({ display_name: trimmed })
-      .eq('phone', userPhone);
+      .eq('phone', verifiedPhone);
   };
 
   const handleAvatarUpload = async (e) => {
@@ -162,7 +177,7 @@ function ProfilePage() {
     setUploadingAvatar(true);
     try {
       const ext = file.name.split('.').pop();
-      const fileName = `avatars/${userPhone}_${Date.now()}.${ext}`;
+      const fileName = `avatars/${verifiedPhone}_${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('images')
@@ -178,7 +193,7 @@ function ProfilePage() {
       await supabase
         .from('user_profiles')
         .update({ avatar_url: publicUrl })
-        .eq('phone', userPhone);
+        .eq('phone', verifiedPhone);
     } catch (error) {
       console.error('Avatar upload error:', error);
       alert('Ошибка загрузки фото');
@@ -295,7 +310,7 @@ function ProfilePage() {
           ) : (
             <>
               <h1 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Мой профиль</h1>
-              {!userPhone && (
+              {newRequests.length === 0 && invoiceSentRequests.length === 0 && (
                 <p className='text-sm text-[var(--text-secondary)]'>Сделайте первое пожертвование</p>
               )}
             </>
@@ -384,15 +399,7 @@ function ProfilePage() {
 
       {/* Category Sections */}
       <div className='px-4 mt-6 space-y-6 pb-4'>
-        {!userPhone ? (
-          <div className='text-center py-8'>
-            <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className='text-[var(--text-secondary)] mb-4'>Здесь будет отображаться история вашей помощи</p>
-            <button onClick={() => navigate('/')} className='btn-primary'>
-              Перейти к подопечным
-            </button>
-          </div>
-        ) : !isActivated && invoiceSentRequests.length === 0 && newRequests.length === 0 ? (
+        {!isActivated && invoiceSentRequests.length === 0 && newRequests.length === 0 ? (
           <div className='text-center py-8'>
             <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
             <p className='text-[var(--text-secondary)] mb-4'>У вас пока нет подтверждённых пожертвований</p>
