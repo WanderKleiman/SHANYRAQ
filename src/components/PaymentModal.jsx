@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../components/Icon';
 import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
+import { getVisitorId } from '../utils/fingerprint';
 
 function PaymentModal({ beneficiary, onClose }) {
   const navigate = useNavigate();
@@ -96,21 +97,24 @@ function PaymentModal({ beneficiary, onClose }) {
       try {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
-        const { data: inserted } = await supabase.from('kaspi_payment_requests').insert({
+        const visitorId = await getVisitorId();
+
+        await supabase.from('kaspi_payment_requests').insert({
           beneficiary_id: beneficiary.id,
           beneficiary_title: beneficiary.title,
           phone: phoneNumber,
           amount: amount,
-          status: 'new'
-        }).select('id').single();
+          status: 'new',
+          visitor_id: visitorId
+        });
 
-        // Save request ID to localStorage for profile verification
-        const myRequests = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
-        if (inserted?.id) {
-          myRequests.push(inserted.id);
-          localStorage.setItem('myRequestIds', JSON.stringify(myRequests));
-        }
-        localStorage.setItem('userPhone', phoneNumber);
+        // Upsert visitor record
+        await supabase.from('visitors').upsert({
+          visitor_id: visitorId,
+          phone: phoneNumber,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'visitor_id' });
+
         onClose();
         navigate('/?donated=kaspi');
       } catch (error) {

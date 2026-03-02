@@ -142,7 +142,7 @@ function AdminKaspiRequestsPage() {
                 </span>
               </div>
 
-              <div className='flex items-center space-x-4 mb-3'>
+              <div className='flex items-center space-x-4 mb-2'>
                 <div className='flex items-center space-x-1 text-sm text-[var(--text-secondary)]'>
                   <Icon name="phone" size={14} />
                   <span>{formatPhone(req.phone)}</span>
@@ -151,6 +151,10 @@ function AdminKaspiRequestsPage() {
                   {req.amount?.toLocaleString()} ₸
                 </div>
               </div>
+
+              {req.visitor_id && (
+                <p className='text-xs text-gray-400 mb-3 font-mono truncate'>ID: {req.visitor_id}</p>
+              )}
 
               <div className='flex space-x-2'>
                 {req.status === 'new' && (

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
+import { getVisitorId } from '../utils/fingerprint';
 
 const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
 
@@ -19,7 +20,6 @@ function ProfilePage() {
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const userPhone = localStorage.getItem('userPhone');
 
   // Profile state
   const [isActivated, setIsActivated] = useState(false);
@@ -37,12 +37,7 @@ function ProfilePage() {
   const [verifiedPhone, setVerifiedPhone] = useState('');
 
   useEffect(() => {
-    const myRequestIds = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
-    if (myRequestIds.length > 0) {
-      loadProfile();
-    } else {
-      setLoading(false);
-    }
+    loadProfile();
   }, []);
 
   const formatPhoneDisplay = (phone) => {
@@ -53,18 +48,12 @@ function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      // Get only MY request IDs (created from this browser)
-      const myRequestIds = JSON.parse(localStorage.getItem('myRequestIds') || '[]');
-
-      if (myRequestIds.length === 0) {
-        setLoading(false);
-        return;
-      }
+      const visitorId = await getVisitorId();
 
       const { data: allPayments } = await supabase
         .from('kaspi_payment_requests')
         .select('*')
-        .in('id', myRequestIds)
+        .eq('visitor_id', visitorId)
         .order('created_at', { ascending: false });
 
       if (!allPayments || allPayments.length === 0) {
