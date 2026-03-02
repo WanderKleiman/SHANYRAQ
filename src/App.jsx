@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { Component, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import HomePage from './pages/HomePage';
@@ -16,6 +16,21 @@ import ProfileSettingsPage from './pages/ProfileSettingsPage';
 import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
+import { AuthProvider } from './contexts/AuthContext';
+import { supabase } from './supabaseClient';
+
+// Handle OAuth callback — redirect to /profile after Google/Email auth
+function AuthCallback() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        navigate('/profile', { replace: true });
+      }
+    });
+  }, [navigate]);
+  return null;
+}
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -76,7 +91,9 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <AuthProvider>
       <BrowserRouter>
+        <AuthCallback />
         <Routes>
           <Route 
             path='/' 
@@ -150,6 +167,7 @@ function App() {
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }
