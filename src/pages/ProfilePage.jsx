@@ -166,12 +166,13 @@ function ProfilePage() {
 
   const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file || !isActivated) return;
+    if (!file || (!isActivated && !user)) return;
 
     setUploadingAvatar(true);
     try {
       const ext = file.name.split('.').pop();
-      const fileName = `avatars/${verifiedPhone}_${Date.now()}.${ext}`;
+      const ownerId = verifiedPhone || user?.id || 'unknown';
+      const fileName = `avatars/${ownerId}_${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from('images')
@@ -234,14 +235,14 @@ function ProfilePage() {
         <div className='px-6 text-center'>
           {/* Avatar */}
           <div className='relative w-20 h-20 mx-auto -mt-14 mb-2'>
-            {isActivated ? (
+            {(isActivated || user) ? (
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingAvatar}
                 className='w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg block'
               >
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt='Avatar' className='w-full h-full object-cover' />
+                {avatarUrl || user?.user_metadata?.avatar_url ? (
+                  <img src={avatarUrl || user?.user_metadata?.avatar_url} alt='Avatar' className='w-full h-full object-cover' />
                 ) : (
                   <div className='w-full h-full bg-gray-200 flex items-center justify-center'>
                     {uploadingAvatar ? (
@@ -257,7 +258,7 @@ function ProfilePage() {
                 <Icon name="user" size={32} className="text-gray-400" />
               </div>
             )}
-            {isActivated && (
+            {(isActivated || user) && (
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className='absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--primary-color)] rounded-full flex items-center justify-center border-2 border-white'
@@ -265,7 +266,7 @@ function ProfilePage() {
                 <Icon name="camera" size={12} className="text-white" />
               </button>
             )}
-            {!isActivated && (
+            {(!isActivated && !user) && (
               <div className='absolute -bottom-1 -right-1 w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center border-2 border-white'>
                 <Icon name="lock" size={12} className="text-white" />
               </div>
@@ -273,43 +274,45 @@ function ProfilePage() {
           </div>
 
           {/* Name */}
-          {isActivated ? (
-            <div className='flex items-center justify-center space-x-2 mb-2'>
-              {isEditingName ? (
-                <div className='flex items-center space-x-2'>
-                  <input
-                    type='text'
-                    value={editNameValue}
-                    onChange={(e) => setEditNameValue(e.target.value.slice(0, 20))}
-                    className='text-xl font-bold text-center border-b-2 border-[var(--primary-color)] outline-none bg-transparent w-48'
-                    autoFocus
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
-                  />
-                  <button onClick={handleSaveName} className='text-[var(--primary-color)]'>
-                    <Icon name="check" size={20} />
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h1 className='text-xl font-bold text-[var(--text-primary)]'>{displayName}</h1>
-                  <button
-                    onClick={() => { setEditNameValue(displayName); setIsEditingName(true); }}
-                    className='text-[var(--text-secondary)]'
-                  >
-                    <Icon name="pencil" size={16} />
-                  </button>
-                </>
+          {(isActivated || user) ? (
+            <div className='mb-2'>
+              <div className='flex items-center justify-center space-x-2'>
+                {isEditingName ? (
+                  <div className='flex items-center space-x-2'>
+                    <input
+                      type='text'
+                      value={editNameValue}
+                      onChange={(e) => setEditNameValue(e.target.value.slice(0, 20))}
+                      className='text-xl font-bold text-center border-b-2 border-[var(--primary-color)] outline-none bg-transparent w-48'
+                      autoFocus
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                    />
+                    <button onClick={handleSaveName} className='text-[var(--primary-color)]'>
+                      <Icon name="check" size={20} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <h1 className='text-xl font-bold text-[var(--text-primary)]'>
+                      {displayName || user?.user_metadata?.full_name || user?.email || 'Мой профиль'}
+                    </h1>
+                    <button
+                      onClick={() => { setEditNameValue(displayName || user?.user_metadata?.full_name || ''); setIsEditingName(true); }}
+                      className='text-[var(--text-secondary)]'
+                    >
+                      <Icon name="pencil" size={16} />
+                    </button>
+                  </>
+                )}
+              </div>
+              {user && !isActivated && (
+                <p className='text-xs text-green-600 mt-1'>Авторизован через {user.app_metadata?.provider === 'google' ? 'Google' : 'Email'}</p>
               )}
             </div>
           ) : (
             <>
-              <h1 className='text-xl font-bold text-[var(--text-primary)] mb-2'>
-                {user ? (user.user_metadata?.full_name || user.email) : 'Мой профиль'}
-              </h1>
-              {user && (
-                <p className='text-xs text-green-600 mb-1'>Авторизован через {user.app_metadata?.provider === 'google' ? 'Google' : 'Email'}</p>
-              )}
-              {newRequests.length === 0 && invoiceSentRequests.length === 0 && !user && (
+              <h1 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Мой профиль</h1>
+              {newRequests.length === 0 && invoiceSentRequests.length === 0 && (
                 <p className='text-sm text-[var(--text-secondary)]'>Сделайте первое пожертвование</p>
               )}
             </>
