@@ -4,8 +4,10 @@ import Icon from '../components/Icon';
 import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
 import { getVisitorId } from '../utils/fingerprint';
+import { useAuth } from '../contexts/AuthContext';
 
 function PaymentModal({ beneficiary, onClose }) {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
@@ -28,11 +30,25 @@ function PaymentModal({ beneficiary, onClose }) {
   const loadSavedPhone = async () => {
     try {
       const visitorId = await getVisitorId();
-      // Check if user has at least 1 paid request
+
+      // If authorized, find all visitor_ids linked to same auth account
+      let visitorIds = [visitorId];
+      if (user) {
+        const { data: linkedVisitors } = await supabase
+          .from('visitors')
+          .select('visitor_id')
+          .eq('auth_user_id', user.id);
+
+        if (linkedVisitors && linkedVisitors.length > 0) {
+          visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
+        }
+      }
+
+      // Check if user has at least 1 paid request across all devices
       const { data: paid } = await supabase
         .from('kaspi_payment_requests')
         .select('id')
-        .eq('visitor_id', visitorId)
+        .in('visitor_id', visitorIds)
         .eq('status', 'paid')
         .limit(1);
 

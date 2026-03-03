@@ -21,17 +21,30 @@ function ProfileSettingsPage() {
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [user]);
 
   const loadSettings = async () => {
     setLoading(true);
     try {
       const visitorId = await getVisitorId();
 
+      // If authorized, find all visitor_ids linked to same auth account
+      let visitorIds = [visitorId];
+      if (user) {
+        const { data: linkedVisitors } = await supabase
+          .from('visitors')
+          .select('visitor_id')
+          .eq('auth_user_id', user.id);
+
+        if (linkedVisitors && linkedVisitors.length > 0) {
+          visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
+        }
+      }
+
       const { data: payments } = await supabase
         .from('kaspi_payment_requests')
         .select('*')
-        .eq('visitor_id', visitorId)
+        .in('visitor_id', visitorIds)
         .eq('status', 'paid');
 
       if (payments && payments.length > 0) {
