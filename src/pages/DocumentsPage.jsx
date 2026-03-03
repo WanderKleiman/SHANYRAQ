@@ -22,7 +22,8 @@ function DocumentsPage() {
       id: 3,
       name: "Политика конфиденциальности",
       icon: "shield-check",
-      url: "https://doc.shanyrak.world/policy"
+      url: "/policy",
+      internal: true
     },
     {
       id: 4,
@@ -66,9 +67,26 @@ function DocumentsPage() {
         </div>
 
         <div className='space-y-4'>
-          {documents.map(doc => (
-            <a 
-              key={doc.id} 
+          {documents.map(doc => doc.internal ? (
+            <button
+              key={doc.id}
+              onClick={() => navigate(doc.url)}
+              className='card cursor-pointer hover:bg-gray-50 block w-full text-left'
+            >
+              <div className='flex items-center space-x-4'>
+                <div className='w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center'>
+                 <Icon name={doc.icon} size={24} className="text-[var(--primary-color)]" />
+                </div>
+                <div className='flex-1'>
+                  <h3 className='font-semibold text-lg mb-1 text-[var(--text-primary)]'>{doc.name}</h3>
+                  <div className='text-sm text-[var(--text-secondary)]'>Открыть</div>
+                </div>
+                <Icon name="chevron-right" size={20} className="text-[var(--text-secondary)]" />
+              </div>
+            </button>
+          ) : (
+            <a
+              key={doc.id}
               href={doc.url}
               target='_blank'
               rel='noopener noreferrer'
@@ -78,14 +96,10 @@ function DocumentsPage() {
                 <div className='w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center'>
                  <Icon name={doc.icon} size={24} className="text-[var(--primary-color)]" />
                 </div>
-                
                 <div className='flex-1'>
                   <h3 className='font-semibold text-lg mb-1 text-[var(--text-primary)]'>{doc.name}</h3>
-                  <div className='text-sm text-[var(--text-secondary)]'>
-                    Открыть в новой вкладке
-                  </div>
+                  <div className='text-sm text-[var(--text-secondary)]'>Открыть в новой вкладке</div>
                 </div>
-                
                 <Icon name="external-link" size={20} className="text-[var(--text-secondary)]" />
               </div>
             </a>
