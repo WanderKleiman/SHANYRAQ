@@ -5,7 +5,7 @@ import Icon from '../../components/Icon';
 
 function AdminLoginPage() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -15,7 +15,7 @@ function AdminLoginPage() {
     setIsLoading(true);
     setError('');
 
-    const result = login(username, password);
+    const result = await login(email, password);
     if (result.success) {
       navigate('/admin/dashboard');
     } else {
@@ -44,13 +44,13 @@ function AdminLoginPage() {
             )}
 
             <div>
-              <label className='block text-sm font-medium mb-2'>Логин</label>
+              <label className='block text-sm font-medium mb-2'>Email</label>
               <input
-                type='text'
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type='email'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className='form-input'
-                placeholder='Введите логин'
+                placeholder='Введите email'
                 required
               />
             </div>

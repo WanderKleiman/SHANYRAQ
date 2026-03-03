@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { signInWithGoogle, signInWithEmail, signOut as authSignOut } from '../utils/auth';
-import { getVisitorId } from '../utils/fingerprint';
+import { getVisitorId, clearVisitorCache } from '../utils/fingerprint';
 
 const AuthContext = createContext(null);
 
@@ -45,6 +45,7 @@ export function AuthProvider({ children }) {
 
   const handleSignOut = async () => {
     await authSignOut();
+    clearVisitorCache();
     setUser(null);
   };
 

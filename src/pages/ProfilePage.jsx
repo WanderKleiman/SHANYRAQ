@@ -444,7 +444,7 @@ function ProfilePage() {
                     />
                     <button
                       onClick={async () => {
-                        if (!emailInput.includes('@')) { alert('Введите корректный email'); return; }
+                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert('Введите корректный email'); return; }
                         setAuthLoading(true);
                         try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { alert('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
                       }}
@@ -590,13 +590,6 @@ function ProfilePage() {
               <span>Контакты</span>
             </button>
 
-            <button
-              onClick={() => {navigate('/admin-access'); setShowMoreMenu(false);}}
-              className='w-full text-left p-3 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:bg-gray-100 flex items-center space-x-3'
-            >
-              <Icon name="shield" size={20} className="text-[var(--primary-color)]" />
-              <span>Админ</span>
-            </button>
           </div>
         </div>
       )}

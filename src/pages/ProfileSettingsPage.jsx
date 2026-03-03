@@ -266,7 +266,7 @@ function ProfileSettingsPage() {
                   />
                   <button
                     onClick={async () => {
-                      if (!emailInput.includes('@')) { alert('Введите корректный email'); return; }
+                      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert('Введите корректный email'); return; }
                       setAuthLoading(true);
                       try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { alert('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
                     }}

@@ -19,17 +19,18 @@ function AdminDashboardPage() {
   const [kaspiNewCount, setKaspiNewCount] = useState(0);
 
   useEffect(() => {
-    const authData = checkAuth();
-    if (!authData) {
-      navigate('/admin');
-    } else {
-      setUser(authData);
-      supabase
-        .from('kaspi_payment_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'new')
-        .then(({ count }) => setKaspiNewCount(count || 0));
-    }
+    checkAuth().then(authData => {
+      if (!authData) {
+        navigate('/admin');
+      } else {
+        setUser(authData);
+        supabase
+          .from('kaspi_payment_requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'new')
+          .then(({ count }) => setKaspiNewCount(count || 0));
+      }
+    });
   }, [navigate]);
 
   const handleLogout = () => {

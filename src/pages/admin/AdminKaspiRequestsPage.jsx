@@ -32,11 +32,13 @@ function AdminKaspiRequestsPage() {
   const [activeTab, setActiveTab] = useState('new');
 
   useEffect(() => {
-    if (!checkAuth()) {
-      navigate('/admin');
-    } else {
-      fetchRequests();
-    }
+    checkAuth().then(authData => {
+      if (!authData) {
+        navigate('/admin');
+      } else {
+        fetchRequests();
+      }
+    });
   }, [navigate]);
 
   const fetchRequests = async () => {

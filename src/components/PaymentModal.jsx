@@ -143,30 +143,38 @@ function PaymentModal({ beneficiary, onClose }) {
         return;
       }
 
+      if (isSubmitting) return;
       setIsSubmitting(true);
       try {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
         const visitorId = await getVisitorId();
+        const requestId = `${visitorId}_${beneficiary.id}_${Date.now()}`;
 
-        await supabase.from('kaspi_payment_requests').insert({
+        const { error: insertError } = await supabase.from('kaspi_payment_requests').insert({
           beneficiary_id: beneficiary.id,
           beneficiary_title: beneficiary.title,
           phone: phoneNumber,
           amount: amount,
           status: 'new',
-          visitor_id: visitorId
+          visitor_id: visitorId,
+          request_id: requestId
         });
 
+        if (insertError) throw insertError;
+
         // Upsert visitor record
-        await supabase.from('visitors').upsert({
+        const { error: upsertError } = await supabase.from('visitors').upsert({
           visitor_id: visitorId,
           phone: phoneNumber,
           updated_at: new Date().toISOString()
         }, { onConflict: 'visitor_id' });
 
+        if (upsertError) console.error('Visitor upsert error:', upsertError);
+
         onClose();
-        navigate(`/?donated=kaspi&phone=${encodeURIComponent(phoneNumber)}`);
+        sessionStorage.setItem('donatedPhone', phoneNumber);
+        navigate('/?donated=kaspi');
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         alert('Произошла ошибка. Попробуйте ещё раз.');

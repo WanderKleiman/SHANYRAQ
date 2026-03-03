@@ -33,10 +33,13 @@ function HomePage({ selectedCity, onCityChange }) {
   // Проверяем параметр donated
   useEffect(() => {
     const donated = searchParams.get('donated');
-    const phone = searchParams.get('phone');
     if (donated === 'kaspi' || donated === 'true') {
       setDonationType(donated);
-      if (phone) setDonatedPhone(phone);
+      const phone = sessionStorage.getItem('donatedPhone');
+      if (phone) {
+        setDonatedPhone(phone);
+        sessionStorage.removeItem('donatedPhone');
+      }
       setShowThankYou(true);
       setSearchParams({}, { replace: true });
     }

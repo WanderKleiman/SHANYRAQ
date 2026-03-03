@@ -3,6 +3,10 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs';
 const STORAGE_KEY = 'visitorId';
 let cachedVisitorId = null;
 
+export function clearVisitorCache() {
+  cachedVisitorId = null;
+}
+
 export async function getVisitorId() {
   if (cachedVisitorId) return cachedVisitorId;
 
