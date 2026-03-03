@@ -17,6 +17,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
 import PolicyPage from './pages/PolicyPage';
+import OfertaPage from './pages/OfertaPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { supabase } from './supabaseClient';
 
@@ -163,6 +164,7 @@ function App() {
             }
           />
           <Route path='/policy' element={<PolicyPage />} />
+          <Route path='/oferta' element={<OfertaPage />} />
           <Route path='/fund/:name' element={<FundDetailPage />} />
           <Route path='/admin' element={<AdminLoginPage />} />
 <Route path='/admin/dashboard' element={<AdminDashboardPage />} />

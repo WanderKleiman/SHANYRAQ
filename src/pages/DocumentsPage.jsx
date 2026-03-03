@@ -29,7 +29,8 @@ function DocumentsPage() {
       id: 4,
       name: "Публичная оферта",
       icon: "file-check",
-      url: "http://doc.shanyrak.world/oferta"
+      url: "/oferta",
+      internal: true
     },
     {
       id: 5,
