@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 
 // Admin emails allowed to access admin panel
-const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map(e => e.trim()).filter(Boolean);
+const ADMIN_EMAILS = ['kleiman.alex@yandex.kz'];
 
 export async function login(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
