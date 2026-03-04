@@ -159,7 +159,6 @@ function PaymentModal({ beneficiary, onClose }) {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
         const visitorId = await getVisitorId();
-        const requestId = `${visitorId}_${beneficiary.id}_${Date.now()}`;
 
         const { error: insertError } = await supabase.from('kaspi_payment_requests').insert({
           beneficiary_id: beneficiary.id,
@@ -167,8 +166,7 @@ function PaymentModal({ beneficiary, onClose }) {
           phone: phoneNumber,
           amount: amount,
           status: 'new',
-          visitor_id: visitorId,
-          request_id: requestId
+          visitor_id: visitorId
         });
 
         if (insertError) throw insertError;
