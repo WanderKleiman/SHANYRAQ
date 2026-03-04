@@ -28,8 +28,9 @@ function ProfileSettingsPage() {
     try {
       const visitorId = await getVisitorId();
 
-      // If authorized, find all visitor_ids linked to same auth account
+      // Collect all visitor_ids linked to this user
       let visitorIds = [visitorId];
+
       if (user) {
         const { data: linkedVisitors } = await supabase
           .from('visitors')
@@ -38,6 +39,33 @@ function ProfileSettingsPage() {
 
         if (linkedVisitors && linkedVisitors.length > 0) {
           visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
+        }
+      }
+
+      // Find phone from visitors table and merge by phone
+      const { data: visitorRecord } = await supabase
+        .from('visitors')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .single();
+
+      if (visitorRecord?.phone) {
+        const { data: phoneVisitors } = await supabase
+          .from('visitors')
+          .select('visitor_id')
+          .eq('phone', visitorRecord.phone);
+
+        if (phoneVisitors && phoneVisitors.length > 0) {
+          visitorIds = [...new Set([...visitorIds, ...phoneVisitors.map(v => v.visitor_id)])];
+        }
+
+        const { data: phonePayments } = await supabase
+          .from('kaspi_payment_requests')
+          .select('visitor_id')
+          .eq('phone', visitorRecord.phone);
+
+        if (phonePayments && phonePayments.length > 0) {
+          visitorIds = [...new Set([...visitorIds, ...phonePayments.map(v => v.visitor_id)])];
         }
       }
 

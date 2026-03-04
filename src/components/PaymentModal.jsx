@@ -41,7 +41,7 @@ function PaymentModal({ beneficiary, onClose }) {
     try {
       const visitorId = await getVisitorId();
 
-      // If authorized, find all visitor_ids linked to same auth account
+      // Collect all visitor_ids linked to this user
       let visitorIds = [visitorId];
       if (user) {
         const { data: linkedVisitors } = await supabase
@@ -51,6 +51,24 @@ function PaymentModal({ beneficiary, onClose }) {
 
         if (linkedVisitors && linkedVisitors.length > 0) {
           visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
+        }
+      }
+
+      // Merge by phone
+      const { data: visitorRecord } = await supabase
+        .from('visitors')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .single();
+
+      if (visitorRecord?.phone) {
+        const { data: phoneVisitors } = await supabase
+          .from('visitors')
+          .select('visitor_id')
+          .eq('phone', visitorRecord.phone);
+
+        if (phoneVisitors && phoneVisitors.length > 0) {
+          visitorIds = [...new Set([...visitorIds, ...phoneVisitors.map(v => v.visitor_id)])];
         }
       }
 
