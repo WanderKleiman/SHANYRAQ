@@ -102,7 +102,7 @@ function ProfileSettingsPage() {
 
   const formatPhoneDisplay = (p) => {
     if (!p || p.length < 11) return p || '';
-    return `+7 ${p.slice(1, 4)} ${p.slice(4, 7)} ${p.slice(7, 9)} ${p.slice(9)}`;
+    return `+7 ${p.slice(1, 4)} *** ** ${p.slice(9)}`;
   };
 
   const handlePhoneChange = (e) => {
