@@ -29,7 +29,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
           <button
             onClick={() => navigate('/')}
             className={`flex flex-col items-center space-y-1 py-2 px-4 ${
-              isActive('/') ? 'text-[var(--primary-color)]' : 'text-[var(--text-secondary)]'
+              isActive('/') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
             <img
@@ -42,7 +42,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
 
           <button
             onClick={() => setShowCitySelector(true)}
-            className='flex flex-col items-center space-y-1 py-2 px-4 text-[var(--text-secondary)]'
+            className='flex flex-col items-center space-y-1 py-2 px-4 text-black'
           >
             <Icon name="map-pin" size={20} />
             <span className='text-xs'>{selectedCity}</span>
@@ -51,7 +51,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
           <button
             onClick={() => navigate('/reports')}
             className={`flex flex-col items-center space-y-1 py-2 px-4 ${
-              isActive('/reports') ? 'text-[var(--primary-color)]' : 'text-[var(--text-secondary)]'
+              isActive('/reports') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
             <Icon name="file-text" size={20} />
@@ -61,7 +61,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
           <button
             onClick={() => navigate('/profile')}
             className={`flex flex-col items-center space-y-1 py-2 px-4 ${
-              isActive('/profile') ? 'text-[var(--primary-color)]' : 'text-[var(--text-secondary)]'
+              isActive('/profile') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
             <Icon name="user" size={20} />
