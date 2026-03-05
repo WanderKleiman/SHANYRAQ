@@ -80,7 +80,7 @@ function PaymentPage() {
           <h2 className='text-lg font-semibold mb-4'>Способ оплаты</h2>
           
           <div className='space-y-3'>
-            <label className='flex items-center space-x-3 p-3 border border-[var(--border-color)] rounded-xl cursor-pointer'>
+            <label className='flex items-center space-x-3 p-3 h-14 border border-[var(--border-color)] rounded-xl cursor-pointer'>
               <input
                 type='radio'
                 name='payment'
@@ -89,14 +89,14 @@ function PaymentPage() {
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 className='text-[var(--primary-color)]'
               />
-              <img 
+              <img
                 src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/12.jpeg'
                 alt='Каспи'
                 className='h-8 object-contain'
               />
             </label>
-            
-            <label className='flex items-center space-x-3 p-3 border border-[var(--border-color)] rounded-xl cursor-pointer'>
+
+            <label className='flex items-center space-x-3 p-3 h-14 border border-[var(--border-color)] rounded-xl cursor-pointer'>
               <input
                 type='radio'
                 name='payment'
