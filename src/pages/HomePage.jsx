@@ -121,7 +121,7 @@ function HomePage({ selectedCity, onCityChange }) {
 
   return (
     <>
-      <div className='sticky top-0 bg-white bg-opacity-90 backdrop-blur-md z-10 pt-4 pb-2'>
+      <div className='sticky top-0 z-10 pt-4 pb-2'>
         <CategoryTabs activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       </div>
       
