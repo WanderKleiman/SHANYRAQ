@@ -49,13 +49,30 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const deleteAccount = async () => {
+    try {
+      const visitorId = await getVisitorId();
+      // Delete visitor record
+      await supabase.from('visitors').delete().eq('visitor_id', visitorId);
+      // Sign out from Supabase auth
+      await authSignOut();
+      clearVisitorCache();
+      localStorage.clear();
+      setUser(null);
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       loading,
       signInWithGoogle,
       signInWithEmail,
-      signOut: handleSignOut
+      signOut: handleSignOut,
+      deleteAccount
     }}>
       {children}
     </AuthContext.Provider>

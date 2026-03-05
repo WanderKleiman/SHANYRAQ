@@ -288,7 +288,7 @@ function PaymentModal({ beneficiary, onClose }) {
                 <span className='text-[var(--text-primary)]'>Банковская карта</span>
                 <span className='text-xs text-[var(--text-secondary)] ml-auto'>скоро</span>
               </label>
-              <label className={`flex items-center space-x-3 p-4 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
+              <label className={`flex items-center space-x-3 p-4 h-14 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
                 <input
                   type='radio'
                   name='payment'
@@ -297,7 +297,7 @@ function PaymentModal({ beneficiary, onClose }) {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className='w-5 h-5 text-[var(--primary-color)]'
                 />
-                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-14 object-contain" />
+                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-8 object-contain" />
               </label>
             </div>
           </div>
