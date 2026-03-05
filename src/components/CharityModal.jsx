@@ -266,7 +266,7 @@ function CharityModal({ data, onClose }) {
                 <div className='flex justify-between text-sm'>
                   <span className='text-[var(--text-secondary)]'>Собрано</span>
                   <span className='font-semibold text-[var(--text-primary)]'>
-                    {data.raised.toLocaleString()} ₸ из {data.target.toLocaleString()} ₸
+                    {data.raised.toLocaleString("ru-RU")} ₸ из {data.target.toLocaleString("ru-RU")} ₸
                   </span>
                 </div>
                 
@@ -278,7 +278,7 @@ function CharityModal({ data, onClose }) {
                 </div>
                 
                 <div className='flex justify-between items-center text-sm text-[var(--text-secondary)]'>
-                  <span>Осталось собрать: {remainingAmount.toLocaleString()} ₸</span>
+                  <span>Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸</span>
                   {data.helpersCount && (
                     <span>Помогли: {data.helpersCount} человек</span>
                   )}

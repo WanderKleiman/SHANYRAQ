@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Шанырак</string>
+    <string name="title_activity_main">Шанырак</string>
+    <string name="package_name">world.shanyrak.app</string>
+    <string name="custom_url_scheme">world.shanyrak.app</string>
+</resources>

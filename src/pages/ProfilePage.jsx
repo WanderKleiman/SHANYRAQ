@@ -366,7 +366,7 @@ function ProfilePage() {
 
           {isActivated && (
             <p className='text-sm text-[var(--text-secondary)]'>
-              Помог на сумму: <span className='font-bold text-[var(--text-primary)]'>{totalHelp.toLocaleString()} ₸</span>
+              Помог на сумму: <span className='font-bold text-[var(--text-primary)]'>{totalHelp.toLocaleString("ru-RU")} ₸</span>
             </p>
           )}
         </div>
@@ -393,7 +393,7 @@ function ProfilePage() {
                   )}
                   <div className='flex-1 min-w-0'>
                     <p className='font-medium text-[var(--text-primary)] text-sm truncate'>{req.beneficiary_title}</p>
-                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString("ru-RU")} ₸</p>
                   </div>
                   <div className='flex-shrink-0'>
                     <span className='text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded-lg'>Формируется</span>
@@ -427,7 +427,7 @@ function ProfilePage() {
                   )}
                   <div className='flex-1 min-w-0'>
                     <p className='font-medium text-[var(--text-primary)] text-sm truncate'>{req.beneficiary_title}</p>
-                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString()} ₸</p>
+                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString("ru-RU")} ₸</p>
                   </div>
                 </div>
                 <a
@@ -547,7 +547,7 @@ function ProfilePage() {
                               {item.name}
                             </h3>
                             <p className='text-xs font-bold text-[var(--text-primary)]'>
-                              {item.amount.toLocaleString()} ₸
+                              {item.amount.toLocaleString("ru-RU")} ₸
                             </p>
                           </div>
                         ))}

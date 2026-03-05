@@ -70,7 +70,7 @@ href={`/fund/${encodeURIComponent(data.partnerFund)}`}
           <div className='flex justify-between text-sm'>
             <span className='text-[var(--text-secondary)]'>Собрано</span>
             <span className='font-medium text-[var(--text-primary)]'>
-              {data.raised.toLocaleString()} ₸ из {data.target.toLocaleString()} ₸
+              {data.raised.toLocaleString("ru-RU")} ₸ из {data.target.toLocaleString("ru-RU")} ₸
             </span>
           </div>
           <div className='progress-bar'>
@@ -80,7 +80,7 @@ href={`/fund/${encodeURIComponent(data.partnerFund)}`}
             />
           </div>
           <div className='text-sm text-[var(--text-secondary)]'>
-            Осталось собрать: {remainingAmount.toLocaleString()} ₸
+            Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸
           </div>
         </div>
         <div className='flex space-x-3 pt-2'>

@@ -255,7 +255,7 @@ function PaymentModal({ beneficiary, onClose }) {
                       : 'bg-gray-100 text-[var(--text-primary)]'
                   }`}
                 >
-                  {amount.toLocaleString()} ₸
+                  {amount.toLocaleString("ru-RU")} ₸
                 </button>
               ))}
             </div>

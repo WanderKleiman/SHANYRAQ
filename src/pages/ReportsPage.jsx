@@ -125,7 +125,7 @@ function ReportsPage() {
                       <div className='text-sm'>
                         <span className='text-[var(--text-secondary)]'>Собрано: </span>
                         <span className='font-medium text-[var(--primary-color)]'>
-                          {report.amount?.toLocaleString()} ₸
+                          {report.amount?.toLocaleString("ru-RU")} ₸
                         </span>
                       </div>
                       {report.completedDate && (

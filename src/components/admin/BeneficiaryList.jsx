@@ -169,7 +169,7 @@ function BeneficiaryList({ statusFilter = 'active', onEdit, onRefresh, onAddRepo
                   <div className='flex justify-between text-sm'>
                     <span>Прогресс сбора</span>
                     <span className='font-medium'>
-                      {beneficiary.raised_amount?.toLocaleString()} ₸ / {beneficiary.target_amount?.toLocaleString()} ₸
+                      {beneficiary.raised_amount?.toLocaleString("ru-RU")} ₸ / {beneficiary.target_amount?.toLocaleString("ru-RU")} ₸
                     </span>
                   </div>
                   

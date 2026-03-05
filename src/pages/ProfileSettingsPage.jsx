@@ -166,7 +166,7 @@ function ProfileSettingsPage() {
                   <Icon name="heart" size={18} className="text-green-600" />
                 </div>
                 <p className='text-sm text-[var(--text-secondary)]'>Вы оказали помощь на</p>
-                <p className='font-bold text-[var(--text-primary)]'>{totalHelp.toLocaleString()} ₸</p>
+                <p className='font-bold text-[var(--text-primary)]'>{totalHelp.toLocaleString("ru-RU")} ₸</p>
               </div>
               <div className='flex flex-col items-center text-center'>
                 <div className='w-10 h-10 bg-red-50 rounded-full flex items-center justify-center mb-1'>

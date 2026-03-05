@@ -59,7 +59,7 @@ function PaymentPage() {
                     : 'border-[var(--border-color)] bg-[var(--bg-primary)]'
                 }`}
               >
-                {preset.toLocaleString()} ₸
+                {preset.toLocaleString("ru-RU")} ₸
               </button>
             ))}
           </div>
@@ -115,7 +115,7 @@ function PaymentPage() {
           onClick={handlePayment}
           className='btn-primary w-full'
         >
-          Сделать пожертвование {amount && `${parseInt(amount).toLocaleString()} ₸`}
+          Сделать пожертвование {amount && `${parseInt(amount).toLocaleString("ru-RU")} ₸`}
         </button>
       </div>
     </div>

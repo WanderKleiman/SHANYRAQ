@@ -150,7 +150,7 @@ function AdminKaspiRequestsPage() {
                   <span>{formatPhone(req.phone)}</span>
                 </div>
                 <div className='font-bold text-[var(--text-primary)]'>
-                  {req.amount?.toLocaleString()} ₸
+                  {req.amount?.toLocaleString("ru-RU")} ₸
                 </div>
               </div>
 

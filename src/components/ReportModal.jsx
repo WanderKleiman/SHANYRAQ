@@ -111,7 +111,7 @@ function ReportModal({ report, onClose }) {
                 <div className='text-right'>
                   <div className='text-sm text-[var(--text-secondary)]'>Собрано</div>
                   <div className='text-lg font-bold text-[var(--primary-color)]'>
-                    {report.amount?.toLocaleString()} ₸
+                    {report.amount?.toLocaleString("ru-RU")} ₸
                   </div>
                 </div>
               </div>
