@@ -32,12 +32,36 @@ export function AuthProvider({ children }) {
   const linkVisitor = async (authUser) => {
     try {
       const visitorId = await getVisitorId();
-      await supabase.from('visitors').upsert({
+
+      // Get existing visitor record to preserve phone
+      const { data: existing } = await supabase
+        .from('visitors')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .single();
+
+      const upsertData = {
         visitor_id: visitorId,
         auth_user_id: authUser.id,
         email: authUser.email,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'visitor_id' });
+      };
+
+      // Preserve existing phone if present
+      if (existing?.phone) {
+        upsertData.phone = existing.phone;
+      }
+
+      await supabase.from('visitors').upsert(upsertData, { onConflict: 'visitor_id' });
+
+      // Also link all other visitors with same phone to this auth_user_id
+      if (existing?.phone) {
+        await supabase
+          .from('visitors')
+          .update({ auth_user_id: authUser.id })
+          .eq('phone', existing.phone)
+          .is('auth_user_id', null);
+      }
     } catch (error) {
       console.error('Error linking visitor:', error);
     }
@@ -52,8 +76,11 @@ export function AuthProvider({ children }) {
   const deleteAccount = async () => {
     try {
       const visitorId = await getVisitorId();
-      // Delete visitor record
-      await supabase.from('visitors').delete().eq('visitor_id', visitorId);
+      // Unlink auth from visitor records but keep data for analytics
+      await supabase
+        .from('visitors')
+        .update({ auth_user_id: null, email: null })
+        .eq('visitor_id', visitorId);
       // Sign out from Supabase auth
       await authSignOut();
       clearVisitorCache();

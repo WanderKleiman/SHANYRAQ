@@ -297,7 +297,7 @@ function PaymentModal({ beneficiary, onClose }) {
                   onChange={(e) => setPaymentMethod(e.target.value)}
                   className='w-5 h-5 text-[var(--primary-color)]'
                 />
-                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-8 object-contain" />
+                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-16 object-contain" />
               </label>
             </div>
           </div>

@@ -18,7 +18,7 @@ const CATEGORIES = [
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const { user, signInWithGoogle, signInWithEmail, signOut, deleteAccount } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signOut } = useAuth();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -622,26 +622,6 @@ function ProfilePage() {
               <Icon name="phone" size={20} className="text-[var(--primary-color)]" />
               <span>Контакты</span>
             </button>
-
-            {user && (
-              <button
-                onClick={async () => {
-                  if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо.')) {
-                    try {
-                      await deleteAccount();
-                      setShowMoreMenu(false);
-                      navigate('/');
-                    } catch (e) {
-                      alert('Ошибка при удалении аккаунта');
-                    }
-                  }
-                }}
-                className='w-full text-left p-3 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 flex items-center space-x-3'
-              >
-                <Icon name="x" size={20} className="text-red-500" />
-                <span>Удалить аккаунт</span>
-              </button>
-            )}
 
           </div>
         </div>

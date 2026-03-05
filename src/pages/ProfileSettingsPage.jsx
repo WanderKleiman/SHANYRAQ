@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 function ProfileSettingsPage() {
   const navigate = useNavigate();
-  const { user, signInWithGoogle, signInWithEmail, signOut } = useAuth();
+  const { user, signInWithGoogle, signInWithEmail, signOut, deleteAccount } = useAuth();
   const [loading, setLoading] = useState(true);
   const [emailInput, setEmailInput] = useState('');
   const [emailSent, setEmailSent] = useState(false);
@@ -270,6 +270,21 @@ function ProfileSettingsPage() {
                 className='w-full py-2 bg-gray-100 text-red-500 rounded-xl text-sm font-medium'
               >
                 Выйти
+              </button>
+              <button
+                onClick={async () => {
+                  if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо.')) {
+                    try {
+                      await deleteAccount();
+                      navigate('/');
+                    } catch (e) {
+                      alert('Ошибка при удалении аккаунта');
+                    }
+                  }
+                }}
+                className='w-full py-2 bg-red-50 text-red-500 rounded-xl text-sm font-medium'
+              >
+                Удалить аккаунт
               </button>
             </div>
           ) : (
