@@ -24,7 +24,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
 
   return (
     <>
-      <nav className='fixed bottom-0 left-0 right-0 bg-white bg-opacity-90 border-t border-[var(--border-color)] backdrop-blur-md rounded-t-[20%]' data-name='bottom-navigation' data-file='src/components/BottomNavigation.jsx'>
+      <nav className='fixed bottom-0 left-0 right-0 bg-white bg-opacity-90 border-t border-[var(--border-color)] backdrop-blur-md rounded-t-2xl' data-name='bottom-navigation' data-file='src/components/BottomNavigation.jsx'>
         <div className='flex items-center justify-around py-1'>
           <button
             onClick={() => navigate('/')}
