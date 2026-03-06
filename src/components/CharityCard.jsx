@@ -3,6 +3,7 @@ import { ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
 import PaymentModal from '../components/PaymentModal';
+import { Share } from '@capacitor/share';
 
 function CharityCard({ data, onCardClick, index = 0 }) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -13,19 +14,22 @@ function CharityCard({ data, onCardClick, index = 0 }) {
     setShowPaymentModal(true);
   };
 
-  const handleShare = () => {
+  const handleShare = async () => {
     ymTrackShareClick(data.id, data.title);
-    const shareUrl = `${window.location.origin}/?beneficiary=${data.id}`;
-    if (navigator.share) {
-      navigator.share({ url: shareUrl }).catch(() => {
-        navigator.clipboard.writeText(shareUrl).then(() => {
-          alert('Ссылка скопирована в буфер обмена');
-        });
+    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}`;
+    try {
+      await Share.share({
+        title: data.title,
+        text: `Помогите ${data.title}`,
+        url: shareUrl,
+        dialogTitle: 'Поделиться'
       });
-    } else {
-      navigator.clipboard.writeText(shareUrl).then(() => {
+    } catch (e) {
+      // Fallback for browsers without Share API
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
         alert('Ссылка скопирована в буфер обмена');
-      });
+      }
     }
   };
 

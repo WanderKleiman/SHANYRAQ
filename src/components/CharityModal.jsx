@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Icon from '../components/Icon';
 import PaymentModal from '../components/PaymentModal';
+import { Share } from '@capacitor/share';
 
 function CharityModal({ data, onClose }) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -48,18 +49,20 @@ function CharityModal({ data, onClose }) {
     setShowPaymentModal(true);
   };
 
-  const handleShare = () => {
-    const shareUrl = `${window.location.origin}/?beneficiary=${data.id}`;
-    if (navigator.share) {
-      navigator.share({ url: shareUrl }).catch(() => {
-        navigator.clipboard.writeText(shareUrl).then(() => {
-          alert('Ссылка скопирована в буфер обмена');
-        });
+  const handleShare = async () => {
+    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}`;
+    try {
+      await Share.share({
+        title: data.title,
+        text: `Помогите ${data.title}`,
+        url: shareUrl,
+        dialogTitle: 'Поделиться'
       });
-    } else {
-      navigator.clipboard.writeText(shareUrl).then(() => {
+    } catch (e) {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shareUrl);
         alert('Ссылка скопирована в буфер обмена');
-      });
+      }
     }
   };
 

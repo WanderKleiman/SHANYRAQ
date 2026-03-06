@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
+import { Browser } from '@capacitor/browser';
 
 const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
 
@@ -430,14 +431,12 @@ function ProfilePage() {
                     <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString("ru-RU")} ₸</p>
                   </div>
                 </div>
-                <a
-                  href='https://kaspi.kz'
-                  target='_blank'
-                  rel='noopener noreferrer'
+                <button
+                  onClick={() => Browser.open({ url: 'https://kaspi.kz' })}
                   className='flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-xl text-sm font-medium'
                 >
                   Счёт выставлен, оплатить
-                </a>
+                </button>
               </div>
             ))}
           </div>
