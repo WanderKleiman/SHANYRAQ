@@ -121,7 +121,7 @@ function HomePage({ selectedCity, onCityChange }) {
 
   return (
     <>
-      <div className='sticky top-0 z-10 pt-4 pb-2'>
+      <div className='sticky z-10 pt-4 pb-2' style={{ top: 'env(safe-area-inset-top)' }}>
         <CategoryTabs activeCategory={activeCategory} onCategoryChange={setActiveCategory} />
       </div>
       
