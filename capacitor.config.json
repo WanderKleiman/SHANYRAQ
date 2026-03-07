@@ -4,11 +4,9 @@
   "webDir": "dist",
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "backgroundColor": "#ffffff",
-      "showSpinner": false
+      "launchShowDuration": 0
     },
-    "StatusBar": {
+"StatusBar": {
       "style": "LIGHT",
       "backgroundColor": "#16a34a"
     }
