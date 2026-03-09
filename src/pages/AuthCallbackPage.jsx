@@ -1,23 +1,37 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 
 export default function AuthCallbackPage() {
+  const navigate = useNavigate();
+
   useEffect(() => {
-    // Get the full URL with tokens from hash
     const hash = window.location.hash;
-    if (hash) {
-      // Try to redirect to app with tokens
-      const appUrl = `shanyrak://auth${hash}`;
-      window.location.href = appUrl;
+
+    if (hash && hash.includes('access_token')) {
+      // Extract tokens and set session
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        }).then(() => {
+          // Try to open the native app
+          window.location.href = `shanyrak://auth${hash}`;
+          // Fallback: redirect to profile on web after 1.5s
+          setTimeout(() => navigate('/profile', { replace: true }), 1500);
+        });
+        return;
+      }
     }
 
-    // Fallback: if app doesn't open in 2 seconds, redirect to profile on web
-    const timeout = setTimeout(() => {
-      window.location.href = '/profile';
-    }, 2000);
-
-    return () => clearTimeout(timeout);
-  }, []);
+    // No tokens — just go to profile
+    navigate('/profile', { replace: true });
+  }, [navigate]);
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-white'>
