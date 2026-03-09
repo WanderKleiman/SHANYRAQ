@@ -2,8 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { signInWithGoogle, signInWithEmail, signOut as authSignOut } from '../utils/auth';
 import { getVisitorId, clearVisitorCache } from '../utils/fingerprint';
-import { Capacitor } from '@capacitor/core';
-import { App as CapApp } from '@capacitor/app';
 
 const AuthContext = createContext(null);
 
@@ -26,34 +24,6 @@ export function AuthProvider({ children }) {
       setUser(currentUser);
       if (currentUser) linkVisitor(currentUser);
     });
-
-    // Handle deep links in native app (magic link / OAuth callback)
-    if (Capacitor.isNativePlatform()) {
-      CapApp.addListener('appUrlOpen', async ({ url }) => {
-        // Close in-app browser if open
-        try {
-          const { Browser } = await import('@capacitor/browser');
-          Browser.close();
-        } catch (e) {}
-
-        // Extract tokens from URL hash or query
-        const hashPart = url.split('#')[1];
-        const queryPart = url.split('?')[1];
-        const tokenString = hashPart || queryPart;
-
-        if (tokenString) {
-          const params = new URLSearchParams(tokenString);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-          }
-        }
-      });
-    }
 
     return () => subscription.unsubscribe();
   }, []);
