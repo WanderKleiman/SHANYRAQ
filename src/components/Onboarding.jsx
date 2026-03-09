@@ -2,10 +2,10 @@ import React, { useState, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
 
 const SLIDES = [
-  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/first%20.png',
-  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/second.png',
-  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/third%20.png',
-  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/fourth.png',
+  '/onboarding/1.jpg',
+  '/onboarding/2.jpg',
+  '/onboarding/3.jpg',
+  '/onboarding/4.jpg',
 ];
 
 export default function Onboarding({ onComplete }) {
@@ -55,7 +55,10 @@ export default function Onboarding({ onComplete }) {
       )}
 
       {/* Slide image */}
-      <div className='flex-1 flex items-center justify-center'>
+      <div
+        className='flex-1 flex items-center justify-center'
+        onClick={current === SLIDES.length - 1 ? handleFinish : undefined}
+      >
         <img
           src={SLIDES[current]}
           alt={`Онбординг ${current + 1}`}
