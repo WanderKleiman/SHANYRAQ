@@ -1,5 +1,6 @@
-import React, { Component, useEffect } from 'react';
+import React, { Component, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import Onboarding, { shouldShowOnboarding } from './components/Onboarding';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import HomePage from './pages/HomePage';
@@ -82,6 +83,7 @@ function AppLayout({ children, selectedCity, onCityChange }) {
 }
 
 function App() {
+  const [showOnboarding, setShowOnboarding] = useState(shouldShowOnboarding);
   const [selectedCity, setSelectedCity] = React.useState(() => {
     return localStorage.getItem('selectedCity') || 'Алматы';
   });
@@ -90,6 +92,10 @@ function App() {
     setSelectedCity(city);
     localStorage.setItem('selectedCity', city);
   };
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
+  }
 
   return (
     <ErrorBoundary>
