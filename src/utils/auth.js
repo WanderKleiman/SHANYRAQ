@@ -1,22 +1,29 @@
 import { supabase } from '../supabaseClient';
+import { Capacitor } from '@capacitor/core';
+
+const SITE_URL = 'https://shanyrak.world';
 
 export async function signInWithGoogle() {
+  const redirectTo = Capacitor.isNativePlatform()
+    ? SITE_URL + '/profile'
+    : window.location.origin + '/profile';
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: {
-      redirectTo: window.location.origin + '/profile'
-    }
+    options: { redirectTo }
   });
   if (error) throw error;
   return data;
 }
 
 export async function signInWithEmail(email) {
+  const redirectTo = Capacitor.isNativePlatform()
+    ? SITE_URL + '/profile'
+    : window.location.origin + '/profile';
+
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      emailRedirectTo: window.location.origin + '/profile'
-    }
+    options: { emailRedirectTo: redirectTo }
   });
   if (error) throw error;
   return data;
