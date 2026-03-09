@@ -29,17 +29,27 @@ export function AuthProvider({ children }) {
 
     // Handle deep links in native app (magic link / OAuth callback)
     if (Capacitor.isNativePlatform()) {
-      CapApp.addListener('appUrlOpen', ({ url }) => {
-        if (url.includes('access_token') || url.includes('token_hash')) {
-          // Extract the hash/query from the URL and pass to Supabase
-          const hashPart = url.split('#')[1] || url.split('?')[1];
-          if (hashPart) {
-            const params = new URLSearchParams(hashPart);
-            const accessToken = params.get('access_token');
-            const refreshToken = params.get('refresh_token');
-            if (accessToken && refreshToken) {
-              supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
-            }
+      CapApp.addListener('appUrlOpen', async ({ url }) => {
+        // Close in-app browser if open
+        try {
+          const { Browser } = await import('@capacitor/browser');
+          Browser.close();
+        } catch (e) {}
+
+        // Extract tokens from URL hash or query
+        const hashPart = url.split('#')[1];
+        const queryPart = url.split('?')[1];
+        const tokenString = hashPart || queryPart;
+
+        if (tokenString) {
+          const params = new URLSearchParams(tokenString);
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
+          if (accessToken && refreshToken) {
+            await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
           }
         }
       });

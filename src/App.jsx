@@ -1,6 +1,7 @@
 import React, { Component, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Onboarding, { shouldShowOnboarding } from './components/Onboarding';
+import AuthCallbackPage from './pages/AuthCallbackPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import HomePage from './pages/HomePage';
@@ -169,6 +170,7 @@ function App() {
               </AppLayout>
             }
           />
+          <Route path='/auth-callback' element={<AuthCallbackPage />} />
           <Route path='/policy' element={<PolicyPage />} />
           <Route path='/oferta' element={<OfertaPage />} />
           <Route path='/fund/:name' element={<FundDetailPage />} />
