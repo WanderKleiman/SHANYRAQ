@@ -28,31 +28,32 @@ export function AuthProvider({ children }) {
 
     // In native app: listen for app resume and check if session appeared
     if (Capacitor.isNativePlatform()) {
-      const { App: CapApp } = require('@capacitor/app');
-      CapApp.addListener('appStateChange', async ({ isActive }) => {
-        if (isActive) {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            setUser(session.user);
-            linkVisitor(session.user);
+      import('@capacitor/app').then(({ App: CapApp }) => {
+        CapApp.addListener('appStateChange', async ({ isActive }) => {
+          if (isActive) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+              setUser(session.user);
+              linkVisitor(session.user);
+            }
           }
-        }
-      });
+        });
 
-      CapApp.addListener('appUrlOpen', async ({ url }) => {
-        // Handle callback from website auth
-        const hashPart = url.split('#')[1];
-        if (hashPart) {
-          const params = new URLSearchParams(hashPart);
-          const accessToken = params.get('access_token');
-          const refreshToken = params.get('refresh_token');
-          if (accessToken && refreshToken) {
-            await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
+        CapApp.addListener('appUrlOpen', async ({ url }) => {
+          // Handle callback from website auth
+          const hashPart = url.split('#')[1];
+          if (hashPart) {
+            const params = new URLSearchParams(hashPart);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            if (accessToken && refreshToken) {
+              await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              });
+            }
           }
-        }
+        });
       });
     }
 

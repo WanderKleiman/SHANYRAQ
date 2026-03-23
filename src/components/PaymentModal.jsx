@@ -81,7 +81,10 @@ function PaymentModal({ beneficiary, onClose }) {
         .limit(1);
 
       if (paid && paid.length > 0) {
-        // Get phone from visitors table
+        // Get phone from visitors table — check all linked visitor_ids
+        let phone = null;
+
+        // First try current visitor
         const { data: visitor } = await supabase
           .from('visitors')
           .select('phone')
@@ -89,8 +92,40 @@ function PaymentModal({ beneficiary, onClose }) {
           .single();
 
         if (visitor?.phone) {
-          setSavedPhone(visitor.phone);
-          setPhoneNumber(visitor.phone);
+          phone = visitor.phone;
+        }
+
+        // If no phone on current visitor, check all linked visitors
+        if (!phone && visitorIds.length > 1) {
+          const { data: linkedWithPhone } = await supabase
+            .from('visitors')
+            .select('phone')
+            .in('visitor_id', visitorIds)
+            .not('phone', 'is', null)
+            .limit(1);
+
+          if (linkedWithPhone && linkedWithPhone.length > 0) {
+            phone = linkedWithPhone[0].phone;
+          }
+        }
+
+        // Also check phone directly from paid payment requests
+        if (!phone) {
+          const { data: paidWithPhone } = await supabase
+            .from('kaspi_payment_requests')
+            .select('phone')
+            .in('visitor_id', visitorIds)
+            .eq('status', 'paid')
+            .limit(1);
+
+          if (paidWithPhone && paidWithPhone.length > 0) {
+            phone = paidWithPhone[0].phone;
+          }
+        }
+
+        if (phone) {
+          setSavedPhone(phone);
+          setPhoneNumber(phone);
         }
       }
     } catch (error) {

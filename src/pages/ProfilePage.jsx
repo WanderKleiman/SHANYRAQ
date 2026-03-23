@@ -152,11 +152,22 @@ function ProfilePage() {
           .eq('phone', verifiedPhone)
           .single();
 
+        // Prefer Google auth name over phone number
+        const googleName = user?.user_metadata?.full_name;
+
         if (profile) {
-          setDisplayName(profile.display_name || formatPhoneDisplay(verifiedPhone));
+          // If profile has phone as name but Google name exists — update it
+          const profileName = profile.display_name;
+          const isPhoneName = profileName && /^\+?\d[\d\s]+$/.test(profileName.replace(/\s/g, ''));
+          if (isPhoneName && googleName) {
+            await supabase.from('user_profiles').update({ display_name: googleName }).eq('phone', verifiedPhone);
+            setDisplayName(googleName);
+          } else {
+            setDisplayName(profileName || googleName || formatPhoneDisplay(verifiedPhone));
+          }
           setAvatarUrl(profile.avatar_url || '');
         } else {
-          const defaultName = formatPhoneDisplay(verifiedPhone);
+          const defaultName = googleName || formatPhoneDisplay(verifiedPhone);
           await supabase.from('user_profiles').insert({
             phone: verifiedPhone,
             display_name: defaultName,
@@ -515,7 +526,7 @@ function ProfilePage() {
                   <div className='flex space-x-3 items-start'>
                     {items.length === 0 ? (
                       <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate(`/?category=${cat.key}`)}
                         className='border-2 border-dashed border-gray-300 rounded-2xl bg-green-50 flex-shrink-0 w-32 h-32 flex items-center justify-center'
                       >
                         <div className='flex flex-col items-center text-center px-2'>

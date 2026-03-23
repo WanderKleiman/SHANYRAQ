@@ -11,7 +11,10 @@ import Icon from '../components/Icon';
 
 function HomePage({ selectedCity, onCityChange }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [activeCategory, setActiveCategory] = useState(() => {
+    const cat = new URLSearchParams(window.location.search).get('category');
+    return cat || 'all';
+  });
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);

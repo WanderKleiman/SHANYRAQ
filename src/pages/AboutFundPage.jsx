@@ -71,6 +71,20 @@ function AboutFundPage() {
               <p><strong>Телефон:</strong> +7 747 150 45 45</p>
             </div>
           </div>
+
+          <div className='card'>
+            <h3 className='text-lg font-semibold mb-3'>Реквизиты фонда</h3>
+            <div className='space-y-2 text-sm'>
+              <p className='font-medium'>Частный Благотворительный фонд "Шанырақ көмек"</p>
+              <div className='space-y-1 text-[var(--text-secondary)]'>
+                <p><strong className='text-[var(--text-primary)]'>БИН (ИИН):</strong> 230440020759</p>
+                <p><strong className='text-[var(--text-primary)]'>Банк:</strong> АО "Kaspi Bank"</p>
+                <p><strong className='text-[var(--text-primary)]'>КБе:</strong> 18</p>
+                <p><strong className='text-[var(--text-primary)]'>БИК:</strong> CASPKZKA</p>
+                <p><strong className='text-[var(--text-primary)]'>Номер счета:</strong> KZ47722S000052022327</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
