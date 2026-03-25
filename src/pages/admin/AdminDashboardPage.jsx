@@ -273,16 +273,28 @@ function FundsAdmin() {
     setShowForm(true);
   };
 
+  const handleAdd = () => {
+    setEditingFund(null);
+    setShowForm(true);
+  };
+
   const handleSave = async (formData) => {
     if (editingFund) {
       const { error } = await supabase.from('partner_funds').update(formData).eq('id', editingFund.id);
-      if (error) {
-        alert('Ошибка сохранения: ' + error.message);
-        return;
-      }
+      if (error) { alert('Ошибка сохранения: ' + error.message); return; }
+    } else {
+      const { error } = await supabase.from('partner_funds').insert(formData);
+      if (error) { alert('Ошибка создания: ' + error.message); return; }
     }
     setShowForm(false);
     setEditingFund(null);
+    fetchFunds();
+  };
+
+  const handleDelete = async (fund) => {
+    if (!confirm(`Удалить фонд "${fund.name}"?`)) return;
+    const { error } = await supabase.from('partner_funds').delete().eq('id', fund.id);
+    if (error) { alert('Ошибка удаления: ' + error.message); return; }
     fetchFunds();
   };
 
@@ -292,13 +304,23 @@ function FundsAdmin() {
 
   return (
     <div>
-      <h2 className='text-xl font-bold mb-6'>Управление фондами</h2>
+      <div className='flex justify-between items-center mb-6'>
+        <h2 className='text-xl font-bold'>Управление фондами</h2>
+        <button onClick={handleAdd} className='btn-primary flex items-center space-x-2'>
+          <Icon name="plus" size={20} />
+          <span>Добавить фонд</span>
+        </button>
+      </div>
       <div className='space-y-3'>
         {funds.map(fund => (
           <div key={fund.id} className='card'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center space-x-3'>
-                <img src={fund.logo_url} alt={fund.name} className='w-12 h-12 object-contain rounded-lg' />
+                {fund.logo_url ? (
+                  <img src={fund.logo_url} alt={fund.name} className='w-12 h-12 object-contain rounded-lg' />
+                ) : (
+                  <div className='w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center text-lg font-bold text-gray-500'>{fund.name?.charAt(0)}</div>
+                )}
                 <div>
                   <p className='font-semibold'>{fund.name}</p>
                   <p className='text-sm text-[var(--text-secondary)]'>
@@ -306,15 +328,20 @@ function FundsAdmin() {
                   </p>
                 </div>
               </div>
-              <button onClick={() => handleEdit(fund)} className='btn-secondary text-sm'>
-                <Icon name="pencil" size={16} />
-              </button>
+              <div className='flex items-center space-x-2'>
+                <button onClick={() => handleEdit(fund)} className='btn-secondary text-sm'>
+                  <Icon name="pencil" size={16} />
+                </button>
+                <button onClick={() => handleDelete(fund)} className='text-red-500 hover:text-red-700 p-2'>
+                  <Icon name="x" size={16} />
+                </button>
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      {showForm && editingFund && (
+      {showForm && (
         <FundFormModal fund={editingFund} onClose={() => { setShowForm(false); setEditingFund(null); }} onSave={handleSave} />
       )}
     </div>
@@ -322,20 +349,30 @@ function FundsAdmin() {
 }
 
 function FundFormModal({ fund, onClose, onSave }) {
+  const isNew = !fund;
   const [form, setForm] = useState({
-    bin: fund.bin || '',
-    founded_date: fund.founded_date || '',
-    location: fund.location || '',
-    website: fund.social_links?.website || '',
-    instagram: fund.social_links?.instagram || '',
-    facebook: fund.social_links?.facebook || '',
-    whatsapp: fund.social_links?.whatsapp || '',
+    name: fund?.name || '',
+    description: fund?.description || '',
+    logo_url: fund?.logo_url || '',
+    is_verified: fund?.is_verified || false,
+    bin: fund?.bin || '',
+    founded_date: fund?.founded_date || '',
+    location: fund?.location || '',
+    website: fund?.social_links?.website || '',
+    instagram: fund?.social_links?.instagram || '',
+    facebook: fund?.social_links?.facebook || '',
+    whatsapp: fund?.social_links?.whatsapp || '',
   });
 
   const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmit = () => {
+    if (!form.name.trim()) { alert('Введите название фонда'); return; }
     const data = {
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      logo_url: form.logo_url.trim() || null,
+      is_verified: form.is_verified,
       bin: form.bin || null,
       founded_date: form.founded_date || null,
       location: form.location || null,
@@ -349,11 +386,13 @@ function FundFormModal({ fund, onClose, onSave }) {
     onSave(data);
   };
 
+  const inputClass = 'w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]';
+
   return (
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4' onClick={onClose}>
       <div className='bg-[var(--bg-primary)] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6' onClick={e => e.stopPropagation()}>
         <div className='flex items-center justify-between mb-6'>
-          <h3 className='text-lg font-bold'>Редактировать: {fund.name}</h3>
+          <h3 className='text-lg font-bold'>{isNew ? 'Добавить фонд' : `Редактировать: ${fund.name}`}</h3>
           <button onClick={onClose} className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'>
             <Icon name="x" size={16} />
           </button>
@@ -361,16 +400,39 @@ function FundFormModal({ fund, onClose, onSave }) {
 
         <div className='space-y-4'>
           <div>
+            <label className='block text-sm font-medium mb-1'>Название фонда *</label>
+            <input type='text' value={form.name} onChange={e => handleChange('name', e.target.value)} placeholder='Название фонда' className={inputClass} />
+          </div>
+          <div>
+            <label className='block text-sm font-medium mb-1'>Описание</label>
+            <textarea value={form.description} onChange={e => handleChange('description', e.target.value)} placeholder='Описание фонда' rows={3} className={inputClass} />
+          </div>
+          <div>
+            <label className='block text-sm font-medium mb-1'>URL логотипа</label>
+            <input type='url' value={form.logo_url} onChange={e => handleChange('logo_url', e.target.value)} placeholder='https://...logo.png' className={inputClass} />
+            {form.logo_url && (
+              <img src={form.logo_url} alt='Превью' className='w-16 h-16 object-contain rounded-lg mt-2 border border-[var(--border-color)]' />
+            )}
+          </div>
+          <label className='flex items-center space-x-3 cursor-pointer'>
+            <input type='checkbox' checked={form.is_verified} onChange={e => handleChange('is_verified', e.target.checked)} className='w-5 h-5 accent-[var(--primary-color)]' />
+            <span className='text-sm font-medium'>Верифицированный фонд</span>
+          </label>
+
+          <hr className='border-[var(--border-color)]' />
+          <p className='text-sm font-semibold text-[var(--text-secondary)]'>Дополнительно</p>
+
+          <div>
             <label className='block text-sm font-medium mb-1'>БИН фонда</label>
-            <input type='text' value={form.bin} onChange={e => handleChange('bin', e.target.value)} placeholder='123456789012' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='text' value={form.bin} onChange={e => handleChange('bin', e.target.value)} placeholder='123456789012' className={inputClass} />
           </div>
           <div>
             <label className='block text-sm font-medium mb-1'>Дата создания</label>
-            <input type='date' value={form.founded_date} onChange={e => handleChange('founded_date', e.target.value)} className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='date' value={form.founded_date} onChange={e => handleChange('founded_date', e.target.value)} className={inputClass} />
           </div>
           <div>
             <label className='block text-sm font-medium mb-1'>Расположение</label>
-            <input type='text' value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder='г. Алматы' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='text' value={form.location} onChange={e => handleChange('location', e.target.value)} placeholder='г. Алматы' className={inputClass} />
           </div>
 
           <hr className='border-[var(--border-color)]' />
@@ -378,25 +440,25 @@ function FundFormModal({ fund, onClose, onSave }) {
 
           <div>
             <label className='block text-sm font-medium mb-1'>Веб-сайт</label>
-            <input type='url' value={form.website} onChange={e => handleChange('website', e.target.value)} placeholder='https://fund.kz' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='url' value={form.website} onChange={e => handleChange('website', e.target.value)} placeholder='https://fund.kz' className={inputClass} />
           </div>
           <div>
             <label className='block text-sm font-medium mb-1'>Instagram</label>
-            <input type='text' value={form.instagram} onChange={e => handleChange('instagram', e.target.value)} placeholder='https://instagram.com/fund' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='text' value={form.instagram} onChange={e => handleChange('instagram', e.target.value)} placeholder='https://instagram.com/fund' className={inputClass} />
           </div>
           <div>
             <label className='block text-sm font-medium mb-1'>Facebook</label>
-            <input type='text' value={form.facebook} onChange={e => handleChange('facebook', e.target.value)} placeholder='https://facebook.com/fund' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='text' value={form.facebook} onChange={e => handleChange('facebook', e.target.value)} placeholder='https://facebook.com/fund' className={inputClass} />
           </div>
           <div>
             <label className='block text-sm font-medium mb-1'>WhatsApp</label>
-            <input type='text' value={form.whatsapp} onChange={e => handleChange('whatsapp', e.target.value)} placeholder='+7 777 123 4567' className='w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]' />
+            <input type='text' value={form.whatsapp} onChange={e => handleChange('whatsapp', e.target.value)} placeholder='+7 777 123 4567' className={inputClass} />
           </div>
         </div>
 
         <div className='flex gap-3 mt-6'>
           <button onClick={onClose} className='flex-1 py-3 rounded-xl border border-[var(--border-color)] font-medium'>Отмена</button>
-          <button onClick={handleSubmit} className='flex-1 py-3 rounded-xl bg-[var(--primary-color)] text-white font-medium'>Сохранить</button>
+          <button onClick={handleSubmit} className='flex-1 py-3 rounded-xl bg-[var(--primary-color)] text-white font-medium'>{isNew ? 'Создать' : 'Сохранить'}</button>
         </div>
       </div>
     </div>

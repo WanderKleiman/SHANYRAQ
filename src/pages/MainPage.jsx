@@ -108,7 +108,14 @@ function MainPage() {
     });
   }, [beneficiaries]);
 
-  // Search filter
+  // Search results for dropdown (search across ALL beneficiaries)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    return beneficiaries.filter(b => b.title.toLowerCase().includes(q)).slice(0, 8);
+  }, [beneficiaries, searchQuery]);
+
+  // Filter for grid display
   const filteredBeneficiaries = useMemo(() => {
     if (!searchQuery.trim()) return mainBeneficiaries;
     const q = searchQuery.toLowerCase();
@@ -295,14 +302,56 @@ function MainPage() {
       {/* Search */}
       <div className='px-4 mb-4'>
         <div className='relative'>
-          <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 z-10" />
           <input
             type='text'
-            placeholder='Поиск'
+            placeholder='Поиск подопечных'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full h-8 pl-9 pr-4 bg-[#EAEAEA] rounded-3xl border-0 text-[var(--text-primary)] placeholder-gray-400 text-sm focus:outline-none'
+            className='w-full h-8 pl-9 pr-8 bg-[#EAEAEA] rounded-3xl border-0 text-[var(--text-primary)] placeholder-gray-400 text-sm focus:outline-none relative z-10'
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className='absolute right-3 top-1/2 -translate-y-1/2 z-10'
+            >
+              <Icon name="x" size={14} className="text-gray-400" />
+            </button>
+          )}
+
+          {/* Search dropdown */}
+          {searchResults.length > 0 && (
+            <div className='absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden z-50 max-h-[60vh] overflow-y-auto'>
+              {searchResults.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setSelectedCharity(formatBeneficiary(item));
+                    setSearchQuery('');
+                  }}
+                  className='w-full flex items-center gap-3 p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left border-b border-gray-50 last:border-0'
+                >
+                  <img
+                    src={item.image_url}
+                    alt={item.title}
+                    className='w-11 h-11 rounded-xl object-cover flex-shrink-0'
+                  />
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-[13px] font-semibold text-[var(--text-primary)] leading-tight line-clamp-2'>{item.title}</p>
+                    <p className='text-[11px] text-[var(--text-secondary)] mt-0.5'>
+                      {CATEGORY_NAMES[item.category] || item.category} · {formatSum(item.raised_amount || 0)} ₸
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {searchQuery.trim() && searchResults.length === 0 && (
+            <div className='absolute top-full left-0 right-0 mt-1 bg-white rounded-2xl shadow-lg border border-gray-100 z-50 p-4 text-center'>
+              <p className='text-sm text-[var(--text-secondary)]'>Ничего не найдено</p>
+            </div>
+          )}
         </div>
       </div>
 

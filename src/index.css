@@ -108,3 +108,17 @@ body {
 }
 .funds-carousel { animation: scrollFunds 20s ease-in-out infinite; }
 .funds-carousel:hover { animation-play-state: paused; }
+
+/* Lock to portrait on mobile web */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  html {
+    transform: rotate(-90deg);
+    transform-origin: left top;
+    width: 100vh;
+    height: 100vw;
+    overflow-x: hidden;
+    position: absolute;
+    top: 100%;
+    left: 0;
+  }
+}
