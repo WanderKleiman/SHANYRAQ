@@ -98,3 +98,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+@keyframes scrollFunds {
+  0% { transform: translateX(0); }
+  45% { transform: translateX(calc(-50% - 0.75vw)); }
+  50% { transform: translateX(calc(-50% - 0.75vw)); }
+  95% { transform: translateX(0); }
+  100% { transform: translateX(0); }
+}
+.funds-carousel { animation: scrollFunds 20s ease-in-out infinite; }
+.funds-carousel:hover { animation-play-state: paused; }

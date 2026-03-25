@@ -4,6 +4,7 @@ import Onboarding, { shouldShowOnboarding } from './components/Onboarding';
 import AuthCallbackPage from './pages/AuthCallbackPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
+import MainPage from './pages/MainPage';
 import HomePage from './pages/HomePage';
 import PaymentPage from './pages/PaymentPage';
 import ReportsPage from './pages/ReportsPage';
@@ -27,11 +28,12 @@ import { supabase } from './supabaseClient';
 function AuthCallback() {
   const navigate = useNavigate();
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
         navigate('/profile', { replace: true });
       }
     });
+    return () => subscription.unsubscribe();
   }, [navigate]);
   return null;
 }
@@ -67,17 +69,19 @@ class ErrorBoundary extends Component {
   }
 }
 
-function AppLayout({ children, selectedCity, onCityChange }) {
+function AppLayout({ children, selectedCity, onCityChange, hideHeader }) {
   return (
     <div className='min-h-screen bg-[var(--bg-secondary)]'>
-      <div className='mobile-hide'>
-        <Header />
-      </div>
-      
+      {!hideHeader && (
+        <div className='mobile-hide'>
+          <Header />
+        </div>
+      )}
+
       <main className='pb-20'>
         {React.cloneElement(children, { selectedCity, onCityChange })}
       </main>
-      
+
       <BottomNavigation selectedCity={selectedCity} onCityChange={onCityChange} />
     </div>
   );
@@ -104,13 +108,21 @@ function App() {
       <BrowserRouter>
         <AuthCallback />
         <Routes>
-          <Route 
-            path='/' 
+          <Route
+            path='/'
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange} hideHeader>
+                <MainPage />
+              </AppLayout>
+            }
+          />
+          <Route
+            path='/feed'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <HomePage />
               </AppLayout>
-            } 
+            }
           />
           <Route path='/payment' element={<PaymentPage />} />
           <Route 
@@ -173,7 +185,14 @@ function App() {
           <Route path='/auth-callback' element={<AuthCallbackPage />} />
           <Route path='/policy' element={<PolicyPage />} />
           <Route path='/oferta' element={<OfertaPage />} />
-          <Route path='/fund/:name' element={<FundDetailPage />} />
+          <Route
+            path='/fund/:name'
+            element={
+              <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
+                <FundDetailPage />
+              </AppLayout>
+            }
+          />
           <Route path='/admin' element={<AdminLoginPage />} />
 <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />

@@ -8,6 +8,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
   const [showCitySelector, setShowCitySelector] = useState(false);
 
   const cities = [
+    'Вся страна',
     'Алматы', 'Астана', 'Шымкент', 'Актобе', 'Караганда', 'Тараз',
     'Павлодар', 'Усть-Каменогорск', 'Семей', 'Атырау', 'Кызылорда',
     'Актау', 'Костанай', 'Уральск', 'Туркестан', 'Петропавловск',
@@ -25,47 +26,57 @@ function BottomNavigation({ selectedCity, onCityChange }) {
   return (
     <>
       <nav className='fixed bottom-0 left-0 right-0 bg-white bg-opacity-90 border-t border-[var(--border-color)] backdrop-blur-md rounded-t-2xl' style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} data-name='bottom-navigation' data-file='src/components/BottomNavigation.jsx'>
-        <div className='flex items-center justify-around py-1'>
+        <div className='flex items-center py-1'>
           <button
             onClick={() => navigate('/')}
-            className={`flex flex-col items-center space-y-1 py-2 px-4 ${
+            className={`flex-1 flex flex-col items-center space-y-0.5 py-2 ${
               isActive('/') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
-            <img
-              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.webp'
-              alt='Главное'
-              className='w-5 h-5 object-contain'
-            />
-            <span className='text-xs'>Главное</span>
+            <Icon name="home" size={20} />
+            <span className='text-[10px]'>Главное</span>
           </button>
 
           <button
             onClick={() => setShowCitySelector(true)}
-            className='flex flex-col items-center space-y-1 py-2 px-4 text-black'
+            className='flex-1 flex flex-col items-center space-y-0.5 py-2 text-black overflow-hidden'
           >
             <Icon name="map-pin" size={20} />
-            <span className='text-xs'>{selectedCity}</span>
+            <span className='text-[10px] truncate w-full text-center'>{selectedCity}</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/feed')}
+            className={`flex-1 flex flex-col items-center space-y-0.5 py-1 ${
+              isActive('/feed') ? 'text-[var(--primary-color)]' : 'text-black'
+            }`}
+          >
+            <img
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.webp'
+              alt='Лента'
+              className='w-7 h-7 object-contain'
+            />
+            <span className='text-[10px]'>Лента</span>
           </button>
 
           <button
             onClick={() => navigate('/reports')}
-            className={`flex flex-col items-center space-y-1 py-2 px-4 ${
+            className={`flex-1 flex flex-col items-center space-y-0.5 py-2 ${
               isActive('/reports') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
             <Icon name="file-text" size={20} />
-            <span className='text-xs'>Отчеты</span>
+            <span className='text-[10px]'>Отчеты</span>
           </button>
 
           <button
             onClick={() => navigate('/profile')}
-            className={`flex flex-col items-center space-y-1 py-2 px-4 ${
+            className={`flex-1 flex flex-col items-center space-y-0.5 py-2 ${
               isActive('/profile') ? 'text-[var(--primary-color)]' : 'text-black'
             }`}
           >
             <Icon name="user" size={20} />
-            <span className='text-xs'>Профиль</span>
+            <span className='text-[10px]'>Профиль</span>
           </button>
         </div>
       </nav>

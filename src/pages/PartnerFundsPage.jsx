@@ -66,13 +66,16 @@ function PartnerFundsPage() {
                       alt={fund.name}
                       className='w-16 h-16 object-contain rounded-lg'
                       onError={(e) => {
+                        e.target.onerror = null;
                         e.target.src = 'https://via.placeholder.com/64?text=' + fund.name.charAt(0);
                       }}
                     />
                     {fund.is_verified && (
-                      <div className='absolute -bottom-1 -right-1 w-5 h-5 bg-[var(--success-color)] rounded-full flex items-center justify-center'>
-                        <Icon name="check" size={12} className="text-white" />
-                      </div>
+                      <img
+                        src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Galochka.png'
+                        alt='Верифицирован'
+                        className='absolute -bottom-1 -right-1 w-5 h-5'
+                      />
                     )}
                   </div>
                   <div className='flex-1'>

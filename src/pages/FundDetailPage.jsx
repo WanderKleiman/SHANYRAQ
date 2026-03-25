@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import CharityCard from '../components/CharityCard';
@@ -13,31 +13,31 @@ function FundDetailPage() {
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCharity, setSelectedCharity] = useState(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isDescriptionLong, setIsDescriptionLong] = useState(false);
+  const descRef = useRef(null);
 
   useEffect(() => {
     async function loadData() {
       try {
-        // Загружаем информацию о фонде
         const { data: fundData, error: fundError } = await supabase
           .from('partner_funds')
           .select('*')
           .eq('name', decodeURIComponent(name))
           .single();
-        
+
         if (fundError) throw fundError;
         setFund(fundData);
 
-        // Загружаем подопечных этого фонда
         const { data: beneficiariesData, error: beneficiariesError } = await supabase
           .from('beneficiaries')
           .select('*')
           .eq('partner_fund', decodeURIComponent(name))
           .eq('is_active', true)
           .order('created_at', { ascending: false });
-        
+
         if (beneficiariesError) throw beneficiariesError;
-        
-        // Форматируем данные
+
         const formatted = beneficiariesData.map(item => ({
           id: item.id,
           title: item.title,
@@ -55,7 +55,7 @@ function FundDetailPage() {
           isUrgent: item.is_urgent,
           collectionStatus: item.collection_status
         }));
-        
+
         setBeneficiaries(formatted);
       } catch (err) {
         console.error('Ошибка загрузки данных:', err);
@@ -63,9 +63,17 @@ function FundDetailPage() {
         setLoading(false);
       }
     }
-    
+
     loadData();
   }, [name]);
+
+  useEffect(() => {
+    if (descRef.current) {
+      const lineHeight = parseFloat(getComputedStyle(descRef.current).lineHeight);
+      const height = descRef.current.scrollHeight;
+      setIsDescriptionLong(height > lineHeight * 5);
+    }
+  }, [fund]);
 
   if (loading) {
     return (
@@ -88,6 +96,8 @@ function FundDetailPage() {
     );
   }
 
+  const socialLinks = fund.social_links || {};
+
   return (
     <>
       <div className='min-h-screen bg-[var(--bg-secondary)]'>
@@ -104,34 +114,118 @@ function FundDetailPage() {
         </header>
 
         <div className='p-4 pb-20'>
-          {/* Карточка с информацией о фонде */}
+          {/* Fund card - new layout: logo top, name, description, details */}
           <div className='card mb-6'>
-            <div className='flex items-start space-x-4'>
+            <div className='flex flex-col items-center text-center'>
               <img
-                src={optimizeImage(fund.logo_url, { width: 80, quality: 75 })}
+                src={optimizeImage(fund.logo_url, { width: 160, quality: 75 })}
                 alt={fund.name}
-                className='w-20 h-20 object-cover rounded-xl'
+                className='w-24 h-24 object-contain rounded-2xl mb-3'
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/80?text=' + fund.name.charAt(0);
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/96?text=' + fund.name.charAt(0);
                 }}
               />
-              <div className='flex-1'>
-                <div className='flex items-center space-x-2 mb-2'>
-                  <h2 className='text-xl font-bold'>{fund.name}</h2>
-                  {fund.is_verified && (
-                    <div className='w-6 h-6 bg-[var(--success-color)] rounded-full flex items-center justify-center'>
-                      <Icon name="check" size={14} className="text-white" />
-                    </div>
-                  )}
-                </div>
-                <p className='text-[var(--text-secondary)] text-sm leading-relaxed'>
-                  {fund.description}
-                </p>
+              <div className='flex items-center space-x-2 mb-3'>
+                <h2 className='text-xl font-bold'>{fund.name}</h2>
+                {fund.is_verified && (
+                  <img
+                    src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Galochka.png'
+                    alt='Верифицирован'
+                    className='w-6 h-6'
+                  />
+                )}
               </div>
             </div>
+
+            {/* Description with "ещё" */}
+            {fund.description && (
+              <div className='mb-4'>
+                <p
+                  ref={descRef}
+                  className={`text-[var(--text-secondary)] text-sm leading-relaxed ${!showFullDescription && isDescriptionLong ? 'line-clamp-5' : ''}`}
+                >
+                  {fund.description}
+                </p>
+                {isDescriptionLong && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className='text-[var(--primary-color)] text-sm font-medium mt-1'
+                  >
+                    {showFullDescription ? 'Свернуть' : 'Ещё'}
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Fund details */}
+            {(fund.bin || fund.founded_date || fund.location) && (
+              <div className='space-y-3 pt-3 border-t border-[var(--border-color)]'>
+                {fund.bin && (
+                  <div className='flex items-center space-x-3'>
+                    <Icon name="file-check" size={18} className="text-[var(--text-secondary)]" />
+                    <div>
+                      <p className='text-xs text-[var(--text-secondary)]'>БИН</p>
+                      <p className='text-sm font-medium'>{fund.bin}</p>
+                    </div>
+                  </div>
+                )}
+                {fund.founded_date && (
+                  <div className='flex items-center space-x-3'>
+                    <Icon name="database" size={18} className="text-[var(--text-secondary)]" />
+                    <div>
+                      <p className='text-xs text-[var(--text-secondary)]'>Дата создания</p>
+                      <p className='text-sm font-medium'>{new Date(fund.founded_date).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                )}
+                {fund.location && (
+                  <div className='flex items-center space-x-3'>
+                    <Icon name="map-pin" size={18} className="text-[var(--text-secondary)]" />
+                    <div>
+                      <p className='text-xs text-[var(--text-secondary)]'>Расположение</p>
+                      <p className='text-sm font-medium'>{fund.location}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Social links */}
+            {(socialLinks.website || socialLinks.instagram || socialLinks.facebook || socialLinks.whatsapp) && (
+              <div className='pt-3 mt-3 border-t border-[var(--border-color)]'>
+                <p className='text-xs text-[var(--text-secondary)] mb-2'>Социальные сети</p>
+                <div className='flex flex-wrap gap-2'>
+                  {socialLinks.website && (
+                    <a href={socialLinks.website} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="external-link" size={14} className="text-[var(--primary-color)]" />
+                      <span>Сайт</span>
+                    </a>
+                  )}
+                  {socialLinks.instagram && (
+                    <a href={socialLinks.instagram} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="instagram" size={14} className="text-[#E4405F]" />
+                      <span>Instagram</span>
+                    </a>
+                  )}
+                  {socialLinks.facebook && (
+                    <a href={socialLinks.facebook} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="users" size={14} className="text-[#1877F2]" />
+                      <span>Facebook</span>
+                    </a>
+                  )}
+                  {socialLinks.whatsapp && (
+                    <a href={`https://wa.me/${socialLinks.whatsapp.replace(/\D/g, '')}`} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="message-circle" size={14} className="text-[#25D366]" />
+                      <span>WhatsApp</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Список подопечных фонда */}
+          {/* Beneficiaries list */}
           <div className='mb-4'>
             <h3 className='text-lg font-semibold mb-3'>
               Подопечные фонда ({beneficiaries.length})
@@ -146,10 +240,10 @@ function FundDetailPage() {
           ) : (
             <div className='cards-grid'>
               {beneficiaries.map(item => (
-                <CharityCard 
-                  key={item.id} 
-                  data={item} 
-                  onCardClick={() => setSelectedCharity(item)} 
+                <CharityCard
+                  key={item.id}
+                  data={item}
+                  onCardClick={() => setSelectedCharity(item)}
                 />
               ))}
             </div>
@@ -158,16 +252,15 @@ function FundDetailPage() {
       </div>
 
       {selectedCharity && (
-        <CharityModal 
-          data={selectedCharity} 
-          onClose={() => setSelectedCharity(null)} 
+        <CharityModal
+          data={selectedCharity}
+          onClose={() => setSelectedCharity(null)}
         />
       )}
     </>
   );
 }
 
-// Хелпер для названий категорий
 function getCategoryName(category) {
   const categories = {
     'children': 'Дети',

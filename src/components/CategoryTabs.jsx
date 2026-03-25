@@ -8,7 +8,7 @@ function CategoryTabs({ activeCategory, onCategoryChange }) {
     { id: 'urgent', name: 'Взрослые', icon: 'user' },
     { id: 'operations', name: 'Пожилые', icon: 'accessibility' },
     { id: 'animals', name: 'Животные', icon: 'paw-print' },
-    { id: 'social', name: 'Социальные программы', icon: 'users' },
+    { id: 'social', name: 'Социальные проекты', icon: 'users' },
     { id: 'non_material', name: 'Не материальная помощь', icon: 'hand-helping' }
   ];
 

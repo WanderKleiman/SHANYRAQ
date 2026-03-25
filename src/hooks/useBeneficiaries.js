@@ -24,7 +24,7 @@ export function useBeneficiaries(category = null, city = null) {
           query = query.eq('category', category)
         }
         
-        if (city && city !== 'all' && city !== 'Все города') {
+        if (city && city !== 'all' && city !== 'Все города' && city !== 'Вся страна') {
           query = query.or(`city.eq.${city},is_nationwide.eq.true`)
         }
         

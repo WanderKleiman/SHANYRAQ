@@ -1,11 +1,12 @@
 import {
-  MapPin, FileText, Menu, X, Info, Users, Phone, Building, Shield,
+  MapPin, FileText, Menu, X, Info, Users, Phone, Building, Building2, Shield,
   Map, ChevronLeft, ChevronRight, ExternalLink, ShieldCheck, Share2,
   ArrowLeft, Heart, Activity, Zap, Loader, CreditCard, Check,
   FileEdit, MessageCircle, Mail, Instagram, Settings,
   Grid3x3, Baby, HandHeart, FileBadge, ScrollText, FileCheck, Database,
   User, HeartHandshake, PersonStanding, PawPrint, Accessibility,
-  Plus, UserRound, Lock, Pencil, Camera
+  Plus, UserRound, Lock, Pencil, Camera,
+  Home, Search, TrendingUp
 } from 'lucide-react';
 
 // Маппинг старых CSS классов на React компоненты
@@ -54,6 +55,10 @@ const iconMap = {
   'lock': Lock,
   'pencil': Pencil,
   'camera': Camera,
+  'home': Home,
+  'search': Search,
+  'trending-up': TrendingUp,
+  'building-2': Building2,
 };
 
 // Универсальный компонент иконки
