@@ -155,6 +155,16 @@ function AdminDashboardPage() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('subscriptions')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              activeTab === 'subscriptions'
+                ? 'border-[var(--primary-color)] text-[var(--primary-color)]'
+                : 'border-transparent text-[var(--text-secondary)]'
+            }`}
+          >
+            Подписки
+          </button>
         </div>
       </nav>
 
@@ -232,6 +242,10 @@ function AdminDashboardPage() {
             </button>
           </div>
         )}
+
+        {activeTab === 'subscriptions' && (
+          <SubscriptionsAdmin />
+        )}
       </main>
 
       {showForm && (
@@ -248,6 +262,91 @@ function AdminDashboardPage() {
           onClose={handleReportFormClose}
           onSave={handleReportFormSave}
         />
+      )}
+    </div>
+  );
+}
+
+function SubscriptionsAdmin() {
+  const [subs, setSubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSubs = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.from('fund_subscriptions').select('*').order('created_at', { ascending: false });
+    setSubs(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchSubs(); }, [fetchSubs]);
+
+  const updateStatus = async (id, status) => {
+    const { error } = await supabase.from('fund_subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) { alert('Ошибка: ' + error.message); return; }
+    fetchSubs();
+  };
+
+  const statusColors = {
+    new: 'bg-blue-100 text-blue-700',
+    active: 'bg-green-100 text-green-700',
+    paused: 'bg-yellow-100 text-yellow-700',
+    cancelled: 'bg-red-100 text-red-700',
+  };
+
+  const statusLabels = { new: 'Новая', active: 'Активна', paused: 'Пауза', cancelled: 'Отменена' };
+
+  if (loading) {
+    return <div className='text-center py-8'><Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin mx-auto" /></div>;
+  }
+
+  return (
+    <div>
+      <h2 className='text-xl font-bold mb-6'>Подписки на фонды</h2>
+      {subs.length === 0 ? (
+        <div className='card text-center py-8'>
+          <p className='text-[var(--text-secondary)]'>Нет подписок</p>
+        </div>
+      ) : (
+        <div className='space-y-3'>
+          {subs.map(sub => (
+            <div key={sub.id} className='card'>
+              <div className='flex items-start justify-between mb-2'>
+                <div>
+                  <p className='font-semibold'>{sub.fund_name}</p>
+                  <p className='text-sm text-[var(--text-secondary)]'>
+                    {sub.phone ? `+${sub.phone}` : 'Нет телефона'} · {sub.payment_method === 'kaspi' ? 'Kaspi' : 'Карта'}
+                  </p>
+                </div>
+                <div className='text-right'>
+                  <p className='font-bold text-[var(--primary-color)]'>{sub.amount?.toLocaleString('ru-RU')} ₸/мес</p>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${statusColors[sub.status] || 'bg-gray-100'}`}>
+                    {statusLabels[sub.status] || sub.status}
+                  </span>
+                </div>
+              </div>
+              <p className='text-xs text-[var(--text-secondary)] mb-3'>
+                {new Date(sub.created_at).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </p>
+              <div className='flex gap-2'>
+                {sub.status !== 'active' && (
+                  <button onClick={() => updateStatus(sub.id, 'active')} className='flex-1 py-2 text-xs font-medium rounded-lg bg-green-50 text-green-700 active:bg-green-100'>
+                    Активировать
+                  </button>
+                )}
+                {sub.status !== 'paused' && sub.status !== 'cancelled' && (
+                  <button onClick={() => updateStatus(sub.id, 'paused')} className='flex-1 py-2 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-700 active:bg-yellow-100'>
+                    Пауза
+                  </button>
+                )}
+                {sub.status !== 'cancelled' && (
+                  <button onClick={() => updateStatus(sub.id, 'cancelled')} className='flex-1 py-2 text-xs font-medium rounded-lg bg-red-50 text-red-700 active:bg-red-100'>
+                    Отменить
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
