@@ -5,6 +5,27 @@ import Icon from '../components/Icon';
 function DocumentsPage() {
   const navigate = useNavigate();
 
+  const reports = [
+    {
+      id: 'r1',
+      name: "Отчёт за 2023 год",
+      icon: "bar-chart-2",
+      url: "http://doc.shanyrak.world/report2023"
+    },
+    {
+      id: 'r2',
+      name: "Отчёт за 2024 год",
+      icon: "bar-chart-2",
+      url: "http://doc.shanyrak.world/report2024"
+    },
+    {
+      id: 'r3',
+      name: "Отчёт за 2025 год",
+      icon: "bar-chart-2",
+      url: "http://doc.shanyrak.world/report2025"
+    }
+  ];
+
   const documents = [
     {
       id: 1,
@@ -65,6 +86,36 @@ function DocumentsPage() {
           <p className='text-[var(--text-secondary)] leading-relaxed'>
             Официальные документы и отчетность благотворительного фонда "Шанырак"
           </p>
+        </div>
+
+        <div className='mb-6'>
+          <h2 className='text-lg font-bold mb-3'>Отчёты</h2>
+          <div className='space-y-3'>
+            {reports.map(report => (
+              <a
+                key={report.id}
+                href={report.url}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='card cursor-pointer hover:bg-gray-50 block no-underline'
+              >
+                <div className='flex items-center space-x-4'>
+                  <div className='w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center'>
+                    <Icon name={report.icon} size={24} className="text-blue-600" />
+                  </div>
+                  <div className='flex-1'>
+                    <h3 className='font-semibold text-lg mb-1 text-[var(--text-primary)]'>{report.name}</h3>
+                    <div className='text-sm text-[var(--text-secondary)]'>Открыть в новой вкладке</div>
+                  </div>
+                  <Icon name="external-link" size={20} className="text-[var(--text-secondary)]" />
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className='mb-6'>
+          <h2 className='text-lg font-bold mb-3'>Документы</h2>
         </div>
 
         <div className='space-y-4'>

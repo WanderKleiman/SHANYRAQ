@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 export function useMainPageData() {
   const [categoryCounts, setCategoryCounts] = useState({});
   const [totalRaised, setTotalRaised] = useState(0);
+  const [totalTarget, setTotalTarget] = useState(0);
   const [beneficiaries, setBeneficiaries] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,22 +21,19 @@ export function useMainPageData() {
         if (benError) throw benError;
         setBeneficiaries(benData || []);
 
-        // Compute category counts
+        // Compute category counts and total target
         const counts = {};
+        let target = 0;
+        let raised = 0;
         (benData || []).forEach(b => {
           counts[b.category] = (counts[b.category] || 0) + 1;
+          target += b.target_amount || 0;
+          raised += b.raised_amount || 0;
         });
         setCategoryCounts(counts);
+        setTotalTarget(target);
+        setTotalRaised(raised);
 
-        // Fetch total raised from paid payments
-        const { data: totalData, error: totalError } = await supabase
-          .from('kaspi_payment_requests')
-          .select('amount')
-          .eq('status', 'paid');
-
-        if (totalError) throw totalError;
-        const sum = (totalData || []).reduce((acc, r) => acc + (r.amount || 0), 0);
-        setTotalRaised(sum);
       } catch (err) {
         console.error('Error loading main page data:', err);
       } finally {
@@ -45,5 +43,5 @@ export function useMainPageData() {
     fetchData();
   }, []);
 
-  return { categoryCounts, totalRaised, beneficiaries, loading };
+  return { categoryCounts, totalRaised, totalTarget, beneficiaries, loading };
 }

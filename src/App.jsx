@@ -23,17 +23,26 @@ import PolicyPage from './pages/PolicyPage';
 import OfertaPage from './pages/OfertaPage';
 import { AuthProvider } from './contexts/AuthContext';
 import { supabase } from './supabaseClient';
+import { initPushNotifications } from './utils/pushNotifications';
 
-// Handle OAuth callback — redirect to /profile after Google/Email auth
+// Handle OAuth callback — redirect to /profile only on fresh sign-in (not on app reload)
 function AuthCallback() {
   const navigate = useNavigate();
   useEffect(() => {
+    // Track if we already had a session on mount
+    let isInitialCheck = true;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' && !isInitialCheck) {
         navigate('/profile', { replace: true });
       }
+      // After the first event (INITIAL_SESSION), stop treating as initial
+      if (event === 'INITIAL_SESSION') {
+        isInitialCheck = false;
+      }
     });
-    return () => subscription.unsubscribe();
+    // Fallback: after 1s, any SIGNED_IN is a real login
+    const timer = setTimeout(() => { isInitialCheck = false; }, 1000);
+    return () => { subscription.unsubscribe(); clearTimeout(timer); };
   }, [navigate]);
   return null;
 }
@@ -92,6 +101,11 @@ function App() {
   const [selectedCity, setSelectedCity] = React.useState(() => {
     return localStorage.getItem('selectedCity') || 'Алматы';
   });
+
+  // Initialize push notifications on app start
+  useEffect(() => {
+    initPushNotifications();
+  }, []);
 
   const handleCityChange = (city) => {
     setSelectedCity(city);

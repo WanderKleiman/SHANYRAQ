@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import Icon from './Icon';
 
 function CategoryTabs({ activeCategory, onCategoryChange }) {
+  const scrollRef = useRef(null);
   const categories = [
     { id: 'all', name: 'Все', icon: 'grid-3x3' },
     { id: 'children', name: 'Дети', icon: 'baby' },
@@ -12,12 +13,22 @@ function CategoryTabs({ activeCategory, onCategoryChange }) {
     { id: 'non_material', name: 'Не материальная помощь', icon: 'hand-helping' }
   ];
 
+  // Scroll active tab into view
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const activeBtn = scrollRef.current.querySelector('[data-active="true"]');
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [activeCategory]);
+
   return (
     <div className='px-4'>
-      <div className='flex space-x-2 overflow-x-auto scrollbar-hide'>
+      <div ref={scrollRef} className='flex space-x-2 overflow-x-auto scrollbar-hide'>
         {categories.map(category => (
           <button
             key={category.id}
+            data-active={activeCategory === category.id}
             onClick={() => onCategoryChange(category.id)}
             className={`category-tab flex items-center space-x-2 whitespace-nowrap ${
               activeCategory === category.id ? 'active' : 'inactive'

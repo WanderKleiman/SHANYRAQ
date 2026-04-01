@@ -5,8 +5,22 @@ import Icon from '../components/Icon';
 import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
 import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
 
-const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
+
+
+const openKaspiApp = async () => {
+  if (Capacitor.isNativePlatform()) {
+    // Try deep link to Kaspi app first
+    window.location.href = 'kaspi://';
+    // Fallback to website after short delay if app not installed
+    setTimeout(() => {
+      Browser.open({ url: 'https://kaspi.kz' });
+    }, 1500);
+  } else {
+    window.open('https://kaspi.kz', '_blank');
+  }
+};
 
 const CATEGORIES = [
   { key: 'children', name: 'Дети', icon: 'baby' },
@@ -41,6 +55,8 @@ function ProfilePage() {
   const [newRequests, setNewRequests] = useState([]);
   const [invoiceSentRequests, setInvoiceSentRequests] = useState([]);
   const [verifiedPhone, setVerifiedPhone] = useState('');
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [thankYouItems, setThankYouItems] = useState([]);
 
   useEffect(() => {
     loadProfile();
@@ -114,8 +130,35 @@ function ProfilePage() {
       }
 
       const paidPayments = allPayments.filter(p => p.status === 'paid');
-      const newRequests = allPayments.filter(p => p.status === 'new');
-      const invoiceSent = allPayments.filter(p => p.status === 'invoice_sent');
+
+      // Show "Спасибо" only when admin confirms payment (status changed to 'paid')
+      // Compare current paid IDs with previously known paid IDs
+      const knownPaidIds = JSON.parse(localStorage.getItem('knownPaidIds') || 'null');
+      const currentPaidIds = paidPayments.map(p => p.id);
+      if (knownPaidIds === null) {
+        // First time — just save current state, don't show popup
+        localStorage.setItem('knownPaidIds', JSON.stringify(currentPaidIds));
+      } else {
+        const newlyPaid = currentPaidIds.filter(id => !knownPaidIds.includes(id));
+        if (newlyPaid.length > 0) {
+          const items = paidPayments.filter(p => newlyPaid.includes(p.id));
+          // Fetch beneficiary images for thank you popup
+          const benIds = [...new Set(items.map(p => p.beneficiary_id))];
+          const { data: benImages } = await supabase
+            .from('beneficiaries')
+            .select('id, image_url')
+            .in('id', benIds);
+          const imgMap = {};
+          (benImages || []).forEach(b => { imgMap[b.id] = b.image_url; });
+          setThankYouItems(items.map(p => ({ ...p, beneficiary_image: imgMap[p.beneficiary_id] || '' })));
+          setShowThankYou(true);
+        }
+        localStorage.setItem('knownPaidIds', JSON.stringify(currentPaidIds));
+      }
+      const now = new Date();
+      const is24hOld = (dateStr) => (now - new Date(dateStr)) > 24 * 60 * 60 * 1000;
+      const newRequests = allPayments.filter(p => p.status === 'new' && !is24hOld(p.created_at));
+      const invoiceSent = allPayments.filter(p => p.status === 'invoice_sent' && !is24hOld(p.created_at));
 
       // Fetch beneficiary images for pending requests
       const pendingAll = [...newRequests, ...invoiceSent];
@@ -144,12 +187,11 @@ function ProfilePage() {
         // Use phone from the paid payment (verified phone)
         const vPhone = paidPayments[0].phone;
         setVerifiedPhone(vPhone);
-        const verifiedPhone = vPhone;
 
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('*')
-          .eq('phone', verifiedPhone)
+          .eq('phone', vPhone)
           .single();
 
         // Prefer Google auth name over phone number
@@ -160,16 +202,16 @@ function ProfilePage() {
           const profileName = profile.display_name;
           const isPhoneName = profileName && /^\+?\d[\d\s]+$/.test(profileName.replace(/\s/g, ''));
           if (isPhoneName && googleName) {
-            await supabase.from('user_profiles').update({ display_name: googleName }).eq('phone', verifiedPhone);
+            await supabase.from('user_profiles').update({ display_name: googleName }).eq('phone', vPhone);
             setDisplayName(googleName);
           } else {
-            setDisplayName(profileName || googleName || formatPhoneDisplay(verifiedPhone));
+            setDisplayName(profileName || googleName || formatPhoneDisplay(vPhone));
           }
           setAvatarUrl(profile.avatar_url || '');
         } else {
-          const defaultName = googleName || formatPhoneDisplay(verifiedPhone);
+          const defaultName = googleName || formatPhoneDisplay(vPhone);
           await supabase.from('user_profiles').insert({
-            phone: verifiedPhone,
+            phone: vPhone,
             display_name: defaultName,
             avatar_url: ''
           });
@@ -211,11 +253,15 @@ function ProfilePage() {
     }
   };
 
+  const [hasEditedName, setHasEditedName] = useState(() => localStorage.getItem('hasEditedName') === 'true');
+
   const handleSaveName = async () => {
     const trimmed = editNameValue.trim().slice(0, 20);
     if (!trimmed) return;
     setDisplayName(trimmed);
     setIsEditingName(false);
+    setHasEditedName(true);
+    localStorage.setItem('hasEditedName', 'true');
     await supabase
       .from('user_profiles')
       .update({ display_name: trimmed })
@@ -351,15 +397,20 @@ function ProfilePage() {
                   </div>
                 ) : (
                   <>
-                    <h1 className='text-xl font-bold text-[var(--text-primary)]'>
+                    <h1
+                      className='text-xl font-bold text-[var(--text-primary)] cursor-pointer'
+                      onClick={() => { setEditNameValue(displayName || user?.user_metadata?.full_name || ''); setIsEditingName(true); }}
+                    >
                       {displayName || user?.user_metadata?.full_name || user?.email || 'Мой профиль'}
                     </h1>
-                    <button
-                      onClick={() => { setEditNameValue(displayName || user?.user_metadata?.full_name || ''); setIsEditingName(true); }}
-                      className='text-[var(--text-secondary)]'
-                    >
-                      <Icon name="pencil" size={16} />
-                    </button>
+                    {!hasEditedName && (
+                      <button
+                        onClick={() => { setEditNameValue(displayName || user?.user_metadata?.full_name || ''); setIsEditingName(true); }}
+                        className='text-[var(--text-secondary)]'
+                      >
+                        <Icon name="pencil" size={16} />
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -443,7 +494,7 @@ function ProfilePage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => Browser.open({ url: 'https://kaspi.kz' })}
+                  onClick={openKaspiApp}
                   className='flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-xl text-sm font-medium'
                 >
                   Счёт выставлен, оплатить
@@ -526,7 +577,7 @@ function ProfilePage() {
                   <div className='flex space-x-3 items-start'>
                     {items.length === 0 ? (
                       <button
-                        onClick={() => navigate(`/?category=${cat.key}`)}
+                        onClick={() => navigate(`/feed?category=${cat.key}`)}
                         className='border-2 border-dashed border-gray-300 rounded-2xl bg-green-50 flex-shrink-0 w-32 h-32 flex items-center justify-center'
                       >
                         <div className='flex flex-col items-center text-center px-2'>
@@ -542,7 +593,7 @@ function ProfilePage() {
                           <div
                             key={item.id}
                             className='cursor-pointer flex-shrink-0 w-32'
-                            onClick={() => navigate(`/?beneficiary=${item.beneficiaryId}`)}
+                            onClick={() => navigate(`/feed?beneficiary=${item.beneficiaryId}`)}
                           >
                             <div className='relative mb-2'>
                               {item.image ? (
@@ -563,7 +614,7 @@ function ProfilePage() {
                         ))}
                         <div className='flex-shrink-0 w-10 h-32 flex items-center'>
                           <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('/feed')}
                             className='w-10 h-10 bg-green-100 rounded-full flex items-center justify-center'
                           >
                             <Icon name="plus" size={18} className="text-green-600" />
@@ -579,10 +630,53 @@ function ProfilePage() {
         )}
       </div>
 
+      {/* Thank You Popup */}
+      {showThankYou && (
+        <div
+          className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'
+          onClick={() => setShowThankYou(false)}
+        >
+          <div className='bg-white rounded-3xl p-8 max-w-sm w-full text-center' onClick={e => e.stopPropagation()}>
+            <img
+              src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Group%20270988349.jpg'
+              alt='Спасибо'
+              className='w-32 h-32 mx-auto mb-6'
+            />
+            <h2 className='text-2xl font-bold mb-3'>Спасибо!</h2>
+            <p className='text-gray-600 mb-4'>Ваш платёж подтверждён. Вы помогли:</p>
+
+            <div className='space-y-2 mb-5'>
+              {thankYouItems.map(item => (
+                <div key={item.id} className='flex items-center space-x-3 bg-green-50 rounded-xl p-3 text-left'>
+                  {item.beneficiary_image ? (
+                    <img src={item.beneficiary_image} alt='' className='w-10 h-10 rounded-lg object-cover flex-shrink-0' />
+                  ) : (
+                    <div className='w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0'>
+                      <Icon name="heart" size={16} className="text-[var(--primary-color)]" />
+                    </div>
+                  )}
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-medium text-[var(--text-primary)] truncate'>{item.beneficiary_title}</p>
+                    <p className='text-sm font-bold text-[var(--primary-color)]'>{item.amount?.toLocaleString('ru-RU')} ₸</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowThankYou(false)}
+              className='bg-[var(--primary-color)] text-white w-full py-4 rounded-2xl font-semibold text-lg'
+            >
+              Отлично!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* More Menu Modal */}
       {showMoreMenu && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50'>
-          <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-4 space-y-2'>
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowMoreMenu(false)}>
+          <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-4 space-y-2' onClick={e => e.stopPropagation()}>
             <div className='flex items-center justify-between mb-4'>
               <h3 className='text-lg font-semibold'>Дополнительно</h3>
               <button

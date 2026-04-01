@@ -165,6 +165,16 @@ function AdminDashboardPage() {
           >
             Подписки
           </button>
+          <button
+            onClick={() => setActiveTab('push')}
+            className={`py-3 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+              activeTab === 'push'
+                ? 'border-[var(--primary-color)] text-[var(--primary-color)]'
+                : 'border-transparent text-[var(--text-secondary)]'
+            }`}
+          >
+            Пуши
+          </button>
         </div>
       </nav>
 
@@ -245,6 +255,10 @@ function AdminDashboardPage() {
 
         {activeTab === 'subscriptions' && (
           <SubscriptionsAdmin />
+        )}
+
+        {activeTab === 'push' && (
+          <PushAdmin />
         )}
       </main>
 
@@ -559,6 +573,123 @@ function FundFormModal({ fund, onClose, onSave }) {
           <button onClick={onClose} className='flex-1 py-3 rounded-xl border border-[var(--border-color)] font-medium'>Отмена</button>
           <button onClick={handleSubmit} className='flex-1 py-3 rounded-xl bg-[var(--primary-color)] text-white font-medium'>{isNew ? 'Создать' : 'Сохранить'}</button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function PushAdmin() {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [tokens, setTokens] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchTokens = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.from('push_tokens').select('*').order('updated_at', { ascending: false });
+    setTokens(data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchTokens(); }, [fetchTokens]);
+
+  const sendPush = async () => {
+    if (!title.trim() || !body.trim()) { alert('Заполните заголовок и текст'); return; }
+    if (tokens.length === 0) { alert('Нет зарегистрированных устройств'); return; }
+
+    setSending(true);
+    setResult(null);
+
+    try {
+      // Get Firebase server key from Supabase edge function or send via FCM HTTP API
+      const tokenValues = tokens.map(t => t.token);
+
+      const { data, error } = await supabase.functions.invoke('send-push', {
+        body: { title: title.trim(), body: body.trim(), tokens: tokenValues }
+      });
+
+      if (error) throw error;
+      setResult({ success: true, message: `Отправлено на ${tokenValues.length} устройств` });
+      setTitle('');
+      setBody('');
+    } catch (error) {
+      console.error('Push send error:', error);
+      setResult({ success: false, message: 'Ошибка: ' + (error.message || 'Неизвестная ошибка') });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const inputClass = 'w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]';
+
+  return (
+    <div>
+      <h2 className='text-xl font-bold mb-6'>Пуш-уведомления</h2>
+
+      <div className='card mb-6'>
+        <h3 className='font-semibold mb-4'>Отправить уведомление</h3>
+        <div className='space-y-3'>
+          <div>
+            <label className='block text-sm font-medium mb-1'>Заголовок</label>
+            <input
+              type='text'
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder='Новый подопечный!'
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className='block text-sm font-medium mb-1'>Текст</label>
+            <textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              placeholder='Помогите Асылу собрать средства на операцию'
+              rows={3}
+              className={inputClass}
+            />
+          </div>
+          <button
+            onClick={sendPush}
+            disabled={sending || !title.trim() || !body.trim()}
+            className='btn-primary w-full disabled:opacity-50'
+          >
+            {sending ? 'Отправка...' : `Отправить (${tokens.length} устройств)`}
+          </button>
+
+          {result && (
+            <div className={`p-3 rounded-xl text-sm ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              {result.message}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className='card'>
+        <h3 className='font-semibold mb-4'>Зарегистрированные устройства ({tokens.length})</h3>
+        {loading ? (
+          <div className='text-center py-4'>
+            <Icon name="loader" size={24} className="text-[var(--primary-color)] animate-spin mx-auto" />
+          </div>
+        ) : tokens.length === 0 ? (
+          <p className='text-[var(--text-secondary)] text-sm'>Нет устройств. Пуш-токены появятся когда пользователи установят приложение.</p>
+        ) : (
+          <div className='space-y-2'>
+            {tokens.map(t => (
+              <div key={t.id} className='flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-xl'>
+                <div className='min-w-0 flex-1'>
+                  <p className='text-sm font-medium'>{t.platform === 'android' ? 'Android' : 'iOS'}</p>
+                  <p className='text-xs text-[var(--text-secondary)] truncate font-mono'>{t.token.slice(0, 30)}...</p>
+                </div>
+                <p className='text-xs text-[var(--text-secondary)] ml-2 flex-shrink-0'>
+                  {new Date(t.updated_at).toLocaleDateString('ru-RU')}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

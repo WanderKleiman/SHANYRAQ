@@ -14,8 +14,8 @@ function CharityModal({ data, onClose }) {
   const [isClosing, setIsClosing] = useState(false);
   const scrollContainerRef = useRef(null);
   
-  const progressPercentage = (data.raised / data.target) * 100;
-  const remainingAmount = data.target - data.raised;
+  const progressPercentage = data.target > 0 ? (data.raised / data.target) * 100 : 0;
+  const remainingAmount = Math.max(0, data.target - data.raised);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';

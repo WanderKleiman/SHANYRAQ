@@ -15,6 +15,14 @@ function HomePage({ selectedCity, onCityChange }) {
     const cat = new URLSearchParams(window.location.search).get('category');
     return cat || 'all';
   });
+
+  // When navigated with ?category= from Main/Profile, show "Вся страна"
+  useEffect(() => {
+    const cat = new URLSearchParams(window.location.search).get('category');
+    if (cat && selectedCity !== 'Вся страна') {
+      onCityChange('Вся страна');
+    }
+  }, []);
   const [showCitySelector, setShowCitySelector] = useState(false);
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [showThankYou, setShowThankYou] = useState(false);
@@ -27,7 +35,6 @@ function HomePage({ selectedCity, onCityChange }) {
     selectedCity
   );
 
-  console.log('HomePage рендер:', { selectedCity, beneficiariesCount: beneficiaries.length });
 
   useEffect(() => {
     localStorage.setItem('activeTab', 'home');
@@ -52,7 +59,8 @@ function HomePage({ selectedCity, onCityChange }) {
   useEffect(() => {
     const hasSelectedCity = localStorage.getItem('selectedCity');
     if (!hasSelectedCity) {
-      setTimeout(() => setShowCitySelector(true), 15000);
+      const timer = setTimeout(() => setShowCitySelector(true), 15000);
+      return () => clearTimeout(timer);
     }
   }, []);
   
@@ -218,6 +226,7 @@ function getCategoryName(category) {
     'animals': 'Животные',
     'operations': 'Пожилые',
     'urgent': 'Взрослые',
+    'social': 'Социальные проекты',
     'non_material': 'Нематериальная помощь'
   };
   return categories[category] || category;

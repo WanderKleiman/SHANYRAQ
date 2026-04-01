@@ -8,21 +8,24 @@ const STATUS_CONFIG = {
   new: { label: 'Новые', color: 'orange' },
   invoice_sent: { label: 'Счёт выслан', color: 'blue' },
   paid: { label: 'Оплачено', color: 'green' },
-  unpaid: { label: 'Не оплачено', color: 'red' }
+  unpaid: { label: 'Не оплачено', color: 'red' },
+  expired: { label: 'Просроченные 24ч', color: 'gray' }
 };
 
 const STATUS_COLORS = {
   orange: 'bg-orange-100 text-orange-700 border-orange-200',
   blue: 'bg-blue-100 text-blue-700 border-blue-200',
   green: 'bg-green-100 text-green-700 border-green-200',
-  red: 'bg-red-100 text-red-700 border-red-200'
+  red: 'bg-red-100 text-red-700 border-red-200',
+  gray: 'bg-gray-100 text-gray-700 border-gray-200'
 };
 
 const TAB_ACTIVE_COLORS = {
   new: 'border-orange-500 text-orange-600',
   invoice_sent: 'border-blue-500 text-blue-600',
   paid: 'border-green-500 text-green-600',
-  unpaid: 'border-red-500 text-red-600'
+  unpaid: 'border-red-500 text-red-600',
+  expired: 'border-gray-500 text-gray-600'
 };
 
 function AdminKaspiRequestsPage() {
@@ -67,13 +70,27 @@ function AdminKaspiRequestsPage() {
     }
   };
 
-  const filteredRequests = requests.filter(r => r.status === activeTab);
+  const now = new Date();
+  const is24hOld = (dateStr) => (now - new Date(dateStr)) > 24 * 60 * 60 * 1000;
+
+  // Separate expired (new/invoice_sent older than 24h) from active
+  const expiredRequests = requests.filter(r =>
+    (r.status === 'new' || r.status === 'invoice_sent') && is24hOld(r.created_at)
+  );
+  const activeRequests = requests.filter(r =>
+    !((r.status === 'new' || r.status === 'invoice_sent') && is24hOld(r.created_at))
+  );
+
+  const filteredRequests = activeTab === 'expired'
+    ? expiredRequests
+    : activeRequests.filter(r => r.status === activeTab);
 
   const counts = {
-    new: requests.filter(r => r.status === 'new').length,
-    invoice_sent: requests.filter(r => r.status === 'invoice_sent').length,
-    paid: requests.filter(r => r.status === 'paid').length,
-    unpaid: requests.filter(r => r.status === 'unpaid').length
+    new: activeRequests.filter(r => r.status === 'new').length,
+    invoice_sent: activeRequests.filter(r => r.status === 'invoice_sent').length,
+    paid: activeRequests.filter(r => r.status === 'paid').length,
+    unpaid: activeRequests.filter(r => r.status === 'unpaid').length,
+    expired: expiredRequests.length
   };
 
   const formatDate = (dateStr) => {

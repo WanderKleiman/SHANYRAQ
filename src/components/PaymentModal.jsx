@@ -11,7 +11,7 @@ function PaymentModal({ beneficiary, onClose }) {
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('kaspi');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touchStartY, setTouchStartY] = useState(0);
@@ -235,7 +235,7 @@ function PaymentModal({ beneficiary, onClose }) {
 
         onClose();
         sessionStorage.setItem('donatedPhone', phoneNumber);
-        navigate('/?donated=kaspi');
+        navigate('/feed?donated=kaspi');
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         alert('Произошла ошибка. Попробуйте ещё раз.');
@@ -353,10 +353,12 @@ function PaymentModal({ beneficiary, onClose }) {
 
           <button
             onClick={handlePayment}
-            disabled={isSubmitting}
+            disabled={isSubmitting || phoneLoading || (!selectedAmount && !customAmount)}
             className='btn-primary w-full disabled:opacity-50'
           >
-            {isSubmitting ? 'Отправка...' : 'Оплатить'}
+            {isSubmitting ? 'Отправка...' : (selectedAmount || customAmount)
+              ? `Помочь — ${(selectedAmount || parseInt(customAmount) || 0).toLocaleString('ru-RU')} ₸`
+              : 'Выберите сумму'}
           </button>
         </div>
       </div>

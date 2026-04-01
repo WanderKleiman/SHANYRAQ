@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { useMainPageData } from '../hooks/useMainPageData';
 import { usePartnerFunds } from '../hooks/usePartnerFunds';
+import { supabase } from '../supabaseClient';
 import CharityModal from '../components/CharityModal';
 import Icon from '../components/Icon';
 
@@ -27,7 +28,6 @@ const CATEGORY_NAMES = {
   non_material: 'Нематериальная помощь',
 };
 
-const TOTAL_GOAL = 50000000;
 
 function formatSum(num) {
   if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.0', '') + ' млн';
@@ -37,7 +37,7 @@ function formatSum(num) {
 
 function MainPage() {
   const navigate = useNavigate();
-  const { categoryCounts, totalRaised, beneficiaries, loading } = useMainPageData();
+  const { categoryCounts, totalRaised, totalTarget, beneficiaries, loading } = useMainPageData();
   const { funds } = usePartnerFunds();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCharity, setSelectedCharity] = useState(null);
@@ -45,6 +45,14 @@ function MainPage() {
   const [showDownloadSection, setShowDownloadSection] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const beneficiariesRef = React.useRef(null);
+
+  // Subscription state
+  const [mainSubAmount, setMainSubAmount] = useState(3000);
+  const [mainCustomSub, setMainCustomSub] = useState('');
+  const [showMainSubModal, setShowMainSubModal] = useState(false);
+  const [mainSubPhone, setMainSubPhone] = useState('');
+  const [mainSubStep, setMainSubStep] = useState('method');
+  const MAIN_SUB_PRESETS = [1000, 3000, 5000, 10000];
 
   // Redirect old shared links /?beneficiary=X to /feed
   useEffect(() => {
@@ -124,7 +132,7 @@ function MainPage() {
   }, [mainBeneficiaries, searchQuery]);
 
   const displayBeneficiaries = filteredBeneficiaries.slice(0, 10);
-  const totalPercent = TOTAL_GOAL > 0 ? Math.min(Math.round((totalRaised / TOTAL_GOAL) * 100), 100) : 0;
+  const totalPercent = totalTarget > 0 ? Math.min(Math.round((totalRaised / totalTarget) * 100), 100) : 0;
 
   const menuItems = [
     { label: 'Подопечные', path: '/feed' },
@@ -402,27 +410,90 @@ function MainPage() {
 
       {/* Total Amount */}
       <div className='px-4 mb-6'>
-        <div className='bg-[#f5f4f2] rounded-2xl p-5'>
-          <div className='flex items-center gap-4 mb-3'>
-            <div className='w-12 h-12 bg-[var(--primary-color)] rounded-xl flex items-center justify-center flex-shrink-0'>
-              <Icon name="trending-up" size={24} className="text-white" />
+        <div className='bg-white rounded-2xl p-5' style={{ boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)' }}>
+            <div className='flex items-center space-x-2 mb-3'>
+              <div className='w-8 h-8 rounded-lg flex items-center justify-center' style={{ background: 'var(--primary-color)' }}>
+                <Icon name="trending-up" size={16} className="text-white" />
+              </div>
+              <p className='text-[13px] font-semibold text-[var(--text-primary)]'>Общий сбор</p>
             </div>
-            <div>
-              <p className='text-xs text-[var(--text-secondary)] mb-1'>Сумма сбора на сегодня</p>
-              <p className='text-xl font-bold text-[var(--text-primary)]'>
-                {totalRaised.toLocaleString('ru-RU')} ₸
-              </p>
+            <div className='flex items-end justify-between mb-3'>
+              <div>
+                <p className='text-[11px] text-[var(--text-secondary)] mb-0.5'>Собрано</p>
+                <p className='text-[22px] font-bold text-[var(--primary-color)] leading-none'>
+                  {formatSum(totalRaised)} ₸
+                </p>
+              </div>
+              <div className='text-right'>
+                <p className='text-[11px] text-[var(--text-secondary)] mb-0.5'>Цель</p>
+                <p className='text-[16px] font-semibold text-[var(--text-primary)] leading-none'>
+                  {formatSum(totalTarget)} ₸
+                </p>
+              </div>
             </div>
-          </div>
-          <div className='w-full h-2 bg-[#E0E0E0] rounded-full'>
-            <div
-              className='h-full bg-[var(--primary-color)] rounded-full transition-all'
-              style={{ width: `${totalPercent}%` }}
-            />
-          </div>
-          <div className='flex justify-between mt-1'>
-            <p className='text-[10px] text-[var(--text-secondary)]'>{totalPercent}% собрано</p>
-            <p className='text-[10px] text-[var(--text-secondary)]'>Цель: {TOTAL_GOAL.toLocaleString('ru-RU')} ₸</p>
+            <div className='w-full h-2.5 bg-gray-100 rounded-full'>
+              <div
+                className='h-full rounded-full transition-all'
+                style={{ width: `${totalPercent}%`, background: 'linear-gradient(90deg, #2f8f6a, #5ec49a)' }}
+              />
+            </div>
+            <p className='text-[11px] text-[var(--text-secondary)] mt-1.5'>{totalPercent}% от цели</p>
+        </div>
+      </div>
+
+      {/* Subscription card on main page */}
+      <div className='px-3 mb-6'>
+        <div className='rounded-2xl overflow-hidden relative' style={{ background: 'linear-gradient(135deg, #ffffff 30%, #7EF1D0 100%)' }}>
+          <div className='p-5'>
+            <div className='flex items-center space-x-2 mb-1'>
+              <Icon name="heart-handshake" size={22} className="text-[#2f8f6a]" />
+              <h3 className='text-[15px] font-bold text-[var(--text-primary)]'>Помогать ежемесячно</h3>
+            </div>
+            <p className='text-[13px] text-[var(--text-secondary)] mb-4'>Подпишитесь на регулярную помощь фонду</p>
+
+            <div className='flex gap-2 mb-3'>
+              {MAIN_SUB_PRESETS.map(amount => (
+                <button
+                  key={amount}
+                  onClick={() => { setMainSubAmount(amount); setMainCustomSub(''); }}
+                  className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-colors ${
+                    mainSubAmount === amount && !mainCustomSub
+                      ? 'bg-[#2f8f6a] text-white'
+                      : 'bg-gray-100 text-[var(--text-primary)]'
+                  }`}
+                >
+                  {amount >= 10000 ? `${amount / 1000}k` : amount.toLocaleString('ru-RU')} ₸
+                </button>
+              ))}
+            </div>
+
+            <div className='relative mb-4'>
+              <input
+                type='number'
+                inputMode='numeric'
+                placeholder='Своя сумма'
+                value={mainCustomSub}
+                onFocus={() => setMainSubAmount(0)}
+                onChange={(e) => { setMainCustomSub(e.target.value); setMainSubAmount(0); }}
+                className='w-full h-10 px-4 pr-8 rounded-xl bg-gray-100 text-[var(--text-primary)] placeholder-gray-400 text-[16px] font-medium focus:outline-none'
+              />
+              <span className='absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm'>₸</span>
+            </div>
+
+            <button
+              onClick={() => {
+                const finalAmount = mainCustomSub ? parseInt(mainCustomSub) : mainSubAmount;
+                if (!finalAmount || finalAmount < 100) { alert('Минимальная сумма — 100 ₸'); return; }
+                setMainSubAmount(finalAmount);
+                setShowMainSubModal(true);
+                setMainSubStep('method');
+                setMainSubPhone('');
+              }}
+              className='w-full py-3 bg-[#2f8f6a] text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
+            >
+              <Icon name="heart" size={16} className="text-white" />
+              <span>Помогать ежемесячно</span>
+            </button>
           </div>
         </div>
       </div>
@@ -624,6 +695,104 @@ function MainPage() {
     {/* Charity Modal (shared for both views) */}
     {selectedCharity && (
       <CharityModal data={selectedCharity} onClose={() => setSelectedCharity(null)} />
+    )}
+
+    {/* Main page subscription modal */}
+    {showMainSubModal && (
+      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowMainSubModal(false)}>
+        <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-5' onClick={e => e.stopPropagation()}>
+          <div className='flex items-center justify-between mb-4'>
+            <h3 className='text-lg font-bold'>
+              {mainSubStep === 'method' && 'Способ оплаты'}
+              {mainSubStep === 'kaspi' && 'Оплата через Kaspi'}
+              {mainSubStep === 'done' && 'Заявка отправлена'}
+            </h3>
+            <button onClick={() => setShowMainSubModal(false)} className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'>
+              <Icon name="x" size={16} />
+            </button>
+          </div>
+
+          <p className='text-sm text-[var(--text-secondary)] mb-1'>Ежемесячная помощь фонду «Шаңырақ»</p>
+          <p className='text-xl font-bold text-[var(--text-primary)] mb-5'>{mainSubAmount.toLocaleString('ru-RU')} ₸ / мес</p>
+
+          {mainSubStep === 'method' && (
+            <div className='space-y-3'>
+              <button
+                onClick={() => setMainSubStep('kaspi')}
+                className='w-full flex items-center space-x-4 p-4 rounded-2xl bg-[var(--bg-secondary)] active:bg-gray-100 transition-colors'
+              >
+                <div className='w-12 h-12 bg-[#FF0000] rounded-xl flex items-center justify-center flex-shrink-0'>
+                  <span className='text-white font-bold text-lg'>K</span>
+                </div>
+                <div className='text-left flex-1'>
+                  <p className='font-semibold'>Kaspi</p>
+                  <p className='text-xs text-[var(--text-secondary)]'>Оплата через Kaspi</p>
+                </div>
+                <Icon name="chevron-right" size={20} className="text-[var(--text-secondary)]" />
+              </button>
+              <button disabled className='w-full flex items-center space-x-4 p-4 rounded-2xl bg-[var(--bg-secondary)] opacity-50'>
+                <div className='w-12 h-12 bg-gray-300 rounded-xl flex items-center justify-center flex-shrink-0'>
+                  <Icon name="credit-card" size={22} className="text-gray-500" />
+                </div>
+                <div className='text-left flex-1'>
+                  <p className='font-semibold text-[var(--text-secondary)]'>Банковская карта</p>
+                  <p className='text-xs text-[var(--text-secondary)]'>Скоро</p>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {mainSubStep === 'kaspi' && (
+            <div>
+              <label className='block text-sm font-medium mb-2'>Номер телефона</label>
+              <input
+                type='tel'
+                inputMode='numeric'
+                placeholder='+7 ___ ___ __ __'
+                value={mainSubPhone}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/\D/g, '');
+                  if (val.length > 11) val = val.slice(0, 11);
+                  if (val && !val.startsWith('7')) val = '7' + val;
+                  setMainSubPhone(val);
+                }}
+                className='w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[16px] mb-4'
+              />
+              <button
+                onClick={async () => {
+                  if (mainSubPhone.length !== 11) { alert('Введите номер телефона (11 цифр)'); return; }
+                  const { error } = await supabase.from('fund_subscriptions').insert({
+                    fund_name: 'Шаңырақ',
+                    phone: mainSubPhone,
+                    amount: mainSubAmount,
+                    payment_method: 'kaspi',
+                    visitor_id: localStorage.getItem('visitorId') || null,
+                  });
+                  if (error) { alert('Ошибка: ' + error.message); return; }
+                  setMainSubStep('done');
+                }}
+                disabled={mainSubPhone.length !== 11}
+                className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm disabled:opacity-50 active:scale-[0.98] transition-transform'
+              >
+                Отправить заявку
+              </button>
+            </div>
+          )}
+
+          {mainSubStep === 'done' && (
+            <div className='text-center py-4'>
+              <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <Icon name="check" size={32} className="text-[var(--primary-color)]" />
+              </div>
+              <p className='text-[var(--text-primary)] font-semibold mb-2'>Заявка на подписку отправлена!</p>
+              <p className='text-sm text-[var(--text-secondary)] mb-4'>Мы свяжемся с вами для подтверждения ежемесячного платежа.</p>
+              <button onClick={() => setShowMainSubModal(false)} className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm'>
+                Готово
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     )}
     </>
   );
