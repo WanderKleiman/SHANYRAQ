@@ -45,10 +45,11 @@ function CharityCard({ data, onCardClick, index = 0 }) {
   src={optimizeImage(data.image, { width: 400, quality: 75 })}
   alt={data.title}
   loading={index === 0 ? 'eager' : 'lazy'}
-fetchPriority={index === 0 ? 'high' : 'auto'}
+  fetchPriority={index === 0 ? 'high' : 'auto'}
   decoding={index === 0 ? 'sync' : 'async'}
   width='400'
   height='192'
+  onError={(e) => { if (e.target.src !== data.image) e.target.src = data.image; }}
   className='w-full h-48 object-cover object-center rounded-xl'
 />
         <div className='absolute top-3 left-3'>
