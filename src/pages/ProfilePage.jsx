@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 import { getVisitorId } from '../utils/fingerprint';
@@ -75,44 +76,33 @@ function ProfilePage() {
       // Collect all visitor_ids linked to this user
       let visitorIds = [visitorId];
 
-      // 1. If authorized via Google/Email — find all linked visitor_ids
-      if (user) {
-        const { data: linkedVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('auth_user_id', user.id);
+      // 1. Parallel: find linked visitors + current visitor phone
+      const [linkedVisitorsResult, visitorRecordResult] = await Promise.all([
+        user
+          ? supabase.from('visitors').select('visitor_id').eq('auth_user_id', user.id)
+          : Promise.resolve({ data: null }),
+        supabase.from('visitors').select('phone').eq('visitor_id', visitorId).single()
+      ]);
 
-        if (linkedVisitors && linkedVisitors.length > 0) {
-          visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
-        }
+      const linkedVisitors = linkedVisitorsResult.data;
+      if (linkedVisitors && linkedVisitors.length > 0) {
+        visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
       }
 
-      // 2. Find phone from current visitor's payments or visitors table
-      const { data: visitorRecord } = await supabase
-        .from('visitors')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .single();
+      const { data: visitorRecord } = visitorRecordResult;
 
       const currentPhone = visitorRecord?.phone;
 
-      // 3. If phone found, find all visitor_ids that used this phone
+      // 3. If phone found, find all visitor_ids that used this phone (parallel)
       if (currentPhone) {
-        const { data: phoneVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('phone', currentPhone);
+        const [{ data: phoneVisitors }, { data: phonePayments }] = await Promise.all([
+          supabase.from('visitors').select('visitor_id').eq('phone', currentPhone),
+          supabase.from('kaspi_payment_requests').select('visitor_id').eq('phone', currentPhone)
+        ]);
 
         if (phoneVisitors && phoneVisitors.length > 0) {
           visitorIds = [...new Set([...visitorIds, ...phoneVisitors.map(v => v.visitor_id)])];
         }
-
-        // Also find visitor_ids from payments with this phone
-        const { data: phonePayments } = await supabase
-          .from('kaspi_payment_requests')
-          .select('visitor_id')
-          .eq('phone', currentPhone);
-
         if (phonePayments && phonePayments.length > 0) {
           visitorIds = [...new Set([...visitorIds, ...phonePayments.map(v => v.visitor_id)])];
         }
@@ -295,7 +285,7 @@ function ProfilePage() {
         .eq('phone', verifiedPhone);
     } catch (error) {
       console.error('Avatar upload error:', error);
-      alert('Ошибка загрузки фото');
+      toast.error('Ошибка загрузки фото');
     } finally {
       setUploadingAvatar(false);
     }
@@ -538,9 +528,9 @@ function ProfilePage() {
                     />
                     <button
                       onClick={async () => {
-                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert('Введите корректный email'); return; }
+                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
                         setAuthLoading(true);
-                        try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { alert('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
+                        try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
                       }}
                       disabled={authLoading}
                       className='w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl text-[var(--text-primary)] font-medium hover:bg-gray-50'

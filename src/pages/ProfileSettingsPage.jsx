@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 import { getVisitorId } from '../utils/fingerprint';
@@ -113,7 +114,7 @@ function ProfileSettingsPage() {
 
   const handleSavePhone = async () => {
     if (editPhoneValue.length !== 11) {
-      alert('Введите корректный номер телефона (11 цифр)');
+      toast.error('Введите корректный номер телефона (11 цифр)');
       return;
     }
 
@@ -129,7 +130,7 @@ function ProfileSettingsPage() {
       setIsEditingPhone(false);
     } catch (error) {
       console.error('Error saving phone:', error);
-      alert('Ошибка сохранения');
+      toast.error('Ошибка сохранения');
     }
   };
 
@@ -278,7 +279,7 @@ function ProfileSettingsPage() {
                       await deleteAccount();
                       navigate('/');
                     } catch (e) {
-                      alert('Ошибка при удалении аккаунта');
+                      toast.error('Ошибка при удалении аккаунта');
                     }
                   }
                 }}
@@ -309,9 +310,9 @@ function ProfileSettingsPage() {
                   />
                   <button
                     onClick={async () => {
-                      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { alert('Введите корректный email'); return; }
+                      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
                       setAuthLoading(true);
-                      try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { alert('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
+                      try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
                     }}
                     disabled={authLoading}
                     className='w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl text-[var(--text-primary)] font-medium hover:bg-gray-50'

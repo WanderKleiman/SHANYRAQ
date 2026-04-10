@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../../supabaseClient';
 import Icon from '../Icon';
+import { getCategoryName } from '../../utils/charityData';
 
 function BeneficiaryList({ statusFilter = 'active', onEdit, onRefresh, onAddReport }) {
   const [beneficiaries, setBeneficiaries] = useState([]);
@@ -41,7 +43,7 @@ function BeneficiaryList({ statusFilter = 'active', onEdit, onRefresh, onAddRepo
       if (error) throw error;
       loadBeneficiaries();
     } catch (error) {
-      alert('Ошибка при удалении: ' + error.message);
+      toast.error('Ошибка при удалении: ' + error.message);
     }
   };
 
@@ -61,20 +63,8 @@ function BeneficiaryList({ statusFilter = 'active', onEdit, onRefresh, onAddRepo
       if (error) throw error;
       loadBeneficiaries();
     } catch (error) {
-      alert('Ошибка при завершении сбора: ' + error.message);
+      toast.error('Ошибка при завершении сбора: ' + error.message);
     }
-  };
-
-  const getCategoryName = (category) => {
-    const categories = {
-      children: 'Дети',
-      urgent: 'Взрослые',
-      operations: 'Пожилые',
-      animals: 'Животные',
-      social: 'Социальные программы',
-      non_material: 'Не материальная помощь'
-    };
-    return categories[category] || category;
   };
 
   if (isLoading) {

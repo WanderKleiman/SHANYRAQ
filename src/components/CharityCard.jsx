@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { ymTrackShareClick } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
 import PaymentModal from '../components/PaymentModal';
@@ -7,7 +8,7 @@ import { Share } from '@capacitor/share';
 function CharityCard({ data, onCardClick, index = 0 }) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const progressPercentage = (data.raised / data.target) * 100;
-  const remainingAmount = data.target - data.raised;
+  const remainingAmount = Math.max(0, data.target - data.raised);
 
   const handleHelp = () => {
     setShowPaymentModal(true);
@@ -27,7 +28,7 @@ function CharityCard({ data, onCardClick, index = 0 }) {
       // Fallback for browsers without Share API
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        alert('Ссылка скопирована в буфер обмена');
+        toast.success('Ссылка скопирована в буфер обмена');
       }
     }
   };
@@ -58,7 +59,7 @@ function CharityCard({ data, onCardClick, index = 0 }) {
         <h3 className='text-lg font-semibold text-[var(--text-primary)] leading-tight'>{data.title}</h3>
         <p className='text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-4'>{data.description}</p>
         <div className='flex items-center space-x-2 text-xs'>
-          <Icon name="shield" size={16} className="-check  text-[var(--primary-color)]" />
+          <Icon name="shield-check" size={16} className="text-[var(--primary-color)]" />
           <a
 href={`/fund/${encodeURIComponent(data.partnerFund)}`}
             onClick={(e) => e.stopPropagation()}

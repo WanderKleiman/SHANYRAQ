@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../../supabaseClient';
 import Icon from '../Icon';
 
@@ -82,7 +83,7 @@ images: beneficiary?.images?.join('\n') || '',
         is_active: formData.is_active,
         is_urgent: formData.is_urgent,
         is_nationwide: formData.is_nationwide,
-        collection_status: 'active'
+        collection_status: beneficiary?.collection_status || 'active'
       };
 
       if (beneficiary?.id) {
@@ -102,7 +103,7 @@ images: beneficiary?.images?.join('\n') || '',
 
       onSave();
     } catch (error) {
-      alert('Ошибка: ' + error.message);
+      toast.error('Ошибка: ' + error.message);
     } finally {
       setIsLoading(false);
     }

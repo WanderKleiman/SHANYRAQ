@@ -8,6 +8,7 @@ import { useBeneficiaries } from '../hooks/useBeneficiaries';
 import { supabase } from '../supabaseClient';
 import { ymTrackBeneficiaryView, ymTrackCategoryChange } from '../utils/yandexMetrika';
 import Icon from '../components/Icon';
+import { getCategoryName } from '../utils/charityData';
 
 function HomePage({ selectedCity, onCityChange }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -59,8 +60,7 @@ function HomePage({ selectedCity, onCityChange }) {
   useEffect(() => {
     const hasSelectedCity = localStorage.getItem('selectedCity');
     if (!hasSelectedCity) {
-      const timer = setTimeout(() => setShowCitySelector(true), 15000);
-      return () => clearTimeout(timer);
+      setShowCitySelector(true);
     }
   }, []);
   
@@ -170,7 +170,7 @@ function HomePage({ selectedCity, onCityChange }) {
         )}
       </div>
 
-      {showCitySelector && <CitySelectionModal onCitySelect={(city) => { onCityChange(city); setShowCitySelector(false); }} />}
+      {showCitySelector && <CitySelectionModal onCitySelect={(city) => { onCityChange(city); setShowCitySelector(false); }} onClose={() => setShowCitySelector(false)} />}
       {selectedCharity && <CharityModal data={selectedCharity} onClose={() => setSelectedCharity(null)} />}
 
       {showThankYou && (
@@ -217,19 +217,6 @@ function HomePage({ selectedCity, onCityChange }) {
       )}
     </>
   );
-}
-
-// Хелпер для названий категорий
-function getCategoryName(category) {
-  const categories = {
-    'children': 'Дети',
-    'animals': 'Животные',
-    'operations': 'Пожилые',
-    'urgent': 'Взрослые',
-    'social': 'Социальные проекты',
-    'non_material': 'Нематериальная помощь'
-  };
-  return categories[category] || category;
 }
 
 export default HomePage;

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Capacitor } from '@capacitor/core';
 import { useMainPageData } from '../hooks/useMainPageData';
 import { usePartnerFunds } from '../hooks/usePartnerFunds';
@@ -483,7 +484,7 @@ function MainPage() {
             <button
               onClick={() => {
                 const finalAmount = mainCustomSub ? parseInt(mainCustomSub) : mainSubAmount;
-                if (!finalAmount || finalAmount < 100) { alert('Минимальная сумма — 100 ₸'); return; }
+                if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
                 setMainSubAmount(finalAmount);
                 setShowMainSubModal(true);
                 setMainSubStep('method');
@@ -760,7 +761,7 @@ function MainPage() {
               />
               <button
                 onClick={async () => {
-                  if (mainSubPhone.length !== 11) { alert('Введите номер телефона (11 цифр)'); return; }
+                  if (mainSubPhone.length !== 11) { toast.error('Введите номер телефона (11 цифр)'); return; }
                   const { error } = await supabase.from('fund_subscriptions').insert({
                     fund_name: 'Шаңырақ',
                     phone: mainSubPhone,
@@ -768,7 +769,7 @@ function MainPage() {
                     payment_method: 'kaspi',
                     visitor_id: localStorage.getItem('visitorId') || null,
                   });
-                  if (error) { alert('Ошибка: ' + error.message); return; }
+                  if (error) { toast.error('Ошибка: ' + error.message); return; }
                   setMainSubStep('done');
                 }}
                 disabled={mainSubPhone.length !== 11}

@@ -1,7 +1,7 @@
 import React from 'react';
 import Icon from '../components/Icon';
 
-function CitySelectionModal({ onCitySelect }) {
+function CitySelectionModal({ onCitySelect, onClose }) {
   const cities = [
     'Алматы', 'Астана', 'Шымкент', 'Актобе', 'Караганда', 'Тараз',
     'Павлодар', 'Усть-Каменогорск', 'Семей', 'Атырау', 'Кызылорда',
@@ -13,7 +13,7 @@ function CitySelectionModal({ onCitySelect }) {
     <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4'>
       <div className='bg-[var(--bg-primary)] rounded-[var(--card-radius)] p-6 w-full max-w-md max-h-[80vh] flex flex-col relative'>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={onClose}
           className='absolute top-4 right-4 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200'
         >
           <Icon name="x" size={16} />

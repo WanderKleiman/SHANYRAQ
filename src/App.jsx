@@ -6,7 +6,6 @@ import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import MainPage from './pages/MainPage';
 import HomePage from './pages/HomePage';
-import PaymentPage from './pages/PaymentPage';
 import ReportsPage from './pages/ReportsPage';
 import AdminAccessPage from './pages/AdminAccessPage';
 import AboutFundPage from './pages/AboutFundPage';
@@ -21,6 +20,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
 import PolicyPage from './pages/PolicyPage';
 import OfertaPage from './pages/OfertaPage';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { supabase } from './supabaseClient';
 import { initPushNotifications } from './utils/pushNotifications';
@@ -119,6 +119,7 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
+      <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
       <BrowserRouter>
         <AuthCallback />
         <Routes>
@@ -138,8 +139,7 @@ function App() {
               </AppLayout>
             }
           />
-          <Route path='/payment' element={<PaymentPage />} />
-          <Route 
+          <Route
             path='/reports' 
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>

@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import CharityCard from '../components/CharityCard';
 import CharityModal from '../components/CharityModal';
 import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
+import { getCategoryName } from '../utils/charityData';
 
 function FundDetailPage() {
   const navigate = useNavigate();
@@ -273,7 +275,7 @@ function FundDetailPage() {
             <button
               onClick={() => {
                 const finalAmount = customSubAmount ? parseInt(customSubAmount) : subAmount;
-                if (!finalAmount || finalAmount < 100) { alert('Минимальная сумма — 100 ₸'); return; }
+                if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
                 setSubAmount(finalAmount);
                 setShowSubModal(true);
                 setSubStep('method');
@@ -389,7 +391,7 @@ function FundDetailPage() {
                 )}
                 <button
                   onClick={async () => {
-                    if (subPhone.length !== 11) { alert('Введите номер телефона (11 цифр)'); return; }
+                    if (subPhone.length !== 11) { toast.error('Введите номер телефона (11 цифр)'); return; }
                     const { error } = await supabase.from('fund_subscriptions').insert({
                       fund_id: fund.id,
                       fund_name: fund.name,
@@ -398,7 +400,7 @@ function FundDetailPage() {
                       payment_method: 'kaspi',
                       visitor_id: localStorage.getItem('visitorId') || null,
                     });
-                    if (error) { alert('Ошибка: ' + error.message); return; }
+                    if (error) { toast.error('Ошибка: ' + error.message); return; }
                     setSubStep('done');
                   }}
                   disabled={subPhone.length !== 11}
@@ -429,17 +431,6 @@ function FundDetailPage() {
       )}
     </>
   );
-}
-
-function getCategoryName(category) {
-  const categories = {
-    'children': 'Дети',
-    'animals': 'Животные',
-    'operations': 'Пожилые',
-    'urgent': 'Взрослые',
-    'non_material': 'Нематериальная помощь'
-  };
-  return categories[category] || category;
 }
 
 export default FundDetailPage;

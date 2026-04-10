@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../../supabaseClient';
 import Icon from '../Icon';
 
@@ -33,7 +34,7 @@ function ReportFormModal({ beneficiary, onClose, onSave }) {
       if (error) throw error;
       onSave();
     } catch (error) {
-      alert('Ошибка при сохранении отчёта: ' + error.message);
+      toast.error('Ошибка при сохранении отчёта: ' + error.message);
     } finally {
       setIsLoading(false);
     }

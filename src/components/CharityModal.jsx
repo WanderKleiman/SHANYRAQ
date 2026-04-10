@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import Icon from '../components/Icon';
 import PaymentModal from '../components/PaymentModal';
 import { Share } from '@capacitor/share';
@@ -61,7 +62,7 @@ function CharityModal({ data, onClose }) {
     } catch (e) {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        alert('Ссылка скопирована в буфер обмена');
+        toast.success('Ссылка скопирована в буфер обмена');
       }
     }
   };
@@ -255,7 +256,7 @@ function CharityModal({ data, onClose }) {
               <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
               
               <div className='flex items-center space-x-2 text-sm'>
-                <Icon name="shield" size={20} className="-check  text-[var(--primary-color)]" />
+                <Icon name="shield-check" size={20} className="text-[var(--primary-color)]" />
                 <a 
                   href={`/fund/${encodeURIComponent(data.partnerFund)}`}
   onClick={(e) => { e.stopPropagation(); }}

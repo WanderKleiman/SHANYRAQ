@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Icon from '../components/Icon';
 import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
@@ -191,18 +192,23 @@ function PaymentModal({ beneficiary, onClose }) {
     const amount = selectedAmount || parseInt(customAmount);
 
     if (!amount || amount <= 0) {
-      alert('Пожалуйста, выберите или введите сумму пожертвования');
+      toast.error('Пожалуйста, выберите или введите сумму пожертвования');
+      return;
+    }
+
+    if (amount < 100) {
+      toast.error('Минимальная сумма пожертвования — 100 ₸');
       return;
     }
 
     if (paymentMethod === 'card') {
-      alert('Оплата банковской картой временно недоступна');
+      toast.error('Оплата банковской картой временно недоступна');
       return;
     }
 
     if (paymentMethod === 'kaspi') {
       if (phoneNumber.length !== 11) {
-        alert('Пожалуйста, введите корректный номер телефона');
+        toast.error('Пожалуйста, введите корректный номер телефона');
         return;
       }
 
@@ -238,7 +244,7 @@ function PaymentModal({ beneficiary, onClose }) {
         navigate('/feed?donated=kaspi');
       } catch (error) {
         console.error('Ошибка при отправке:', error);
-        alert('Произошла ошибка. Попробуйте ещё раз.');
+        toast.error('Произошла ошибка. Попробуйте ещё раз.');
       } finally {
         setIsSubmitting(false);
       }
@@ -310,18 +316,17 @@ function PaymentModal({ beneficiary, onClose }) {
           <div>
             <h3 className='text-sm font-semibold text-[var(--text-primary)] mb-3'>Способ оплаты</h3>
             <div className='space-y-2'>
-              <label className={`flex items-center space-x-3 p-4 rounded-xl cursor-pointer ${paymentMethod === 'card' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
+              <label className='flex items-center space-x-3 p-4 rounded-xl cursor-not-allowed bg-gray-100 opacity-50'>
                 <input
                   type='radio'
                   name='payment'
                   value='card'
-                  checked={paymentMethod === 'card'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  disabled
                   className='w-5 h-5 text-[var(--primary-color)]'
                 />
-                <Icon name="credit-card" size={20} className="text-[var(--text-primary)]" />
-                <span className='text-[var(--text-primary)]'>Банковская карта</span>
-                <span className='text-xs text-[var(--text-secondary)] ml-auto'>скоро</span>
+                <Icon name="credit-card" size={20} className="text-gray-400" />
+                <span className='text-gray-400'>Банковская карта</span>
+                <span className='text-xs text-gray-400 ml-auto'>скоро</span>
               </label>
               <label className={`flex items-center space-x-3 p-4 h-14 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
                 <input

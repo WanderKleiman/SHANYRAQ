@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 import ReportModal from '../components/ReportModal';
+import { getCategoryName } from '../utils/charityData';
 
 function ReportsPage() {
   const navigate = useNavigate();
@@ -48,17 +49,6 @@ function ReportsPage() {
     }
   };
 
-  const getCategoryName = (category) => {
-    const categories = {
-      children: 'Дети',
-      urgent: 'Взрослые',
-      operations: 'Пожилые',
-      animals: 'Животные',
-      social: 'Социальные программы',
-      non_material: 'Не материальная помощь'
-    };
-    return categories[category] || category;
-  };
 
   return (
     <div className='min-h-screen bg-[var(--bg-secondary)]'>

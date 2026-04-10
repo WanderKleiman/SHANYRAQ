@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { checkAuth, logout } from '../../utils/adminAuth';
 import BeneficiaryFormModal from '../../components/admin/BeneficiaryFormModal';
 import BeneficiaryList from '../../components/admin/BeneficiaryList';
@@ -296,7 +297,7 @@ function SubscriptionsAdmin() {
 
   const updateStatus = async (id, status) => {
     const { error } = await supabase.from('fund_subscriptions').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
-    if (error) { alert('Ошибка: ' + error.message); return; }
+    if (error) { toast.error('Ошибка: ' + error.message); return; }
     fetchSubs();
   };
 
@@ -394,10 +395,10 @@ function FundsAdmin() {
   const handleSave = async (formData) => {
     if (editingFund) {
       const { error } = await supabase.from('partner_funds').update(formData).eq('id', editingFund.id);
-      if (error) { alert('Ошибка сохранения: ' + error.message); return; }
+      if (error) { toast.error('Ошибка сохранения: ' + error.message); return; }
     } else {
       const { error } = await supabase.from('partner_funds').insert(formData);
-      if (error) { alert('Ошибка создания: ' + error.message); return; }
+      if (error) { toast.error('Ошибка создания: ' + error.message); return; }
     }
     setShowForm(false);
     setEditingFund(null);
@@ -407,7 +408,7 @@ function FundsAdmin() {
   const handleDelete = async (fund) => {
     if (!confirm(`Удалить фонд "${fund.name}"?`)) return;
     const { error } = await supabase.from('partner_funds').delete().eq('id', fund.id);
-    if (error) { alert('Ошибка удаления: ' + error.message); return; }
+    if (error) { toast.error('Ошибка удаления: ' + error.message); return; }
     fetchFunds();
   };
 
@@ -480,7 +481,7 @@ function FundFormModal({ fund, onClose, onSave }) {
   const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSubmit = () => {
-    if (!form.name.trim()) { alert('Введите название фонда'); return; }
+    if (!form.name.trim()) { toast.error('Введите название фонда'); return; }
     const data = {
       name: form.name.trim(),
       description: form.description.trim() || null,
@@ -596,8 +597,8 @@ function PushAdmin() {
   useEffect(() => { fetchTokens(); }, [fetchTokens]);
 
   const sendPush = async () => {
-    if (!title.trim() || !body.trim()) { alert('Заполните заголовок и текст'); return; }
-    if (tokens.length === 0) { alert('Нет зарегистрированных устройств'); return; }
+    if (!title.trim() || !body.trim()) { toast.error('Заполните заголовок и текст'); return; }
+    if (tokens.length === 0) { toast.error('Нет зарегистрированных устройств'); return; }
 
     setSending(true);
     setResult(null);
