@@ -56,13 +56,6 @@ function HomePage({ selectedCity, onCityChange }) {
     }
   }, [searchParams, setSearchParams]);
 
-  // Показываем выбор города если не выбран
-  useEffect(() => {
-    const hasSelectedCity = localStorage.getItem('selectedCity');
-    if (!hasSelectedCity) {
-      setShowCitySelector(true);
-    }
-  }, []);
   
   // Открываем подопечного из URL (загружаем напрямую, без фильтра по городу)
   useEffect(() => {

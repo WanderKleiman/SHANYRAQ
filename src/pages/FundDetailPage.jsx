@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
@@ -17,6 +17,7 @@ function FundDetailPage() {
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [isDescriptionLong, setIsDescriptionLong] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
   const descRef = useRef(null);
 
   // Subscription state
@@ -43,7 +44,6 @@ function FundDetailPage() {
           .from('beneficiaries')
           .select('*')
           .eq('partner_fund', decodeURIComponent(name))
-          .eq('is_active', true)
           .order('created_at', { ascending: false });
 
         if (beneficiariesError) throw beneficiariesError;
@@ -105,6 +105,10 @@ function FundDetailPage() {
       </div>
     );
   }
+
+  const filteredBeneficiaries = useMemo(() => {
+    return beneficiaries.filter(b => b.collectionStatus === activeTab);
+  }, [beneficiaries, activeTab]);
 
   const socialLinks = fund.social_links || {};
 
@@ -293,16 +297,40 @@ function FundDetailPage() {
             <h3 className='text-lg font-semibold mb-3'>
               Подопечные фонда ({beneficiaries.length})
             </h3>
+            <div className='flex rounded-xl overflow-hidden border border-[var(--border-color)]'>
+              {[
+                { key: 'active', label: 'Активные' },
+                { key: 'completed', label: 'Завершённые' },
+                { key: 'reported', label: 'Отчёты' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-white'
+                      : 'text-[var(--text-secondary)] bg-[var(--bg-primary)]'
+                  }`}
+                  style={activeTab === tab.key ? { background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {beneficiaries.length === 0 ? (
+          {filteredBeneficiaries.length === 0 ? (
             <div className='text-center py-8'>
               <Icon name="users" size={32} className="text-gray-400 mx-auto mb-4" />
-              <p className='text-[var(--text-secondary)]'>У этого фонда пока нет подопечных</p>
+              <p className='text-[var(--text-secondary)]'>
+                {activeTab === 'active' && 'Нет активных подопечных'}
+                {activeTab === 'completed' && 'Нет завершённых сборов'}
+                {activeTab === 'reported' && 'Нет отчётов'}
+              </p>
             </div>
           ) : (
             <div className='cards-grid'>
-              {beneficiaries.map(item => (
+              {filteredBeneficiaries.map(item => (
                 <CharityCard
                   key={item.id}
                   data={item}
