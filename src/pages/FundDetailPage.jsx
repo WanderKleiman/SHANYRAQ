@@ -77,6 +77,10 @@ function FundDetailPage() {
     loadData();
   }, [name]);
 
+  const filteredBeneficiaries = useMemo(() => {
+    return beneficiaries.filter(b => b.collectionStatus === activeTab);
+  }, [beneficiaries, activeTab]);
+
   useEffect(() => {
     if (descRef.current) {
       const lineHeight = parseFloat(getComputedStyle(descRef.current).lineHeight);
@@ -105,10 +109,6 @@ function FundDetailPage() {
       </div>
     );
   }
-
-  const filteredBeneficiaries = useMemo(() => {
-    return beneficiaries.filter(b => b.collectionStatus === activeTab);
-  }, [beneficiaries, activeTab]);
 
   const socialLinks = fund.social_links || {};
 
