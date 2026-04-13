@@ -1,29 +1,40 @@
-import React, { Component, useEffect, useState } from 'react';
+import React, { Component, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Onboarding, { shouldShowOnboarding } from './components/Onboarding';
-import AuthCallbackPage from './pages/AuthCallbackPage';
 import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 import MainPage from './pages/MainPage';
-import HomePage from './pages/HomePage';
-import ReportsPage from './pages/ReportsPage';
-import AdminAccessPage from './pages/AdminAccessPage';
-import AboutFundPage from './pages/AboutFundPage';
-import DocumentsPage from './pages/DocumentsPage';
-import ContactsPage from './pages/ContactsPage';
-import PartnerFundsPage from './pages/PartnerFundsPage';
-import FundDetailPage from './pages/FundDetailPage';
-import ProfilePage from './pages/ProfilePage';
-import ProfileSettingsPage from './pages/ProfileSettingsPage';
-import AdminLoginPage from './pages/admin/AdminLoginPage';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminKaspiRequestsPage from './pages/admin/AdminKaspiRequestsPage';
-import PolicyPage from './pages/PolicyPage';
-import OfertaPage from './pages/OfertaPage';
+import Icon from './components/Icon';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { supabase } from './supabaseClient';
 import { initPushNotifications } from './utils/pushNotifications';
+
+// Lazy-loaded pages — загружаются только при переходе
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const ReportsPage = React.lazy(() => import('./pages/ReportsPage'));
+const AdminAccessPage = React.lazy(() => import('./pages/AdminAccessPage'));
+const AboutFundPage = React.lazy(() => import('./pages/AboutFundPage'));
+const DocumentsPage = React.lazy(() => import('./pages/DocumentsPage'));
+const ContactsPage = React.lazy(() => import('./pages/ContactsPage'));
+const PartnerFundsPage = React.lazy(() => import('./pages/PartnerFundsPage'));
+const FundDetailPage = React.lazy(() => import('./pages/FundDetailPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const ProfileSettingsPage = React.lazy(() => import('./pages/ProfileSettingsPage'));
+const AuthCallbackPage = React.lazy(() => import('./pages/AuthCallbackPage'));
+const AdminLoginPage = React.lazy(() => import('./pages/admin/AdminLoginPage'));
+const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminKaspiRequestsPage = React.lazy(() => import('./pages/admin/AdminKaspiRequestsPage'));
+const PolicyPage = React.lazy(() => import('./pages/PolicyPage'));
+const OfertaPage = React.lazy(() => import('./pages/OfertaPage'));
+
+function PageLoader() {
+  return (
+    <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
+      <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin" />
+    </div>
+  );
+}
 
 // Handle OAuth callback — redirect to /profile only on fresh sign-in (not on app reload)
 function AuthCallback() {
@@ -122,6 +133,7 @@ function App() {
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
       <BrowserRouter>
         <AuthCallback />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           <Route
             path='/'
@@ -140,45 +152,45 @@ function App() {
             }
           />
           <Route
-            path='/reports' 
+            path='/reports'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <ReportsPage />
               </AppLayout>
-            } 
+            }
           />
           <Route path='/admin-access' element={<AdminAccessPage />} />
-          <Route 
-            path='/about' 
+          <Route
+            path='/about'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <AboutFundPage />
               </AppLayout>
-            } 
+            }
           />
-          <Route 
-            path='/documents' 
+          <Route
+            path='/documents'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <DocumentsPage />
               </AppLayout>
-            } 
+            }
           />
-          <Route 
-            path='/contacts' 
+          <Route
+            path='/contacts'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <ContactsPage />
               </AppLayout>
-            } 
+            }
           />
-          <Route 
-            path='/partner-funds' 
+          <Route
+            path='/partner-funds'
             element={
               <AppLayout selectedCity={selectedCity} onCityChange={handleCityChange}>
                 <PartnerFundsPage />
               </AppLayout>
-            } 
+            }
           />
           <Route
             path='/profile'
@@ -208,9 +220,10 @@ function App() {
             }
           />
           <Route path='/admin' element={<AdminLoginPage />} />
-<Route path='/admin/dashboard' element={<AdminDashboardPage />} />
+          <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
       </AuthProvider>
     </ErrorBoundary>

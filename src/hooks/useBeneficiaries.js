@@ -32,7 +32,12 @@ export function useBeneficiaries(category = null, city = null) {
         
         if (error) throw error
         if (!cancelled) {
-          setBeneficiaries(data || [])
+          let results = data || []
+          // Скрываем карточки "Донорство" когда выбрана "Вся страна"
+          if (!city || city === 'all' || city === 'Все города' || city === 'Вся страна') {
+            results = results.filter(b => !b.title?.toLowerCase().includes('донорство'))
+          }
+          setBeneficiaries(results)
         }
       } catch (err) {
         console.error('Ошибка загрузки данных:', err)
@@ -46,12 +51,10 @@ export function useBeneficiaries(category = null, city = null) {
       }
     }
 
-    // Небольшая задержка чтобы браузер сначала отрисовал UI
-    const timer = setTimeout(fetchBeneficiaries, 50);
-    
+    fetchBeneficiaries();
+
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     }
   }, [category, city])
 
