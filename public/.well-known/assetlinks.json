@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "world.shanyrak.app",
+      "sha256_cert_fingerprints": [
+        "AE:A4:2C:7C:D4:60:F9:D4:2A:69:06:14:E2:DD:9B:28:84:73:AA:84:C2:02:38:7E:01:BC:3E:DA:5B:48:F2:4D"
+      ]
+    }
+  }
+]
