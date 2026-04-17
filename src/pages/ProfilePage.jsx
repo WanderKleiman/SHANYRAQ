@@ -58,6 +58,8 @@ function ProfilePage() {
   const [verifiedPhone, setVerifiedPhone] = useState('');
   const [showThankYou, setShowThankYou] = useState(false);
   const [thankYouItems, setThankYouItems] = useState([]);
+  const [profileTab, setProfileTab] = useState('collection');
+  const [donationsList, setDonationsList] = useState([]);
 
   useEffect(() => {
     loadProfile();
@@ -211,7 +213,7 @@ function ProfilePage() {
         const beneficiaryIds = [...new Set(paidPayments.map(p => p.beneficiary_id))];
         const { data: beneficiaries } = await supabase
           .from('beneficiaries')
-          .select('id, category, image_url, title')
+          .select('id, category, image_url, title, collection_status')
           .in('id', beneficiaryIds);
 
         const beneficiaryMap = {};
@@ -224,9 +226,11 @@ function ProfilePage() {
           amount: p.amount,
           category: beneficiaryMap[p.beneficiary_id]?.category || 'other',
           image: beneficiaryMap[p.beneficiary_id]?.image_url || '',
+          collectionStatus: beneficiaryMap[p.beneficiary_id]?.collection_status || 'active',
           date: p.created_at
         }));
 
+        setDonationsList(donationList);
         setTotalHelp(donationList.reduce((sum, d) => sum + d.amount, 0));
 
         const grouped = {};
@@ -554,69 +558,216 @@ function ProfilePage() {
             )}
           </div>
         ) : isActivated && (
-          CATEGORIES.map(cat => {
-            const items = helpedByCategory[cat.key] || [];
-            return (
-              <div key={cat.key}>
-                <div className='flex items-center space-x-2 mb-3'>
-                  <Icon name={cat.icon} size={18} className="text-[var(--primary-color)]" />
-                  <h2 className='text-lg font-semibold text-[var(--text-primary)]'>{cat.name}</h2>
-                </div>
+          <>
+            {/* Tab switcher */}
+            <div className='flex rounded-xl overflow-hidden border border-[var(--border-color)]'>
+              {[
+                { key: 'collection', label: 'Ваши подопечные' },
+                { key: 'statuses', label: 'Статусы помощи' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setProfileTab(tab.key)}
+                  className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                    profileTab === tab.key
+                      ? 'text-white'
+                      : 'text-[var(--text-secondary)] bg-[var(--bg-primary)]'
+                  }`}
+                  style={profileTab === tab.key ? { background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                <div className='overflow-x-auto scrollbar-hide'>
-                  <div className='flex space-x-3 items-start'>
-                    {items.length === 0 ? (
-                      <button
-                        onClick={() => navigate(`/feed?category=${cat.key}`)}
-                        className='border-2 border-dashed border-gray-300 rounded-2xl bg-green-50 flex-shrink-0 w-32 h-32 flex items-center justify-center'
-                      >
-                        <div className='flex flex-col items-center text-center px-2'>
-                          <div className='w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2'>
-                            <Icon name="plus" size={18} className="text-[var(--primary-color)]" />
-                          </div>
-                          <p className='text-xs text-[var(--text-secondary)] leading-tight'>Добавьте подопечных</p>
-                        </div>
-                      </button>
-                    ) : (
-                      <>
-                        {items.map(item => (
-                          <div
-                            key={item.id}
-                            className='cursor-pointer flex-shrink-0 w-32'
-                            onClick={() => navigate(`/feed?beneficiary=${item.beneficiaryId}`)}
-                          >
-                            <div className='relative mb-2'>
-                              {item.image ? (
-                                <img src={item.image} alt={item.name} className='w-32 h-32 object-cover rounded-2xl' />
-                              ) : (
-                                <div className='w-32 h-32 bg-gray-200 rounded-2xl flex items-center justify-center'>
-                                  <Icon name="user" size={24} className="text-gray-400" />
-                                </div>
-                              )}
-                            </div>
-                            <h3 className='text-xs font-medium text-[var(--text-primary)] mb-1 line-clamp-2'>
-                              {item.name}
-                            </h3>
-                            <p className='text-xs font-bold text-[var(--text-primary)]'>
-                              {item.amount.toLocaleString("ru-RU")} ₸
-                            </p>
-                          </div>
-                        ))}
-                        <div className='flex-shrink-0 w-10 h-32 flex items-center'>
+            {/* Tab: Ваши подопечные */}
+            {profileTab === 'collection' && (
+              CATEGORIES.map(cat => {
+                const items = helpedByCategory[cat.key] || [];
+                return (
+                  <div key={cat.key}>
+                    <div className='flex items-center space-x-2 mb-3'>
+                      <Icon name={cat.icon} size={18} className="text-[var(--primary-color)]" />
+                      <h2 className='text-lg font-semibold text-[var(--text-primary)]'>{cat.name}</h2>
+                    </div>
+
+                    <div className='overflow-x-auto scrollbar-hide'>
+                      <div className='flex space-x-3 items-start'>
+                        {items.length === 0 ? (
                           <button
-                            onClick={() => navigate('/feed')}
-                            className='w-10 h-10 bg-green-100 rounded-full flex items-center justify-center'
+                            onClick={() => navigate(`/feed?category=${cat.key}`)}
+                            className='border-2 border-dashed border-gray-300 rounded-2xl bg-green-50 flex-shrink-0 w-32 h-32 flex items-center justify-center'
                           >
-                            <Icon name="plus" size={18} className="text-green-600" />
+                            <div className='flex flex-col items-center text-center px-2'>
+                              <div className='w-10 h-10 bg-white rounded-full flex items-center justify-center mb-2'>
+                                <Icon name="plus" size={18} className="text-[var(--primary-color)]" />
+                              </div>
+                              <p className='text-xs text-[var(--text-secondary)] leading-tight'>Добавьте подопечных</p>
+                            </div>
                           </button>
-                        </div>
-                      </>
-                    )}
+                        ) : (
+                          <>
+                            {items.map(item => (
+                              <div
+                                key={item.id}
+                                className='cursor-pointer flex-shrink-0 w-32'
+                                onClick={() => navigate(`/feed?beneficiary=${item.beneficiaryId}`)}
+                              >
+                                <div className='relative mb-2'>
+                                  {item.image ? (
+                                    <img src={item.image} alt={item.name} className='w-32 h-32 object-cover rounded-2xl' />
+                                  ) : (
+                                    <div className='w-32 h-32 bg-gray-200 rounded-2xl flex items-center justify-center'>
+                                      <Icon name="user" size={24} className="text-gray-400" />
+                                    </div>
+                                  )}
+                                </div>
+                                <h3 className='text-xs font-medium text-[var(--text-primary)] mb-1 line-clamp-2'>
+                                  {item.name}
+                                </h3>
+                                <p className='text-xs font-bold text-[var(--text-primary)]'>
+                                  {item.amount.toLocaleString("ru-RU")} ₸
+                                </p>
+                              </div>
+                            ))}
+                            <div className='flex-shrink-0 w-10 h-32 flex items-center'>
+                              <button
+                                onClick={() => navigate('/feed')}
+                                className='w-10 h-10 bg-green-100 rounded-full flex items-center justify-center'
+                              >
+                                <Icon name="plus" size={18} className="text-green-600" />
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
+                );
+              })
+            )}
+
+            {/* Tab: Статусы помощи */}
+            {profileTab === 'statuses' && (() => {
+              // Deduplicate by beneficiaryId, sum amounts
+              const uniqueMap = {};
+              donationsList.forEach(d => {
+                if (!uniqueMap[d.beneficiaryId]) {
+                  uniqueMap[d.beneficiaryId] = { ...d, totalAmount: d.amount };
+                } else {
+                  uniqueMap[d.beneficiaryId].totalAmount += d.amount;
+                }
+              });
+              const uniqueDonations = Object.values(uniqueMap);
+
+              const STATUS_STEPS = [
+                { label: 'Сбор', icon: null },
+                { label: 'Завершён', icon: null },
+                { label: 'Помощь', icon: null },
+                { label: 'Отчёт', icon: 'heart' },
+              ];
+
+              const getActiveSteps = (status) => {
+                if (status === 'reported') return 4;
+                if (status === 'completed') return 3;
+                return 1; // active
+              };
+
+              return uniqueDonations.length === 0 ? (
+                <div className='text-center py-8'>
+                  <Icon name="activity" size={32} className="text-gray-300 mx-auto mb-4" />
+                  <p className='text-[var(--text-secondary)]'>Нет данных о статусах</p>
                 </div>
-              </div>
-            );
-          })
+              ) : (
+                <div className='space-y-4'>
+                  {uniqueDonations.map(item => {
+                    const activeSteps = getActiveSteps(item.collectionStatus);
+                    return (
+                      <div
+                        key={item.beneficiaryId}
+                        className='bg-[var(--bg-primary)] rounded-2xl p-4 border border-[var(--border-color)]'
+                      >
+                        {/* Beneficiary info */}
+                        <div
+                          className='flex items-center space-x-3 mb-4 cursor-pointer'
+                          onClick={() => navigate(`/feed?beneficiary=${item.beneficiaryId}`)}
+                        >
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className='w-11 h-11 rounded-xl object-cover flex-shrink-0' />
+                          ) : (
+                            <div className='w-11 h-11 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0'>
+                              <Icon name="user" size={18} className="text-gray-400" />
+                            </div>
+                          )}
+                          <div className='flex-1 min-w-0'>
+                            <h3 className='text-sm font-semibold text-[var(--text-primary)] truncate'>{item.name}</h3>
+                            <p className='text-xs font-bold text-[var(--primary-color)]'>{item.totalAmount.toLocaleString('ru-RU')} ₸</p>
+                          </div>
+                        </div>
+
+                        {/* Status tracker */}
+                        <div className='relative'>
+                          {/* Line */}
+                          <div className='absolute top-3 left-3 right-3 h-0.5 bg-gray-200' />
+                          <div
+                            className='absolute top-3 left-3 h-0.5'
+                            style={{
+                              width: `${((activeSteps - 1) / 3) * 100}%`,
+                              maxWidth: 'calc(100% - 24px)',
+                              background: 'linear-gradient(90deg, #1e6b4e, #5ec49a)'
+                            }}
+                          />
+
+                          {/* Steps */}
+                          <div className='relative flex justify-between'>
+                            {STATUS_STEPS.map((step, i) => {
+                              const isActive = i < activeSteps;
+                              const isCurrent = i === activeSteps - 1;
+                              return (
+                                <div key={i} className='flex flex-col items-center' style={{ width: '25%' }}>
+                                  <div
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center z-10 ${
+                                      isActive
+                                        ? 'text-white'
+                                        : 'bg-gray-200 text-gray-400'
+                                    } ${isCurrent ? 'ring-2 ring-offset-1 ring-green-300' : ''}`}
+                                    style={isActive ? { background: 'linear-gradient(135deg, #1e6b4e, #5ec49a)' } : undefined}
+                                  >
+                                    {step.icon && isActive ? (
+                                      <Icon name={step.icon} size={12} className="text-white" />
+                                    ) : isActive ? (
+                                      <Icon name="check" size={12} className="text-white" />
+                                    ) : (
+                                      <div className='w-2 h-2 rounded-full bg-gray-400' />
+                                    )}
+                                  </div>
+                                  <span className={`text-[10px] mt-1.5 text-center leading-tight ${
+                                    isActive ? 'text-[var(--primary-color)] font-semibold' : 'text-gray-400'
+                                  }`}>
+                                    {step.label}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Report link */}
+                        {item.collectionStatus === 'reported' && (
+                          <button
+                            onClick={() => navigate('/reports')}
+                            className='mt-3 w-full text-center text-xs font-semibold text-[var(--primary-color)] bg-green-50 rounded-xl py-2'
+                          >
+                            Смотреть отчёт
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </>
         )}
       </div>
 
