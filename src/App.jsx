@@ -40,20 +40,19 @@ function PageLoader() {
 function AuthCallback() {
   const navigate = useNavigate();
   useEffect(() => {
-    // Track if we already had a session on mount
-    let isInitialCheck = true;
+    let hadSession = false;
+    // Check if user already has a session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      hadSession = !!session;
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' && !isInitialCheck) {
+      // Only redirect on fresh sign-in (user didn't have session before)
+      if (event === 'SIGNED_IN' && !hadSession) {
+        hadSession = true;
         navigate('/profile', { replace: true });
       }
-      // After the first event (INITIAL_SESSION), stop treating as initial
-      if (event === 'INITIAL_SESSION') {
-        isInitialCheck = false;
-      }
     });
-    // Fallback: after 1s, any SIGNED_IN is a real login
-    const timer = setTimeout(() => { isInitialCheck = false; }, 1000);
-    return () => { subscription.unsubscribe(); clearTimeout(timer); };
+    return () => { subscription.unsubscribe(); };
   }, [navigate]);
   return null;
 }
