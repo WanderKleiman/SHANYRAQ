@@ -8,6 +8,14 @@ import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
 import { getCategoryName } from '../utils/charityData';
 
+function formatPhoneDisplay(digits) {
+  if (!digits) return '+7';
+  if (digits.length <= 1) return '+7';
+  if (digits.length <= 4) return `+7 ${digits.slice(1)}`;
+  if (digits.length <= 7) return `+7 ${digits.slice(1, 4)} ${digits.slice(4)}`;
+  return `+7 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
+}
+
 function FundDetailPage() {
   const navigate = useNavigate();
   const { name } = useParams();
@@ -405,7 +413,7 @@ function FundDetailPage() {
                   type='tel'
                   inputMode='numeric'
                   placeholder='+7 ___ ___ __ __'
-                  value={subPhone}
+                  value={formatPhoneDisplay(subPhone)}
                   onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, '');
                     if (val.length > 11) val = val.slice(0, 11);

@@ -36,6 +36,14 @@ function formatSum(num) {
   return num.toLocaleString('ru-RU');
 }
 
+function formatPhoneDisplay(digits) {
+  if (!digits) return '+7';
+  if (digits.length <= 1) return '+7';
+  if (digits.length <= 4) return `+7 ${digits.slice(1)}`;
+  if (digits.length <= 7) return `+7 ${digits.slice(1, 4)} ${digits.slice(4)}`;
+  return `+7 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
+}
+
 function MainPage() {
   const navigate = useNavigate();
   const { categoryCounts, totalRaised, totalTarget, beneficiaries, loading } = useMainPageData();
@@ -750,7 +758,7 @@ function MainPage() {
                 type='tel'
                 inputMode='numeric'
                 placeholder='+7 ___ ___ __ __'
-                value={mainSubPhone}
+                value={formatPhoneDisplay(mainSubPhone)}
                 onChange={(e) => {
                   let val = e.target.value.replace(/\D/g, '');
                   if (val.length > 11) val = val.slice(0, 11);
