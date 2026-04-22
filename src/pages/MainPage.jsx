@@ -156,7 +156,7 @@ function MainPage() {
     <div className='hidden md:block min-h-screen relative bg-white'>
       {/* Blur block */}
       <div
-        className='absolute top-0 right-0 w-1/2 h-full'
+        className='absolute top-0 right-0 w-1/2 h-screen'
         style={{ background: '#7EF1D0', borderRadius: '20%', filter: 'blur(200px)' }}
       />
 
