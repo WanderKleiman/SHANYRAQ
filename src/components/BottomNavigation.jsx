@@ -25,7 +25,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
 
   return (
     <>
-      <nav className='fixed bottom-0 left-0 right-0 z-50 bg-white bg-opacity-90 border-t border-[var(--border-color)] backdrop-blur-md rounded-t-2xl' style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} data-name='bottom-navigation' data-file='src/components/BottomNavigation.jsx'>
+      <nav className='fixed bottom-0 left-0 right-0 bg-white bg-opacity-90 border-t border-[var(--border-color)] backdrop-blur-md rounded-t-2xl' style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} data-name='bottom-navigation' data-file='src/components/BottomNavigation.jsx'>
         <div className='flex items-center py-1'>
           <button
             onClick={() => navigate('/')}

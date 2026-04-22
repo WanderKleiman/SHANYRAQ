@@ -145,7 +145,7 @@ function MainPage() {
   return (
     <>
     {/* === DESKTOP VERSION === */}
-    <div className='hidden md:block h-screen overflow-hidden relative bg-white'>
+    <div className='hidden md:block min-h-screen relative bg-white'>
       {/* Blur block */}
       <div
         className='absolute top-0 right-0 w-1/2 h-full'
@@ -190,7 +190,7 @@ function MainPage() {
             <div className='mt-[1vh]'>
               <p className='text-[1.1vw] font-semibold text-[var(--text-primary)] mb-[1.5vh]'>Скачайте приложение</p>
               <div className='flex gap-3'>
-                <a href='#' className='block'>
+                <a href='https://play.google.com/store/apps/details?id=world.shanyrak.app&pcampaignid=web_share' target='_blank' rel='noopener noreferrer' className='block'>
                   <img src={`${SUPABASE_IMG}/Google%20.png`} alt='Google Play' className='h-[5.5vh] object-contain' />
                 </a>
                 <a href='#' className='block'>
@@ -625,7 +625,7 @@ function MainPage() {
             В приложении удобнее
           </p>
           <div className='flex gap-3 justify-center'>
-            <a href='#' className='block flex-1'>
+            <a href='https://play.google.com/store/apps/details?id=world.shanyrak.app&pcampaignid=web_share' target='_blank' rel='noopener noreferrer' className='block flex-1'>
               <img src={`${SUPABASE_IMG}/Google%20.png`} alt='Google Play' className='h-[52px] w-full object-contain' />
             </a>
             <a href='#' className='block flex-1'>
