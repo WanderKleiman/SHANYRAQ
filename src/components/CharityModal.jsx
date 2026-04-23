@@ -118,168 +118,163 @@ function CharityModal({ data, onClose }) {
   };
 
   return (
+    /*
+      Transform applied to the outermost fixed container, NOT to the popup card.
+      This ensures the iOS scroll compositor layer (inner overflow-y-auto div)
+      and the popup background are in the same compositing subtree and translate
+      atomically — eliminating the double-layer visual glitch during swipe-to-close.
+    */
     <div
       className='fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-4'
-      style={{ touchAction: 'none' }}
+      style={{
+        transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
+        transition: isClosing ? 'transform 0.3s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.3s ease-out',
+        touchAction: 'none',
+      }}
       onClick={onClose}
     >
       <div
         className='absolute inset-0 bg-black transition-opacity'
         style={{
           opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
-          transition: isDragging ? 'none' : 'opacity 0.3s ease-out'
+          transition: isDragging ? 'none' : 'opacity 0.3s ease-out',
         }}
       />
 
-      {/*
-        Single scrollable layer — popup container IS the scroll container.
-        Eliminates the nested overflow-y-auto div that caused iOS to composite
-        content on a separate async layer, creating the double-layer visual glitch.
-      */}
       <div
-        ref={scrollContainerRef}
-        className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] relative z-10 overflow-y-auto overflow-x-hidden'
+        className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] relative z-10 overflow-hidden'
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{
-          transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
-          transition: isClosing ? 'transform 0.3s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.3s ease-out',
-          touchAction: dragOffset > 0 ? 'none' : 'auto',
-          overscrollBehavior: 'contain',
-        }}
+        style={{ touchAction: dragOffset > 0 ? 'none' : 'auto' }}
       >
-        {/* Zero-height sticky anchor keeps X button pinned to the top of the visible popup area */}
-        <div className='sticky top-0 z-30 pointer-events-none' style={{ height: 0 }}>
-          <button
-            onClick={onClose}
-            className='pointer-events-auto absolute top-4 right-4 w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center hover:bg-opacity-100 shadow-lg'
-          >
-            <Icon name="x" size={16} />
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className='absolute top-4 right-4 w-8 h-8 bg-white bg-opacity-90 rounded-full flex items-center justify-center z-30 hover:bg-opacity-100 shadow-lg'
+        >
+          <Icon name="x" size={16} />
+        </button>
 
-        {/* Media */}
-        <div className='relative h-64 md:h-96'>
-          {media[currentMediaIndex]?.type === 'image' ? (
-            <img
-              src={media[currentMediaIndex].url}
-              alt={data.title}
-              loading='lazy'
-              className='w-full h-64 md:h-96 object-cover object-top'
-            />
-          ) : media[currentMediaIndex]?.type === 'video' ? (
-            <div className='w-full h-64 md:h-96 bg-black flex items-center justify-center'>
-              {getVideoId(media[currentMediaIndex].url) ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${getVideoId(media[currentMediaIndex].url)}`}
-                  className='w-full h-full'
-                  frameBorder='0'
-                  allowFullScreen
-                />
-              ) : (
-                <video src={media[currentMediaIndex].url} className='w-full h-full object-cover' controls />
-              )}
-            </div>
-          ) : null}
-
-          <div className='absolute top-3 left-3 z-10'>
-            <span className='bg-[var(--primary-color)] text-white px-3 py-1 rounded-full text-sm font-medium'>
-              {data.categoryName}
-            </span>
-          </div>
-
-          {media.length > 1 && (
-            <>
-              <button
-                onClick={prevMedia}
-                className='absolute left-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
-              >
-                <Icon name="chevron-left" size={20} />
-              </button>
-              <button
-                onClick={nextMedia}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
-              >
-                <Icon name="chevron-right" size={20} />
-              </button>
-              <div className='absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10'>
-                {media.map((_, index) => (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full ${index === currentMediaIndex ? 'bg-white' : 'bg-white bg-opacity-50'}`}
+        <div
+          ref={scrollContainerRef}
+          className='overflow-y-auto max-h-[85vh] md:max-h-[90vh] pb-20'
+          style={{ overscrollBehavior: 'contain' }}
+        >
+          <div className='relative h-64 md:h-96'>
+            {media[currentMediaIndex]?.type === 'image' ? (
+              <img
+                src={media[currentMediaIndex].url}
+                alt={data.title}
+                loading='lazy'
+                className='w-full h-64 md:h-96 object-cover object-top rounded-t-3xl md:rounded-t-2xl'
+              />
+            ) : media[currentMediaIndex]?.type === 'video' ? (
+              <div className='w-full h-64 md:h-96 bg-black flex items-center justify-center'>
+                {getVideoId(media[currentMediaIndex].url) ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${getVideoId(media[currentMediaIndex].url)}`}
+                    className='w-full h-full'
+                    frameBorder='0'
+                    allowFullScreen
                   />
-                ))}
+                ) : (
+                  <video src={media[currentMediaIndex].url} className='w-full h-full object-cover' controls />
+                )}
               </div>
-            </>
-          )}
-        </div>
+            ) : null}
 
-        {/* Text content */}
-        <div className='p-6 pb-6'>
-          <div className='space-y-4'>
-            <h3 className='text-xl font-bold text-[var(--text-primary)]'>{data.title}</h3>
+            <div className='absolute top-3 left-3 z-10'>
+              <span className='bg-[var(--primary-color)] text-white px-3 py-1 rounded-full text-sm font-medium'>
+                {data.categoryName}
+              </span>
+            </div>
 
-            {data.documentsLink && (
-              <a
-                href={data.documentsLink}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='flex items-center space-x-2 text-sm bg-green-50 text-green-700 p-3 rounded-xl hover:bg-green-100 transition-colors'
-              >
-                <Icon name="file-text" size={20} className="text-green-600" />
-                <span className='flex-1'>Документы, подтверждающие сбор</span>
-                <Icon name="external-link" size={16} />
-              </a>
+            {media.length > 1 && (
+              <>
+                <button
+                  onClick={prevMedia}
+                  className='absolute left-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
+                >
+                  <Icon name="chevron-left" size={20} />
+                </button>
+                <button
+                  onClick={nextMedia}
+                  className='absolute right-3 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black bg-opacity-50 text-white rounded-full flex items-center justify-center hover:bg-opacity-70 transition-all z-10'
+                >
+                  <Icon name="chevron-right" size={20} />
+                </button>
+                <div className='absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10'>
+                  {media.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`w-2 h-2 rounded-full ${index === currentMediaIndex ? 'bg-white' : 'bg-white bg-opacity-50'}`}
+                    />
+                  ))}
+                </div>
+              </>
             )}
+          </div>
 
-            <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
+          <div className='p-6 pb-6'>
+            <div className='space-y-4'>
+              <h3 className='text-xl font-bold text-[var(--text-primary)]'>{data.title}</h3>
 
-            <div className='flex items-center space-x-2 text-sm'>
-              <Icon name="shield-check" size={20} className="text-[var(--primary-color)]" />
-              <a
-                href={`/fund/${encodeURIComponent(data.partnerFund)}`}
-                onClick={(e) => { e.stopPropagation(); }}
-                className='text-[var(--primary-color)] hover:underline'
-              >
-                Фонд "{data.partnerFund}"
-              </a>
-            </div>
+              {data.documentsLink && (
+                <a
+                  href={data.documentsLink}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='flex items-center space-x-2 text-sm bg-green-50 text-green-700 p-3 rounded-xl hover:bg-green-100 transition-colors'
+                >
+                  <Icon name="file-text" size={20} className="text-green-600" />
+                  <span className='flex-1'>Документы, подтверждающие сбор</span>
+                  <Icon name="external-link" size={16} />
+                </a>
+              )}
 
-            <div className='space-y-3 bg-[var(--bg-secondary)] p-4 rounded-xl'>
-              <div className='flex justify-between text-sm'>
-                <span className='text-[var(--text-secondary)]'>Собрано</span>
-                <span className='font-semibold text-[var(--text-primary)]'>
-                  {data.raised.toLocaleString("ru-RU")} ₸ из {data.target.toLocaleString("ru-RU")} ₸
-                </span>
+              <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
+
+              <div className='flex items-center space-x-2 text-sm'>
+                <Icon name="shield-check" size={20} className="text-[var(--primary-color)]" />
+                <a
+                  href={`/fund/${encodeURIComponent(data.partnerFund)}`}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  className='text-[var(--primary-color)] hover:underline'
+                >
+                  Фонд "{data.partnerFund}"
+                </a>
               </div>
 
-              <div className='progress-bar'>
-                <div className='progress-fill' style={{ width: `${Math.min(progressPercentage, 100)}%` }} />
-              </div>
-
-              <div className='flex justify-between items-center text-sm text-[var(--text-secondary)]'>
-                <span>Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸</span>
-                {data.helpersCount && <span>Помогли: {data.helpersCount} человек</span>}
+              <div className='space-y-3 bg-[var(--bg-secondary)] p-4 rounded-xl'>
+                <div className='flex justify-between text-sm'>
+                  <span className='text-[var(--text-secondary)]'>Собрано</span>
+                  <span className='font-semibold text-[var(--text-primary)]'>
+                    {data.raised.toLocaleString("ru-RU")} ₸ из {data.target.toLocaleString("ru-RU")} ₸
+                  </span>
+                </div>
+                <div className='progress-bar'>
+                  <div className='progress-fill' style={{ width: `${Math.min(progressPercentage, 100)}%` }} />
+                </div>
+                <div className='flex justify-between items-center text-sm text-[var(--text-secondary)]'>
+                  <span>Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸</span>
+                  {data.helpersCount && <span>Помогли: {data.helpersCount} человек</span>}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Action buttons — sticky to the bottom of the visible popup area */}
-        <div className='sticky bottom-0 z-20 bg-[var(--bg-primary)] px-4 pb-4 pt-2'>
-          <div className='flex space-x-3'>
-            <button onClick={handleHelp} className='btn-primary flex-1 shadow-lg'>
-              Помочь
-            </button>
-            <button
-              onClick={handleShare}
-              className='btn-secondary w-12 h-12 flex items-center justify-center p-0 shadow-lg'
-            >
-              <Icon name="share-2" size={20} />
-            </button>
-          </div>
+        <div className='absolute bottom-4 left-4 right-4 flex space-x-3 z-20'>
+          <button onClick={handleHelp} className='btn-primary flex-1 shadow-lg'>
+            Помочь
+          </button>
+          <button
+            onClick={handleShare}
+            className='btn-secondary w-12 h-12 flex items-center justify-center p-0 shadow-lg'
+          >
+            <Icon name="share-2" size={20} />
+          </button>
         </div>
       </div>
 
