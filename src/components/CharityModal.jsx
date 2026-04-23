@@ -73,51 +73,35 @@ function CharityModal({ data, onClose }) {
   };
 
   const handleTouchMove = (e) => {
-    if (!isDragging) return;
+    if (!touchStartY) return;
 
-    const currentX = e.targetTouches[0].clientX;
     const currentY = e.targetTouches[0].clientY;
-    setTouchEnd(currentX);
-    setTouchEndY(currentY);
+    const currentX = e.targetTouches[0].clientX;
 
     const offsetY = currentY - touchStartY;
     const offsetX = Math.abs(currentX - touchStart);
 
+    const scrollEl = scrollContainerRef.current;
+    const scrollTop = scrollEl ? scrollEl.scrollTop : 0;
+
     if (isDragMode) {
-      // Drag lock: modal drag already started, keep going until touch end
       e.preventDefault();
       setDragOffset(Math.max(0, offsetY));
       return;
     }
 
-    // Only start modal drag when at top of scroll AND moving down
-    const atTop = scrollTopAtStart.current <= 0;
-    if (atTop && offsetY > 10 && offsetY > offsetX) {
-      e.preventDefault();
-      setIsDragMode(true);
-      setDragOffset(offsetY);
-    }
-    // Otherwise: native scroll takes over, no interference
+    if (scrollTop > 0) return;
+    if (offsetY <= 0) return;
+    if (offsetY < 10 || offsetY < offsetX) return;
+
+    setIsDragMode(true);
+    e.preventDefault();
+    setDragOffset(offsetY);
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
-    const wasDragMode = isDragMode;
     setIsDragMode(false);
-
-    if (wasDragMode && dragOffset > 100) {
-      setIsClosing(true);
-      setTimeout(() => { onClose(); }, 300);
-      return;
-    }
-
     setDragOffset(0);
-    if (wasDragMode) return;
-
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    if (distance > 50 && media.length > 1) nextMedia();
-    if (distance < -50 && media.length > 1) prevMedia();
   };
 
   const getVideoId = (url) => {
@@ -136,7 +120,7 @@ function CharityModal({ data, onClose }) {
         className='absolute inset-0 bg-black'
         style={{
           opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
-          transition: isDragging ? 'none' : 'opacity 0.3s ease-out',
+          transition: isDragMode ? 'none' : 'opacity 0.3s ease-out',
         }}
       />
 
@@ -158,7 +142,7 @@ function CharityModal({ data, onClose }) {
             : isDragMode && dragOffset > 0
               ? 'none'
               : 'transform 0.3s ease-out',
-          willChange: isDragging ? 'transform' : 'auto',
+          willChange: isDragMode ? 'transform' : 'auto',
         }}
       >
         <button
@@ -172,7 +156,6 @@ function CharityModal({ data, onClose }) {
           ref={scrollContainerRef}
           className='overflow-y-auto max-h-[85vh] md:max-h-[90vh] pb-20'
           style={{
-            overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
           }}
         >
