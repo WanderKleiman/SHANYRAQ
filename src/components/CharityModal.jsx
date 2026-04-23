@@ -73,22 +73,31 @@ function CharityModal({ data, onClose }) {
   };
 
   const handleTouchMove = (e) => {
+    if (!isDragging) return;
+
     const currentX = e.targetTouches[0].clientX;
     const currentY = e.targetTouches[0].clientY;
     setTouchEnd(currentX);
     setTouchEndY(currentY);
 
-    if (isDragging && scrollContainerRef.current) {
-      const offsetY = currentY - touchStartY;
-      const offsetX = Math.abs(currentX - touchStart);
-      const canDrag = scrollTopAtStart.current <= 0;
+    const offsetY = currentY - touchStartY;
+    const offsetX = Math.abs(currentX - touchStart);
 
-      if (canDrag && (isDragMode || (offsetY > 10 && offsetY > offsetX)) && offsetY > 0) {
-        e.preventDefault();
-        setIsDragMode(true);
-        setDragOffset(offsetY);
-      }
+    if (isDragMode) {
+      // Drag lock: modal drag already started, keep going until touch end
+      e.preventDefault();
+      setDragOffset(Math.max(0, offsetY));
+      return;
     }
+
+    // Only start modal drag when at top of scroll AND moving down
+    const atTop = scrollTopAtStart.current <= 0;
+    if (atTop && offsetY > 10 && offsetY > offsetX) {
+      e.preventDefault();
+      setIsDragMode(true);
+      setDragOffset(offsetY);
+    }
+    // Otherwise: native scroll takes over, no interference
   };
 
   const handleTouchEnd = () => {
@@ -149,7 +158,6 @@ function CharityModal({ data, onClose }) {
             : isDragMode && dragOffset > 0
               ? 'none'
               : 'transform 0.3s ease-out',
-          touchAction: dragOffset > 0 ? 'none' : 'auto',
           willChange: isDragging ? 'transform' : 'auto',
         }}
       >
