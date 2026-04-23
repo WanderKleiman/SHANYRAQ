@@ -43,15 +43,15 @@ function CharityModal({ data, onClose }) {
   if (data.videos && data.videos.length > 0) {
     data.videos.forEach(video => media.push({ type: 'video', url: video }));
   }
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const handleHelp = () => setShowPaymentModal(true);
 
   const handleShare = async () => {
     const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}`;
     try {
       await Share.share({ title: data.title, text: `Помогите ${data.title}`, url: shareUrl, dialogTitle: 'Поделиться' });
-    } catch (e) {
+    } catch {
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
         toast.success('Ссылка скопирована в буфер обмена');
@@ -112,42 +112,47 @@ function CharityModal({ data, onClose }) {
   };
 
   const getVideoId = (url) => {
-    const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
-    const match = url.match(regex);
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
     return match ? match[1] : null;
   };
 
   return (
-    /*
-      Transform applied to the outermost fixed container, NOT to the popup card.
-      This ensures the iOS scroll compositor layer (inner overflow-y-auto div)
-      and the popup background are in the same compositing subtree and translate
-      atomically — eliminating the double-layer visual glitch during swipe-to-close.
-    */
+    // Overlay: full-screen backdrop, handles click-outside-to-close, no transform
     <div
       className='fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-4'
-      style={{
-        transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
-        transition: isClosing ? 'transform 0.3s ease-out' : isDragMode && dragOffset > 0 ? 'none' : 'transform 0.3s ease-out',
-        touchAction: 'none',
-      }}
+      style={{ touchAction: 'none' }}
       onClick={onClose}
     >
+      {/* Dim layer: opacity only, never transformed */}
       <div
-        className='absolute inset-0 bg-black transition-opacity'
+        className='absolute inset-0 bg-black'
         style={{
           opacity: isClosing ? 0 : Math.max(0.5 - (dragOffset / 1000), 0),
           transition: isDragging ? 'none' : 'opacity 0.3s ease-out',
         }}
       />
 
+      {/*
+        ModalWrapper: owns the swipe/close transform.
+        will-change: transform pre-promotes this node to a GPU compositor layer so
+        the browser treats it and all its children as a single compositing unit.
+      */}
       <div
         className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] relative z-10 overflow-hidden'
         onClick={(e) => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        style={{ touchAction: dragOffset > 0 ? 'none' : 'auto' }}
+        style={{
+          transform: `translateY(${isClosing ? '100%' : dragOffset + 'px'})`,
+          transition: isClosing
+            ? 'transform 0.3s ease-out'
+            : isDragMode && dragOffset > 0
+              ? 'none'
+              : 'transform 0.3s ease-out',
+          touchAction: dragOffset > 0 ? 'none' : 'auto',
+          willChange: 'transform',
+        }}
       >
         <button
           onClick={onClose}
@@ -156,10 +161,20 @@ function CharityModal({ data, onClose }) {
           <Icon name="x" size={16} />
         </button>
 
+        {/*
+          ScrollableContent: also promoted to its own GPU layer via will-change.
+          Because it is a child of the already-promoted ModalWrapper, the compositor
+          applies ModalWrapper's transform to this layer atomically — no async-scroll
+          desync. -webkit-overflow-scrolling: touch keeps momentum scrolling on iOS.
+        */}
         <div
           ref={scrollContainerRef}
           className='overflow-y-auto max-h-[85vh] md:max-h-[90vh] pb-20'
-          style={{ overscrollBehavior: 'contain' }}
+          style={{
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+            willChange: 'transform',
+          }}
         >
           <div className='relative h-64 md:h-96'>
             {media[currentMediaIndex]?.type === 'image' ? (
@@ -250,14 +265,14 @@ function CharityModal({ data, onClose }) {
                 <div className='flex justify-between text-sm'>
                   <span className='text-[var(--text-secondary)]'>Собрано</span>
                   <span className='font-semibold text-[var(--text-primary)]'>
-                    {data.raised.toLocaleString("ru-RU")} ₸ из {data.target.toLocaleString("ru-RU")} ₸
+                    {data.raised.toLocaleString('ru-RU')} ₸ из {data.target.toLocaleString('ru-RU')} ₸
                   </span>
                 </div>
                 <div className='progress-bar'>
                   <div className='progress-fill' style={{ width: `${Math.min(progressPercentage, 100)}%` }} />
                 </div>
                 <div className='flex justify-between items-center text-sm text-[var(--text-secondary)]'>
-                  <span>Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸</span>
+                  <span>Осталось собрать: {remainingAmount.toLocaleString('ru-RU')} ₸</span>
                   {data.helpersCount && <span>Помогли: {data.helpersCount} человек</span>}
                 </div>
               </div>
