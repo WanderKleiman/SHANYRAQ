@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Icon from './Icon';
 
 function ReportModal({ report, onClose }) {
@@ -20,21 +20,6 @@ function ReportModal({ report, onClose }) {
     setCurrentMediaIndex((prev) => (prev - 1 + media.length) % media.length);
   };
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.top = `-${window.scrollY}px`;
-    const scrollY = window.scrollY;
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
-
   const getVideoId = (url) => {
     const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
     const match = url.match(regex);
@@ -42,10 +27,9 @@ function ReportModal({ report, onClose }) {
   };
 
   return (
-    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center md:justify-center z-50 p-0 md:p-4' style={{ touchAction: 'none' }} onClick={onClose}>
-      <div
+    <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end md:items-center md:justify-center z-50 p-0 md:p-4' onClick={onClose}>
+      <div 
         className='bg-[var(--bg-primary)] w-full md:w-auto md:max-w-[600px] rounded-t-3xl md:rounded-2xl max-h-[85vh] md:max-h-[90vh] overflow-y-auto relative'
-        style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
         onClick={(e) => e.stopPropagation()}
       >
         <button 
