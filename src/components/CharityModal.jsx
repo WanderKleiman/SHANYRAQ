@@ -120,7 +120,6 @@ function CharityModal({ data, onClose }) {
     // Overlay: full-screen backdrop, handles click-outside-to-close, no transform
     <div
       className='fixed inset-0 z-50 flex items-end md:items-center md:justify-center p-0 md:p-4'
-      style={{ touchAction: 'none' }}
       onClick={onClose}
     >
       {/* Dim layer: opacity only, never transformed */}
@@ -151,7 +150,7 @@ function CharityModal({ data, onClose }) {
               ? 'none'
               : 'transform 0.3s ease-out',
           touchAction: dragOffset > 0 ? 'none' : 'auto',
-          willChange: 'transform',
+          willChange: isDragging ? 'transform' : 'auto',
         }}
       >
         <button
@@ -161,19 +160,12 @@ function CharityModal({ data, onClose }) {
           <Icon name="x" size={16} />
         </button>
 
-        {/*
-          ScrollableContent: also promoted to its own GPU layer via will-change.
-          Because it is a child of the already-promoted ModalWrapper, the compositor
-          applies ModalWrapper's transform to this layer atomically — no async-scroll
-          desync. -webkit-overflow-scrolling: touch keeps momentum scrolling on iOS.
-        */}
         <div
           ref={scrollContainerRef}
           className='overflow-y-auto max-h-[85vh] md:max-h-[90vh] pb-20'
           style={{
             overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
-            willChange: 'transform',
           }}
         >
           <div className='relative h-64 md:h-96'>
