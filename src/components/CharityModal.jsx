@@ -105,8 +105,8 @@ function CharityModal({ data, onClose }) {
   };
 
   const handleTouchEnd = () => {
-    setIsDragging(false);
     const wasDragMode = isDragMode;
+
     setIsDragMode(false);
 
     if (wasDragMode && dragOffset > 100) {
@@ -118,21 +118,6 @@ function CharityModal({ data, onClose }) {
     }
 
     setDragOffset(0);
-
-    if (wasDragMode) return;
-
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && media.length > 1) {
-      nextMedia();
-    }
-    if (isRightSwipe && media.length > 1) {
-      prevMedia();
-    }
   };
 
   const getVideoId = (url) => {

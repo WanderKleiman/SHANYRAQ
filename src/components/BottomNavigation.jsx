@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Icon from '../components/Icon';
 
@@ -14,6 +14,22 @@ function BottomNavigation({ selectedCity, onCityChange }) {
     'Актау', 'Костанай', 'Уральск', 'Туркестан', 'Петропавловск',
     'Кокшетау', 'Темиртау', 'Талдыкорган', 'Экибастуз'
   ];
+
+  useEffect(() => {
+    if (!showCitySelector) return;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${window.scrollY}px`;
+    const scrollY = window.scrollY;
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      window.scrollTo(0, scrollY);
+    };
+  }, [showCitySelector]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -82,7 +98,11 @@ function BottomNavigation({ selectedCity, onCityChange }) {
       </nav>
 
       {showCitySelector && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowCitySelector(false)}>
+        <div
+          className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50'
+          style={{ touchAction: 'none' }}
+          onClick={() => setShowCitySelector(false)}
+        >
           <div
             className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-4 max-h-[50vh] flex flex-col'
             onClick={(e) => e.stopPropagation()}
@@ -97,7 +117,7 @@ function BottomNavigation({ selectedCity, onCityChange }) {
               </button>
             </div>
 
-            <div className='overflow-y-auto space-y-2'>
+            <div className='overflow-y-auto space-y-2' style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}>
               {cities.map(city => (
                 <button
                   key={city}
