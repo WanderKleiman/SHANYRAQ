@@ -50,7 +50,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    await supabase.from('kaspi_payment_requests').insert({
+    const { error: dbError } = await supabase.from('kaspi_payment_requests').insert({
       beneficiary_id: beneficiaryId,
       beneficiary_title: title,
       phone,
@@ -60,7 +60,11 @@ serve(async (req) => {
       apipay_invoice_id: apiPayData.id,
     })
 
-    return new Response(JSON.stringify({ success: true, invoiceId: apiPayData.id }), {
+    if (dbError) {
+      console.error('DB insert error:', JSON.stringify(dbError))
+    }
+
+    return new Response(JSON.stringify({ success: true, invoiceId: apiPayData.id, dbError: dbError?.message || null }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
