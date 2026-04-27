@@ -219,32 +219,37 @@ function PaymentModal({ beneficiary, onClose }) {
 
         const visitorId = await getVisitorId();
 
-        const { error: insertError } = await supabase.from('kaspi_payment_requests').insert({
-          beneficiary_id: beneficiary.id,
-          beneficiary_title: beneficiary.title,
-          phone: phoneNumber,
-          amount: amount,
-          status: 'new',
-          visitor_id: visitorId
-        });
+        const res = await fetch(
+          'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/apipay-invoice',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: phoneNumber,
+              amount,
+              beneficiaryId: beneficiary.id,
+              title: beneficiary.title,
+            }),
+          }
+        );
 
-        if (insertError) throw insertError;
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || 'Ошибка при создании счёта');
+        }
 
-        // Upsert visitor record
-        const { error: upsertError } = await supabase.from('visitors').upsert({
+        // Save visitor phone for future use
+        await supabase.from('visitors').upsert({
           visitor_id: visitorId,
           phone: phoneNumber,
           updated_at: new Date().toISOString()
         }, { onConflict: 'visitor_id' });
 
-        if (upsertError) console.error('Visitor upsert error:', upsertError);
-
         onClose();
-        sessionStorage.setItem('donatedPhone', phoneNumber);
-        navigate('/feed?donated=kaspi');
+        toast.success('Счёт отправлен в Kaspi! Откройте приложение и подтвердите оплату.', { duration: 6000 });
       } catch (error) {
         console.error('Ошибка при отправке:', error);
-        toast.error('Произошла ошибка. Попробуйте ещё раз.');
+        toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
       } finally {
         setIsSubmitting(false);
       }

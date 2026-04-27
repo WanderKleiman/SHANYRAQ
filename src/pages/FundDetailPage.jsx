@@ -444,16 +444,38 @@ function FundDetailPage() {
                 <button
                   onClick={async () => {
                     if (subPhone.length !== 11) { toast.error('Введите номер телефона (11 цифр)'); return; }
-                    const { error } = await supabase.from('fund_subscriptions').insert({
-                      fund_id: fund.id,
-                      fund_name: fund.name,
-                      phone: subPhone,
-                      amount: subAmount,
-                      payment_method: 'kaspi',
-                      visitor_id: localStorage.getItem('visitorId') || null,
-                    });
-                    if (error) { toast.error('Ошибка: ' + error.message); return; }
-                    setSubStep('done');
+                    try {
+                      const res = await fetch(
+                        'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/apipay-subscription',
+                        {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            phone: subPhone,
+                            amount: subAmount,
+                            fundId: fund.id,
+                            fundName: fund.name,
+                          }),
+                        }
+                      );
+                      const result = await res.json();
+                      if (!res.ok) throw new Error(result.error || 'Ошибка при оформлении подписки');
+
+                      await supabase.from('fund_subscriptions').insert({
+                        fund_id: fund.id,
+                        fund_name: fund.name,
+                        phone: subPhone,
+                        amount: subAmount,
+                        payment_method: 'kaspi',
+                        status: 'pending',
+                        apipay_subscriber_id: result.externalSubscriberId || null,
+                        visitor_id: localStorage.getItem('visitorId') || null,
+                      });
+
+                      setSubStep('done');
+                    } catch (err) {
+                      toast.error(err.message || 'Произошла ошибка. Попробуйте ещё раз.');
+                    }
                   }}
                   disabled={subPhone.length !== 11}
                   className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm disabled:opacity-50 active:scale-[0.98] transition-transform'
