@@ -21,53 +21,54 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // ApiPay may nest payload under "data" or send it flat
+  // ApiPay sends: { event: "invoice.status_changed", invoice: { id, status, amount, ... } }
   const eventType: string = event.type || event.event || ''
-  const data = event.data || event
+  const invoice = event.invoice || event.data || {}
 
-  console.log('apipay-webhook parsed:', JSON.stringify({ eventType, dataStatus: data?.status, dataId: data?.id, externalOrderId: data?.external_order_id }))
+  console.log('apipay-webhook parsed:', JSON.stringify({ eventType, invoiceId: invoice.id, status: invoice.status }))
 
-  // Handle paid invoice
   const isPaidInvoice =
-    (eventType === 'invoice.status_changed' && data.status === 'paid') ||
+    (eventType === 'invoice.status_changed' && invoice.status === 'paid') ||
     eventType === 'invoice.paid'
 
   if (isPaidInvoice) {
-    const apiPayInvoiceId = data.id
+    const apiPayInvoiceId = invoice.id
+    const amount = Number(invoice.amount) || 0
 
-    console.log('Processing paid invoice:', { apiPayInvoiceId })
+    console.log('Processing paid invoice:', { apiPayInvoiceId, amount })
 
     if (!apiPayInvoiceId) {
       console.error('No invoice id in payload')
       return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
 
-    // 1. Find our payment record by apipay_invoice_id to get beneficiary_id and amount
+    // 1. Find our payment record by apipay_invoice_id
     const { data: paymentRecord, error: findErr } = await supabase
       .from('kaspi_payment_requests')
       .select('id, beneficiary_id, amount')
-      .eq('apipay_invoice_id', apiPayInvoiceId)
+      .eq('apipay_invoice_id', String(apiPayInvoiceId))
       .single()
 
-    if (findErr) {
-      console.error('kaspi_payment_requests lookup error:', findErr.message)
-    }
+    if (findErr) console.error('kaspi_payment_requests lookup error:', findErr.message)
 
     // 2. Update payment status to 'paid'
     const { error: updateErr } = await supabase
       .from('kaspi_payment_requests')
       .update({ status: 'paid', updated_at: new Date().toISOString() })
-      .eq('apipay_invoice_id', apiPayInvoiceId)
+      .eq('apipay_invoice_id', String(apiPayInvoiceId))
 
     if (updateErr) console.error('kaspi_payment_requests update error:', updateErr.message)
     else console.log('Payment marked as paid:', apiPayInvoiceId)
 
-    // 3. Update beneficiary raised_amount using our own record (reliable, no external_order_id needed)
-    if (paymentRecord?.beneficiary_id && paymentRecord?.amount) {
+    // 3. Update beneficiary raised_amount
+    const beneficiaryId = paymentRecord?.beneficiary_id
+    const paidAmount = paymentRecord?.amount || amount
+
+    if (beneficiaryId && paidAmount) {
       const { data: beneficiary, error: fetchErr } = await supabase
         .from('beneficiaries')
         .select('raised_amount')
-        .eq('id', paymentRecord.beneficiary_id)
+        .eq('id', beneficiaryId)
         .single()
 
       if (fetchErr) {
@@ -75,11 +76,11 @@ serve(async (req) => {
       } else if (beneficiary) {
         const { error: raiseErr } = await supabase
           .from('beneficiaries')
-          .update({ raised_amount: (beneficiary.raised_amount || 0) + paymentRecord.amount })
-          .eq('id', paymentRecord.beneficiary_id)
+          .update({ raised_amount: (beneficiary.raised_amount || 0) + paidAmount })
+          .eq('id', beneficiaryId)
 
         if (raiseErr) console.error('raised_amount update error:', raiseErr.message)
-        else console.log(`raised_amount +${paymentRecord.amount} for beneficiary ${paymentRecord.beneficiary_id}`)
+        else console.log(`raised_amount +${paidAmount} for beneficiary ${beneficiaryId}`)
       }
     }
   }
