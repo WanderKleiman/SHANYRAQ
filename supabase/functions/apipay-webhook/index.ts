@@ -19,14 +19,26 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
+  // ApiPay may send event type as "type" or "event"
   const eventType: string = event.type || event.event || ''
   const data = event.data || event
 
   if (eventType === 'invoice.status_changed' && data.status === 'paid') {
+    const apiPayInvoiceId = data.id
     const externalOrderId: string = data.external_order_id || ''
+    const amount = Number(data.amount) || 0
+
+    // 1. Update the payment request record to 'paid'
+    if (apiPayInvoiceId) {
+      await supabase
+        .from('kaspi_payment_requests')
+        .update({ status: 'paid' })
+        .eq('apipay_invoice_id', apiPayInvoiceId)
+    }
+
+    // 2. Update beneficiary raised_amount
     if (externalOrderId.startsWith('ben-')) {
       const beneficiaryId = externalOrderId.replace('ben-', '')
-      const amount = Number(data.amount) || 0
 
       const { data: current } = await supabase
         .from('beneficiaries')
@@ -45,7 +57,6 @@ serve(async (req) => {
 
   if (eventType === 'subscription.payment_succeeded') {
     const externalSubscriberId: string = data.external_subscriber_id || ''
-    const amount = Number(data.amount) || 0
 
     if (externalSubscriberId.startsWith('fund-')) {
       await supabase

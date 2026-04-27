@@ -229,6 +229,7 @@ function PaymentModal({ beneficiary, onClose }) {
               amount,
               beneficiaryId: beneficiary.id,
               title: beneficiary.title,
+              visitorId,
             }),
           }
         );
@@ -238,7 +239,7 @@ function PaymentModal({ beneficiary, onClose }) {
           throw new Error(err.error || 'Ошибка при создании счёта');
         }
 
-        // Save visitor phone for future use
+        // Save visitor phone for future autofill
         await supabase.from('visitors').upsert({
           visitor_id: visitorId,
           phone: phoneNumber,

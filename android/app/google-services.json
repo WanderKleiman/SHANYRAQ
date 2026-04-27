@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "787338452670",
+    "project_id": "shanyrak-1fdab",
+    "storage_bucket": "shanyrak-1fdab.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:787338452670:android:c12c96aad1b6cecf8048ef",
+        "android_client_info": {
+          "package_name": "world.shanyrak.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGht8uWA9GVTrHEwueZzc9BHHrROcrqVk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

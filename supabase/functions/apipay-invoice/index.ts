@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const APIPAY_BASE = 'https://bpapi.bazarbay.site/api/v1'
 const corsHeaders = {
@@ -10,7 +11,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { phone, amount, beneficiaryId, title } = await req.json()
+    const { phone, amount, beneficiaryId, title, visitorId } = await req.json()
 
     if (!phone || !amount || !beneficiaryId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -34,10 +35,33 @@ serve(async (req) => {
       }),
     })
 
-    const data = await res.json()
+    const apiPayData = await res.json()
 
-    return new Response(JSON.stringify(data), {
-      status: res.ok ? 200 : res.status,
+    if (!res.ok) {
+      return new Response(JSON.stringify({ error: apiPayData.message || 'ApiPay error' }), {
+        status: res.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Write to kaspi_payment_requests so the profile can track this invoice
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
+    await supabase.from('kaspi_payment_requests').insert({
+      beneficiary_id: beneficiaryId,
+      beneficiary_title: title,
+      phone,
+      amount,
+      status: 'invoice_sent',
+      visitor_id: visitorId || null,
+      apipay_invoice_id: apiPayData.id,
+    })
+
+    return new Response(JSON.stringify({ success: true, invoiceId: apiPayData.id }), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
