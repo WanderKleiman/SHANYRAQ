@@ -84,10 +84,16 @@ function ProfilePage() {
         }, { onConflict: 'visitor_id' });
       }
 
-      // Collect all phones to look up payments
+      // === Step 1: Direct lookup by visitor_id (same device, most reliable) ===
+      const { data: directPayments } = await supabase
+        .from('kaspi_payment_requests')
+        .select('*')
+        .eq('visitor_id', visitorId)
+        .order('created_at', { ascending: false });
+
+      // === Step 2: Collect phones for cross-device lookup ===
       let allPhones = [];
 
-      // 1. Phone from visitors table for current device
       const { data: currentVisitor } = await supabase
         .from('visitors')
         .select('phone')
@@ -96,20 +102,11 @@ function ProfilePage() {
 
       if (currentVisitor?.phone) allPhones.push(currentVisitor.phone);
 
-      // 2. Phone from payment records for this visitor (visitors.phone may be null for older records)
-      const { data: visitorPayments } = await supabase
-        .from('kaspi_payment_requests')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .not('phone', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Also grab phone from any direct payment record (edge: visitors.phone may be null)
+      const directPhone = directPayments?.find(p => p.phone)?.phone;
+      if (directPhone && !allPhones.includes(directPhone)) allPhones.push(directPhone);
 
-      if (visitorPayments?.length) {
-        allPhones = [...new Set([...allPhones, ...visitorPayments.map(p => p.phone).filter(Boolean)])];
-      }
-
-      // 3. If logged in, phones from all visitors linked to this auth account (cross-device)
+      // If logged in, phones from all visitors linked to this auth account (cross-device)
       if (user) {
         const { data: linkedVisitors } = await supabase
           .from('visitors')
@@ -122,19 +119,17 @@ function ProfilePage() {
         }
       }
 
-      if (allPhones.length === 0) {
-        setLoading(false);
-        return;
-      }
+      // === Step 3: Fetch payments by phone (cross-device history) ===
+      const phonePaymentResults = allPhones.length > 0
+        ? await Promise.all(allPhones.map(phone =>
+            supabase.from('kaspi_payment_requests').select('*').eq('phone', phone)
+          ))
+        : [];
 
-      // Fetch payments for all phones in parallel then merge
-      const paymentResults = await Promise.all(
-        allPhones.map(phone =>
-          supabase.from('kaspi_payment_requests').select('*').eq('phone', phone)
-        )
-      );
+      // === Merge all sources, deduplicate by id ===
       const merged = new Map();
-      paymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
+      (directPayments || []).forEach(p => merged.set(p.id, p));
+      phonePaymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
       const allPayments = [...merged.values()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       if (!allPayments || allPayments.length === 0) {

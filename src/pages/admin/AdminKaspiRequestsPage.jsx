@@ -58,6 +58,8 @@ function AdminKaspiRequestsPage() {
   };
 
   const updateStatus = async (id, newStatus) => {
+    const req = requests.find(r => r.id === id);
+
     const { error } = await supabase
       .from('kaspi_payment_requests')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
@@ -67,6 +69,22 @@ function AdminKaspiRequestsPage() {
       setRequests(prev =>
         prev.map(r => r.id === id ? { ...r, status: newStatus, updated_at: new Date().toISOString() } : r)
       );
+
+      // When manually confirming payment — update beneficiary raised_amount
+      if (newStatus === 'paid' && req?.beneficiary_id && req?.amount) {
+        const { data: current } = await supabase
+          .from('beneficiaries')
+          .select('raised_amount')
+          .eq('id', req.beneficiary_id)
+          .single();
+
+        if (current) {
+          await supabase
+            .from('beneficiaries')
+            .update({ raised_amount: (current.raised_amount || 0) + req.amount })
+            .eq('id', req.beneficiary_id);
+        }
+      }
     }
   };
 

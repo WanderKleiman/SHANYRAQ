@@ -7,6 +7,8 @@ serve(async (req) => {
   }
 
   const body = await req.text()
+  console.log('apipay-webhook raw body:', body)
+
   let event: Record<string, any>
   try {
     event = JSON.parse(body)
@@ -19,38 +21,53 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // ApiPay may send event type as "type" or "event"
+  // ApiPay may nest payload under "data" or send it flat
   const eventType: string = event.type || event.event || ''
   const data = event.data || event
 
-  if (eventType === 'invoice.status_changed' && data.status === 'paid') {
+  console.log('apipay-webhook parsed:', JSON.stringify({ eventType, dataStatus: data?.status, dataId: data?.id, externalOrderId: data?.external_order_id }))
+
+  // Handle paid invoice — supports "invoice.status_changed" and flat "invoice.paid" events
+  const isPaidInvoice =
+    (eventType === 'invoice.status_changed' && data.status === 'paid') ||
+    eventType === 'invoice.paid' ||
+    (eventType === '' && data.status === 'paid' && data.id)
+
+  if (isPaidInvoice) {
     const apiPayInvoiceId = data.id
     const externalOrderId: string = data.external_order_id || ''
     const amount = Number(data.amount) || 0
 
+    console.log('Processing paid invoice:', { apiPayInvoiceId, externalOrderId, amount })
+
     // 1. Update the payment request record to 'paid'
     if (apiPayInvoiceId) {
-      await supabase
+      const { error: updateErr } = await supabase
         .from('kaspi_payment_requests')
-        .update({ status: 'paid' })
+        .update({ status: 'paid', updated_at: new Date().toISOString() })
         .eq('apipay_invoice_id', apiPayInvoiceId)
+      if (updateErr) console.error('kaspi_payment_requests update error:', updateErr.message)
     }
 
     // 2. Update beneficiary raised_amount
     if (externalOrderId.startsWith('ben-')) {
       const beneficiaryId = externalOrderId.replace('ben-', '')
 
-      const { data: current } = await supabase
+      const { data: current, error: fetchErr } = await supabase
         .from('beneficiaries')
         .select('raised_amount')
         .eq('id', beneficiaryId)
         .single()
 
-      if (current) {
-        await supabase
+      if (fetchErr) {
+        console.error('beneficiaries fetch error:', fetchErr.message)
+      } else if (current) {
+        const { error: raiseErr } = await supabase
           .from('beneficiaries')
           .update({ raised_amount: (current.raised_amount || 0) + amount })
           .eq('id', beneficiaryId)
+        if (raiseErr) console.error('beneficiaries raised_amount update error:', raiseErr.message)
+        else console.log(`raised_amount updated for beneficiary ${beneficiaryId}: +${amount}`)
       }
     }
   }

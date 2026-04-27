@@ -449,7 +449,10 @@ function FundDetailPage() {
                         'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/apipay-subscription',
                         {
                           method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2eGNjd25kcmt2bndtZmJmaHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjE0NjAsImV4cCI6MjA4NTc5NzQ2MH0.hGWnNGkhg1htJTMtGd74y_hTJX6zMcPhQqd6ZVQO7UA',
+                          },
                           body: JSON.stringify({
                             phone: subPhone,
                             amount: subAmount,
