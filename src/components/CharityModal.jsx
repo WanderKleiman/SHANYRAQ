@@ -181,7 +181,8 @@ function CharityModal({ data, onClose }) {
                 src={media[currentMediaIndex].url} 
                 alt={data.title}
                 loading='lazy'
-                className='w-full h-64 md:h-96 object-cover object-top rounded-t-3xl md:rounded-t-2xl'
+                className='w-full h-64 md:h-96 object-cover rounded-t-3xl md:rounded-t-2xl'
+                style={{ objectPosition: `${data.focalX ?? 50}% ${data.focalY ?? 30}%` }}
               />
             ) : media[currentMediaIndex]?.type === 'video' ? (
               <div className='w-full h-64 md:h-96 bg-black flex items-center justify-center'>

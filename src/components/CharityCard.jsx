@@ -47,7 +47,8 @@ function CharityCard({ data, onCardClick, index = 0 }) {
   loading={index === 0 ? 'eager' : 'lazy'}
   fetchPriority={index === 0 ? 'high' : 'auto'}
   decoding={index === 0 ? 'sync' : 'async'}
-  className='w-full h-48 object-cover object-center rounded-xl'
+  className='w-full h-48 object-cover rounded-xl'
+  style={{ objectPosition: `${data.focalX ?? 50}% ${data.focalY ?? 50}%` }}
 />
         <div className='absolute top-3 left-3'>
           <span className='bg-[var(--primary-color)] text-white px-2 py-1 rounded-full text-xs font-medium'>

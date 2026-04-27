@@ -112,6 +112,8 @@ function MainPage() {
     target: item.target_amount || 0,
     isUrgent: item.is_urgent,
     collectionStatus: item.collection_status,
+    focalX: item.focal_x ?? 50,
+    focalY: item.focal_y ?? 50,
   });
 
   // Filter: for non_material keep only one (Алматы), hide rest

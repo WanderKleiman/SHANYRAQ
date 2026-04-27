@@ -73,7 +73,9 @@ function FundDetailPage() {
           raised: item.raised_amount || 0,
           target: item.target_amount || 0,
           isUrgent: item.is_urgent,
-          collectionStatus: item.collection_status
+          collectionStatus: item.collection_status,
+          focalX: item.focal_x ?? 50,
+          focalY: item.focal_y ?? 50,
         }));
 
         setBeneficiaries(formatted);

@@ -13,6 +13,8 @@ function BeneficiaryFormModal({ beneficiary, onClose, onSave }) {
     target_amount: beneficiary?.target_amount || '',
     raised_amount: beneficiary?.raised_amount || 0,
     image_url: beneficiary?.image_url || '',
+    focal_x: beneficiary?.focal_x ?? 50,
+    focal_y: beneficiary?.focal_y ?? 50,
 images: beneficiary?.images?.join('\n') || '',
   videos: beneficiary?.videos?.join('\n') || '',
   helpers_count: beneficiary?.helpers_count || '',
@@ -76,6 +78,8 @@ images: beneficiary?.images?.join('\n') || '',
         target_amount: parseInt(formData.target_amount) || 0,
         raised_amount: parseInt(formData.raised_amount) || 0,
         image_url: formData.image_url,
+        focal_x: formData.focal_x,
+        focal_y: formData.focal_y,
   images: formData.images ? formData.images.split('\n').filter(url => url.trim()) : [],
   videos: formData.videos ? formData.videos.split('\n').filter(url => url.trim()) : [],
   helpers_count: formData.helpers_count,
@@ -180,6 +184,45 @@ images: beneficiary?.images?.join('\n') || '',
             <label className='block text-sm font-medium mb-2'>URL изображения *</label>
             <input type='url' value={formData.image_url} onChange={(e) => handleChange('image_url', e.target.value)} className='w-full p-3 border border-gray-300 rounded-xl' placeholder='https://example.com/image.jpg' required />
           </div>
+
+          {formData.image_url && (
+            <div>
+              <label className='block text-sm font-medium mb-1'>Фокусная точка</label>
+              <p className='text-xs text-gray-500 mb-2'>Кликните по фото — укажите лицо или главный элемент</p>
+              <div
+                className='relative w-full rounded-xl overflow-hidden cursor-crosshair select-none'
+                style={{ height: '200px' }}
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                  const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                  handleChange('focal_x', x);
+                  handleChange('focal_y', y);
+                }}
+              >
+                <img
+                  src={formData.image_url}
+                  alt="Preview"
+                  className='w-full h-full object-cover pointer-events-none'
+                  style={{ objectPosition: `${formData.focal_x}% ${formData.focal_y}%` }}
+                />
+                <div
+                  className='absolute pointer-events-none'
+                  style={{
+                    left: `${formData.focal_x}%`,
+                    top: `${formData.focal_y}%`,
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  <div className='w-7 h-7 rounded-full border-2 border-white shadow-md' style={{ background: 'rgba(255,255,255,0.25)', backdropFilter: 'blur(2px)' }} />
+                  <div className='absolute inset-0 flex items-center justify-center'>
+                    <div className='w-1.5 h-1.5 rounded-full bg-white' />
+                  </div>
+                </div>
+              </div>
+              <p className='text-xs text-gray-400 mt-1'>Позиция: {formData.focal_x}% × {formData.focal_y}%</p>
+            </div>
+          )}
 <div>
             <label className='block text-sm font-medium mb-2'>Дополнительные изображения (по одному на строку)</label>
             <textarea

@@ -14,7 +14,7 @@ export function useMainPageData() {
         // Fetch all active beneficiaries
         const { data: benData, error: benError } = await supabase
           .from('beneficiaries')
-          .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, images, videos, is_urgent, is_nationwide, collection_status, helpers_count, documents_link')
+          .select('id, title, description, category, city, partner_fund, target_amount, raised_amount, image_url, images, videos, is_urgent, is_nationwide, collection_status, helpers_count, documents_link, focal_x, focal_y')
           .eq('is_active', true)
           .order('created_at', { ascending: false });
 
