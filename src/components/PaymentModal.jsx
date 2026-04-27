@@ -215,10 +215,11 @@ function PaymentModal({ beneficiary, onClose }) {
           throw new Error(err.error || 'Ошибка при создании счёта');
         }
 
-        // Save visitor phone for future autofill
+        // Save visitor phone + auth link for future autofill and cross-device profile
         await supabase.from('visitors').upsert({
           visitor_id: visitorId,
           phone: phoneNumber,
+          auth_user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, { onConflict: 'visitor_id' });
 

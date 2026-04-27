@@ -75,26 +75,67 @@ function ProfilePage() {
     try {
       const visitorId = await getVisitorId();
 
-      // Get phone from visitors table (saved when user makes a payment)
-      const { data: visitor } = await supabase
+      // Link this device/session to the logged-in user so cross-device lookup works
+      if (user) {
+        await supabase.from('visitors').upsert({
+          visitor_id: visitorId,
+          auth_user_id: user.id,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'visitor_id' });
+      }
+
+      // Collect all phones to look up payments
+      let allPhones = [];
+
+      // 1. Phone from visitors table for current device
+      const { data: currentVisitor } = await supabase
         .from('visitors')
         .select('phone')
         .eq('visitor_id', visitorId)
         .single();
 
-      const currentPhone = visitor?.phone;
+      if (currentVisitor?.phone) allPhones.push(currentVisitor.phone);
 
-      if (!currentPhone) {
+      // 2. Phone from payment records for this visitor (visitors.phone may be null for older records)
+      const { data: visitorPayments } = await supabase
+        .from('kaspi_payment_requests')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .not('phone', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (visitorPayments?.length) {
+        allPhones = [...new Set([...allPhones, ...visitorPayments.map(p => p.phone).filter(Boolean)])];
+      }
+
+      // 3. If logged in, phones from all visitors linked to this auth account (cross-device)
+      if (user) {
+        const { data: linkedVisitors } = await supabase
+          .from('visitors')
+          .select('phone')
+          .eq('auth_user_id', user.id)
+          .not('phone', 'is', null);
+
+        if (linkedVisitors?.length) {
+          allPhones = [...new Set([...allPhones, ...linkedVisitors.map(v => v.phone).filter(Boolean)])];
+        }
+      }
+
+      if (allPhones.length === 0) {
         setLoading(false);
         return;
       }
 
-      // Get all payments for this phone number (covers null visitor_id records too)
-      const { data: allPayments } = await supabase
-        .from('kaspi_payment_requests')
-        .select('*')
-        .eq('phone', currentPhone)
-        .order('created_at', { ascending: false });
+      // Fetch payments for all phones in parallel then merge
+      const paymentResults = await Promise.all(
+        allPhones.map(phone =>
+          supabase.from('kaspi_payment_requests').select('*').eq('phone', phone)
+        )
+      );
+      const merged = new Map();
+      paymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
+      const allPayments = [...merged.values()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       if (!allPayments || allPayments.length === 0) {
         setLoading(false);
