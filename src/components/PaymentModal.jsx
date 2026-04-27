@@ -40,70 +40,29 @@ function PaymentModal({ beneficiary, onClose }) {
 
   const loadSavedPhone = async () => {
     try {
+      // First: check localStorage (most reliable, set after each successful payment)
+      const localPhone = localStorage.getItem('kaspiPhone');
+      if (localPhone) {
+        setSavedPhone(localPhone);
+        setPhoneNumber(localPhone);
+        return;
+      }
+
+      // Fallback: check most recent payment by visitor_id
       const visitorId = await getVisitorId();
-
-      // Collect all visitor_ids linked to this user
-      let visitorIds = [visitorId];
-      if (user) {
-        const { data: linkedVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('auth_user_id', user.id);
-
-        if (linkedVisitors && linkedVisitors.length > 0) {
-          visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
-        }
-      }
-
-      // Merge by phone
-      const { data: visitorRecord } = await supabase
-        .from('visitors')
+      const { data: recentPayment } = await supabase
+        .from('kaspi_payment_requests')
         .select('phone')
         .eq('visitor_id', visitorId)
+        .not('phone', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (visitorRecord?.phone) {
-        const { data: phoneVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('phone', visitorRecord.phone);
-
-        if (phoneVisitors && phoneVisitors.length > 0) {
-          visitorIds = [...new Set([...visitorIds, ...phoneVisitors.map(v => v.visitor_id)])];
-        }
-      }
-
-      // Get saved phone: first from visitors table, then from any recent payment
-      let phone = null;
-
-      const { data: visitor } = await supabase
-        .from('visitors')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .single();
-
-      if (visitor?.phone) {
-        phone = visitor.phone;
-      }
-
-      // Fallback: get phone from most recent payment (any status)
-      if (!phone) {
-        const { data: recentPayments } = await supabase
-          .from('kaspi_payment_requests')
-          .select('phone')
-          .in('visitor_id', visitorIds)
-          .not('phone', 'is', null)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (recentPayments && recentPayments.length > 0) {
-          phone = recentPayments[0].phone;
-        }
-      }
-
-      if (phone) {
-        setSavedPhone(phone);
-        setPhoneNumber(phone);
+      if (recentPayment?.phone) {
+        setSavedPhone(recentPayment.phone);
+        setPhoneNumber(recentPayment.phone);
+        localStorage.setItem('kaspiPhone', recentPayment.phone);
       }
     } catch (error) {
       console.error('Error loading saved phone:', error);
@@ -222,6 +181,9 @@ function PaymentModal({ beneficiary, onClose }) {
           auth_user_id: user?.id || null,
           updated_at: new Date().toISOString()
         }, { onConflict: 'visitor_id' });
+
+        // Save phone locally so profile and autofill work across sessions
+        localStorage.setItem('kaspiPhone', phoneNumber);
 
         onClose();
         toast.success('Счёт отправлен в Kaspi! Откройте приложение и подтвердите оплату.', { duration: 6000 });

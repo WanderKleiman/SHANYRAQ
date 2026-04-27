@@ -29,70 +29,68 @@ function ProfileSettingsPage() {
     try {
       const visitorId = await getVisitorId();
 
-      // Collect all visitor_ids linked to this user
-      let visitorIds = [visitorId];
+      // Collect phones: localStorage first (most reliable), then visitors table, then payments
+      let allPhones = [];
 
-      if (user) {
-        const { data: linkedVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('auth_user_id', user.id);
+      const localPhone = localStorage.getItem('kaspiPhone');
+      if (localPhone) allPhones.push(localPhone);
 
-        if (linkedVisitors && linkedVisitors.length > 0) {
-          visitorIds = [...new Set([visitorId, ...linkedVisitors.map(v => v.visitor_id)])];
-        }
-      }
-
-      // Find phone from visitors table and merge by phone
       const { data: visitorRecord } = await supabase
         .from('visitors')
         .select('phone')
         .eq('visitor_id', visitorId)
         .single();
 
-      if (visitorRecord?.phone) {
-        const { data: phoneVisitors } = await supabase
-          .from('visitors')
-          .select('visitor_id')
-          .eq('phone', visitorRecord.phone);
+      if (visitorRecord?.phone && !allPhones.includes(visitorRecord.phone))
+        allPhones.push(visitorRecord.phone);
 
-        if (phoneVisitors && phoneVisitors.length > 0) {
-          visitorIds = [...new Set([...visitorIds, ...phoneVisitors.map(v => v.visitor_id)])];
-        }
-
-        const { data: phonePayments } = await supabase
-          .from('kaspi_payment_requests')
-          .select('visitor_id')
-          .eq('phone', visitorRecord.phone);
-
-        if (phonePayments && phonePayments.length > 0) {
-          visitorIds = [...new Set([...visitorIds, ...phonePayments.map(v => v.visitor_id)])];
-        }
-      }
-
-      const { data: payments } = await supabase
+      // Also include phone from any direct payment by this visitor_id
+      const { data: directPayment } = await supabase
         .from('kaspi_payment_requests')
-        .select('*')
-        .in('visitor_id', visitorIds)
-        .eq('status', 'paid');
-
-      if (payments && payments.length > 0) {
-        setIsVerified(true);
-        setTotalHelp(payments.reduce((sum, p) => sum + p.amount, 0));
-        const uniqueBeneficiaries = new Set(payments.map(p => p.beneficiary_id));
-        setBeneficiaryCount(uniqueBeneficiaries.size);
-        setPhone(payments[0].phone);
-      }
-
-      // Also check visitors table for updated phone
-      const { data: visitor } = await supabase
-        .from('visitors')
         .select('phone')
         .eq('visitor_id', visitorId)
+        .not('phone', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .single();
 
-      if (visitor?.phone) {
-        setPhone(visitor.phone);
+      if (directPayment?.phone && !allPhones.includes(directPayment.phone))
+        allPhones.push(directPayment.phone);
+
+      if (user) {
+        const { data: linkedVisitors } = await supabase
+          .from('visitors')
+          .select('phone')
+          .eq('auth_user_id', user.id)
+          .not('phone', 'is', null);
+
+        if (linkedVisitors?.length) {
+          linkedVisitors.forEach(v => {
+            if (v.phone && !allPhones.includes(v.phone)) allPhones.push(v.phone);
+          });
+        }
+      }
+
+      if (allPhones.length === 0) return;
+
+      // Fetch paid payments for all phones
+      const paymentResults = await Promise.all(
+        allPhones.map(phone =>
+          supabase.from('kaspi_payment_requests').select('*').eq('phone', phone).eq('status', 'paid')
+        )
+      );
+
+      const merged = new Map();
+      paymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
+      const payments = [...merged.values()];
+
+      if (payments.length > 0) {
+        setIsVerified(true);
+        setTotalHelp(payments.reduce((sum, p) => sum + p.amount, 0));
+        setBeneficiaryCount(new Set(payments.map(p => p.beneficiary_id)).size);
+        setPhone(payments[0].phone);
+        // Ensure localStorage is always up to date with verified phone
+        localStorage.setItem('kaspiPhone', payments[0].phone);
       }
     } catch (error) {
       console.error('Error loading settings:', error);

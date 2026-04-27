@@ -94,15 +94,21 @@ function ProfilePage() {
       // === Step 2: Collect phones for cross-device lookup ===
       let allPhones = [];
 
+      // localStorage — most reliable, set after every successful payment
+      const localPhone = localStorage.getItem('kaspiPhone');
+      if (localPhone) allPhones.push(localPhone);
+
+      // Phone from visitors table (may fail silently due to RLS — that's ok)
       const { data: currentVisitor } = await supabase
         .from('visitors')
         .select('phone')
         .eq('visitor_id', visitorId)
         .single();
 
-      if (currentVisitor?.phone) allPhones.push(currentVisitor.phone);
+      if (currentVisitor?.phone && !allPhones.includes(currentVisitor.phone))
+        allPhones.push(currentVisitor.phone);
 
-      // Also grab phone from any direct payment record (edge: visitors.phone may be null)
+      // Phone from direct payment record (visitor_id match)
       const directPhone = directPayments?.find(p => p.phone)?.phone;
       if (directPhone && !allPhones.includes(directPhone)) allPhones.push(directPhone);
 
