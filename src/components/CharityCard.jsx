@@ -58,17 +58,6 @@ function CharityCard({ data, onCardClick, index = 0 }) {
       </div>
       <div className='space-y-3'>
         <h3 className='text-lg font-semibold text-[var(--text-primary)] leading-tight'>{data.title}</h3>
-        <p className='text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-4'>{data.description}</p>
-        <div className='flex items-center space-x-2 text-xs'>
-          <Icon name="shield-check" size={16} className="text-[var(--primary-color)]" />
-          <a
-href={`/fund/${encodeURIComponent(data.partnerFund)}`}
-            onClick={(e) => e.stopPropagation()}
-            className='text-[var(--primary-color)] hover:underline'
-          >
-            Фонд "{data.partnerFund}"
-          </a>
-        </div>
         <div className='space-y-2'>
           <div className='flex justify-between text-sm'>
             <span className='text-[var(--text-secondary)]'>Собрано</span>
@@ -85,6 +74,17 @@ href={`/fund/${encodeURIComponent(data.partnerFund)}`}
           <div className='text-sm text-[var(--text-secondary)]'>
             Осталось собрать: {remainingAmount.toLocaleString("ru-RU")} ₸
           </div>
+        </div>
+        <p className='text-[var(--text-secondary)] text-sm leading-relaxed line-clamp-4'>{data.description}</p>
+        <div className='flex items-center space-x-2 text-xs'>
+          <Icon name="shield-check" size={16} className="text-[var(--primary-color)]" />
+          <a
+href={`/fund/${encodeURIComponent(data.partnerFund)}`}
+            onClick={(e) => e.stopPropagation()}
+            className='text-[var(--primary-color)] hover:underline'
+          >
+            Фонд "{data.partnerFund}"
+          </a>
         </div>
         <div className='flex space-x-3 pt-2'>
           <button
