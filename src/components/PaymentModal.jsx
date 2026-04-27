@@ -73,61 +73,37 @@ function PaymentModal({ beneficiary, onClose }) {
         }
       }
 
-      // Check if user has at least 1 paid request across all devices
-      const { data: paid } = await supabase
-        .from('kaspi_payment_requests')
-        .select('id')
-        .in('visitor_id', visitorIds)
-        .eq('status', 'paid')
-        .limit(1);
+      // Get saved phone: first from visitors table, then from any recent payment
+      let phone = null;
 
-      if (paid && paid.length > 0) {
-        // Get phone from visitors table — check all linked visitor_ids
-        let phone = null;
+      const { data: visitor } = await supabase
+        .from('visitors')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .single();
 
-        // First try current visitor
-        const { data: visitor } = await supabase
-          .from('visitors')
+      if (visitor?.phone) {
+        phone = visitor.phone;
+      }
+
+      // Fallback: get phone from most recent payment (any status)
+      if (!phone) {
+        const { data: recentPayments } = await supabase
+          .from('kaspi_payment_requests')
           .select('phone')
-          .eq('visitor_id', visitorId)
-          .single();
+          .in('visitor_id', visitorIds)
+          .not('phone', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-        if (visitor?.phone) {
-          phone = visitor.phone;
+        if (recentPayments && recentPayments.length > 0) {
+          phone = recentPayments[0].phone;
         }
+      }
 
-        // If no phone on current visitor, check all linked visitors
-        if (!phone && visitorIds.length > 1) {
-          const { data: linkedWithPhone } = await supabase
-            .from('visitors')
-            .select('phone')
-            .in('visitor_id', visitorIds)
-            .not('phone', 'is', null)
-            .limit(1);
-
-          if (linkedWithPhone && linkedWithPhone.length > 0) {
-            phone = linkedWithPhone[0].phone;
-          }
-        }
-
-        // Also check phone directly from paid payment requests
-        if (!phone) {
-          const { data: paidWithPhone } = await supabase
-            .from('kaspi_payment_requests')
-            .select('phone')
-            .in('visitor_id', visitorIds)
-            .eq('status', 'paid')
-            .limit(1);
-
-          if (paidWithPhone && paidWithPhone.length > 0) {
-            phone = paidWithPhone[0].phone;
-          }
-        }
-
-        if (phone) {
-          setSavedPhone(phone);
-          setPhoneNumber(phone);
-        }
+      if (phone) {
+        setSavedPhone(phone);
+        setPhoneNumber(phone);
       }
     } catch (error) {
       console.error('Error loading saved phone:', error);
