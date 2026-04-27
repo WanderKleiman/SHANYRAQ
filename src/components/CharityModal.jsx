@@ -253,20 +253,7 @@ function CharityModal({ data, onClose }) {
                   <Icon name="external-link" size={16} />
                 </a>
               )}
-              
-              <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
-              
-              <div className='flex items-center space-x-2 text-sm'>
-                <Icon name="shield-check" size={20} className="text-[var(--primary-color)]" />
-                <a 
-                  href={`/fund/${encodeURIComponent(data.partnerFund)}`}
-  onClick={(e) => { e.stopPropagation(); }}
-                  className='text-[var(--primary-color)] hover:underline'
-                >
-                  Фонд "{data.partnerFund}"
-                </a>
-              </div>
-              
+
               <div className='space-y-3 bg-[var(--bg-secondary)] p-4 rounded-xl'>
                 <div className='flex justify-between text-sm'>
                   <span className='text-[var(--text-secondary)]'>Собрано</span>
@@ -288,6 +275,19 @@ function CharityModal({ data, onClose }) {
                     <span>Помогли: {data.helpersCount} человек</span>
                   )}
                 </div>
+              </div>
+
+              <p className='text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap'>{data.description}</p>
+
+              <div className='flex items-center space-x-2 text-sm'>
+                <Icon name="shield-check" size={20} className="text-[var(--primary-color)]" />
+                <a
+                  href={`/fund/${encodeURIComponent(data.partnerFund)}`}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  className='text-[var(--primary-color)] hover:underline'
+                >
+                  Фонд "{data.partnerFund}"
+                </a>
               </div>
             </div>
           </div>
