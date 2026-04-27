@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 function PaymentModal({ beneficiary, onClose }) {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [selectedAmount, setSelectedAmount] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState(1000);
   const [customAmount, setCustomAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('kaspi');
   const [phoneNumber, setPhoneNumber] = useState('');

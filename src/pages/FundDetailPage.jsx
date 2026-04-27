@@ -8,6 +8,8 @@ import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
 import { getCategoryName } from '../utils/charityData';
 
+const KASPI_FUND_URL = '#'; // TODO: вставить ссылку на Kaspi
+
 function formatPhoneDisplay(digits) {
   if (!digits) return '+7';
   if (digits.length <= 1) return '+7';
@@ -246,6 +248,18 @@ function FundDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Help fund button */}
+          <a
+            href={KASPI_FUND_URL}
+            target='_blank'
+            rel='noopener noreferrer'
+            className='flex items-center justify-center space-x-2 w-full py-4 rounded-2xl mb-4 font-bold text-white active:scale-[0.98] transition-transform'
+            style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
+          >
+            <Icon name="heart" size={18} className="text-white" />
+            <span>Помочь фонду</span>
+          </a>
 
           {/* Subscription card */}
           <div className='rounded-2xl p-5 mb-6 text-white' style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}>
