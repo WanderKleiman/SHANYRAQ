@@ -74,7 +74,8 @@ function ProfilePage() {
     try {
       const visitorId = await getVisitorId();
 
-      // Link this device/session to the logged-in user so cross-device lookup works
+      // Link this device/session to the logged-in user so cross-device lookup works.
+      // Uses service-role inside the edge function so RLS doesn't block this write.
       if (user) {
         await supabase.from('visitors').upsert({
           visitor_id: visitorId,
@@ -83,59 +84,24 @@ function ProfilePage() {
         }, { onConflict: 'visitor_id' });
       }
 
-      // === Step 1: Direct lookup by visitor_id (same device, most reliable) ===
-      const { data: directPayments } = await supabase
-        .from('kaspi_payment_requests')
-        .select('*')
-        .eq('visitor_id', visitorId)
-        .order('created_at', { ascending: false });
-
-      // === Step 2: Collect phones for cross-device lookup ===
-      let allPhones = [];
-
-      // localStorage — most reliable, set after every successful payment
+      // Collect phones from localStorage so the edge function can do cross-device lookup
       const localPhone = localStorage.getItem('kaspiPhone');
-      if (localPhone) allPhones.push(localPhone);
+      const phones = localPhone ? [localPhone] : [];
 
-      // Phone from visitors table (may fail silently due to RLS — that's ok)
-      const { data: currentVisitor } = await supabase
-        .from('visitors')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .single();
-
-      if (currentVisitor?.phone && !allPhones.includes(currentVisitor.phone))
-        allPhones.push(currentVisitor.phone);
-
-      // Phone from direct payment record (visitor_id match)
-      const directPhone = directPayments?.find(p => p.phone)?.phone;
-      if (directPhone && !allPhones.includes(directPhone)) allPhones.push(directPhone);
-
-      // If logged in, phones from all visitors linked to this auth account (cross-device)
-      if (user) {
-        const { data: linkedVisitors } = await supabase
-          .from('visitors')
-          .select('phone')
-          .eq('auth_user_id', user.id)
-          .not('phone', 'is', null);
-
-        if (linkedVisitors?.length) {
-          allPhones = [...new Set([...allPhones, ...linkedVisitors.map(v => v.phone).filter(Boolean)])];
+      // Single edge-function call — uses service_role, bypasses RLS entirely
+      const res = await fetch(
+        'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/get-user-payments',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitorId,
+            phones,
+            authUserId: user?.id || null,
+          }),
         }
-      }
-
-      // === Step 3: Fetch payments by phone (cross-device history) ===
-      const phonePaymentResults = allPhones.length > 0
-        ? await Promise.all(allPhones.map(phone =>
-            supabase.from('kaspi_payment_requests').select('*').eq('phone', phone)
-          ))
-        : [];
-
-      // === Merge all sources, deduplicate by id ===
-      const merged = new Map();
-      (directPayments || []).forEach(p => merged.set(p.id, p));
-      phonePaymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
-      const allPayments = [...merged.values()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      );
+      const { payments: allPayments = [] } = res.ok ? await res.json() : { payments: [] };
 
       if (!allPayments || allPayments.length === 0) {
         setLoading(false);
@@ -437,7 +403,7 @@ function ProfilePage() {
           ) : (
             <>
               <h1 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Мой профиль</h1>
-              {newRequests.length === 0 && invoiceSentRequests.length === 0 && (
+              {invoiceSentRequests.length === 0 && (
                 <p className='text-sm text-[var(--text-secondary)]'>Сделайте первое пожертвование</p>
               )}
             </>
