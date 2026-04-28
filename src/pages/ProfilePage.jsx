@@ -53,7 +53,6 @@ function ProfilePage() {
   // Donation state
   const [totalHelp, setTotalHelp] = useState(0);
   const [helpedByCategory, setHelpedByCategory] = useState({});
-  const [newRequests, setNewRequests] = useState([]);
   const [invoiceSentRequests, setInvoiceSentRequests] = useState([]);
   const [verifiedPhone, setVerifiedPhone] = useState('');
   const [showThankYou, setShowThankYou] = useState(false);
@@ -171,26 +170,19 @@ function ProfilePage() {
       }
       const now = new Date();
       const is24hOld = (dateStr) => (now - new Date(dateStr)) > 24 * 60 * 60 * 1000;
-      const newRequests = allPayments.filter(p => p.status === 'new' && !is24hOld(p.created_at));
       const invoiceSent = allPayments.filter(p => p.status === 'invoice_sent' && !is24hOld(p.created_at));
 
-      // Fetch beneficiary images for pending requests
-      const pendingAll = [...newRequests, ...invoiceSent];
-      if (pendingAll.length > 0) {
-        const pendingBenIds = [...new Set(pendingAll.map(p => p.beneficiary_id))];
-        const { data: pendingBens } = await supabase
+      if (invoiceSent.length > 0) {
+        const benIds = [...new Set(invoiceSent.map(p => p.beneficiary_id))];
+        const { data: bens } = await supabase
           .from('beneficiaries')
           .select('id, image_url')
-          .in('id', pendingBenIds);
+          .in('id', benIds);
 
         const benImageMap = {};
-        (pendingBens || []).forEach(b => { benImageMap[b.id] = b.image_url; });
-
-        const addImage = (p) => ({ ...p, beneficiary_image: benImageMap[p.beneficiary_id] || '' });
-        setNewRequests(newRequests.map(addImage));
-        setInvoiceSentRequests(invoiceSent.map(addImage));
+        (bens || []).forEach(b => { benImageMap[b.id] = b.image_url; });
+        setInvoiceSentRequests(invoiceSent.map(p => ({ ...p, beneficiary_image: benImageMap[p.beneficiary_id] || '' })));
       } else {
-        setNewRequests([]);
         setInvoiceSentRequests([]);
       }
 
@@ -352,6 +344,14 @@ function ProfilePage() {
           <Icon name="menu" size={20} className="text-[var(--text-primary)]" />
         </button>
 
+        <button
+          onClick={loadProfile}
+          className='absolute top-4 left-4 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md z-10'
+          title='Обновить'
+        >
+          <Icon name="refresh-cw" size={18} className="text-[var(--text-primary)]" />
+        </button>
+
         <div className='px-6 text-center'>
           {/* Avatar */}
           <div className='relative w-20 h-20 mx-auto -mt-14 mb-2'>
@@ -451,39 +451,6 @@ function ProfilePage() {
         </div>
       </div>
 
-      {/* New requests — forming invoice */}
-      {newRequests.length > 0 && (
-        <div className='px-4 mt-6'>
-          <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Формируется счёт</h2>
-          <div className='space-y-3'>
-            {newRequests.map(req => (
-              <div key={req.id} className='bg-orange-50 rounded-2xl p-4 border border-orange-200'>
-                <div className='flex items-center space-x-3'>
-                  {req.beneficiary_image ? (
-                    <img
-                      src={req.beneficiary_image}
-                      alt={req.beneficiary_title}
-                      className='w-12 h-12 rounded-xl object-cover flex-shrink-0'
-                    />
-                  ) : (
-                    <div className='w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0'>
-                      <Icon name="user" size={20} className="text-gray-400" />
-                    </div>
-                  )}
-                  <div className='flex-1 min-w-0'>
-                    <p className='font-medium text-[var(--text-primary)] text-sm truncate'>{req.beneficiary_title}</p>
-                    <p className='font-bold text-[var(--text-primary)]'>{req.amount?.toLocaleString("ru-RU")} ₸</p>
-                  </div>
-                  <div className='flex-shrink-0'>
-                    <span className='text-xs text-orange-600 font-medium bg-orange-100 px-2 py-1 rounded-lg'>Формируется</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Invoice sent requests */}
       {invoiceSentRequests.length > 0 && (
         <div className='px-4 mt-6'>
@@ -523,7 +490,7 @@ function ProfilePage() {
 
       {/* Category Sections */}
       <div className='px-4 mt-6 space-y-6 pb-4'>
-        {!isActivated && invoiceSentRequests.length === 0 && newRequests.length === 0 ? (
+        {!isActivated && invoiceSentRequests.length === 0 ? (
           <div className='text-center py-8'>
             <Icon name="heart" size={48} className="text-gray-300 mx-auto mb-4" />
             <p className='text-[var(--text-secondary)] mb-4'>У вас пока нет подтверждённых пожертвований</p>
