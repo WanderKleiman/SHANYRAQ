@@ -1,0 +1,1509 @@
+Начало работы
+Скрыть справку
+Базовый URL
+
+https://api.xpayment.kz/v1
+Авторизация
+
+Документация покрывает как публичные, так и защищённые эндпоинты. Для защищённых запросов передавайте Bearer токен в заголовке Authorization. Для device API используйте ключ формата xdev_..., для user API — токен формата xusr_live_....
+
+ЗАГОЛОВОК ЗАПРОСА
+Authorization: Bearer xdev_YOUR_API_KEY
+    Authorization: Bearer xusr_live_YOUR_TOKEN
+Идемпотентность
+
+При создании платежей рекомендуем отправлять заголовок X-Idempotency-Key с уникальным ID запроса. Это предотвратит дублирование при повторных попытках.
+
+X-Idempotency-Key: unique-request-id-per-attempt
+Формат ошибок
+
+Все ошибки API возвращают JSON с двумя полями: error (машиночитаемый код) и message (человекочитаемое описание).
+
+{
+  "error": "PAYMENT_NOT_FOUND",
+  "message": "Payment with the given ID does not exist"
+}
+Пагинация
+
+Эндпоинты-списки используют курсорную пагинацию. Если has_more равен true, передайте значение next_cursor в параметре cursor следующего запроса.
+
+{
+  "data": [...],
+  "has_more": true,
+  "next_cursor": "eyJpZCI6Mn0="
+}
+GET
+/payments
+Список платежей
+Возвращает пагинированный список платежей для авторизованного владельца API ключа устройства.
+
+Bearer авторизация
+Свернуть
+QUERY ПАРАМЕТРЫ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+status
+string
+нет
+Фильтр по статусу (pending, completed, cancelled, failed)
+payer_phone
+string
+нет
+Фильтр по телефону плательщика
+merchant_order_id
+string
+нет
+Фильтр по ID заказа мерчанта
+cursor
+string
+нет
+Курсор пагинации из предыдущего ответа
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+data
+object[]
+нет
+data
+has_more
+boolean
+нет
+has_more
+next_cursor
+string
+нет
+next_cursor
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "data": [
+    {
+      "amount": 1500,
+      "cancel_reason": "",
+      "cancelled_at": "",
+      "comment": "Order #42",
+      "completed_at": "",
+      "created_at": "",
+      "currency": "KZT",
+      "merchant_id": "uuid",
+      "merchant_order_id": "order-uuid",
+      "metadata": {},
+      "payer_phone": "+77001234567",
+      "payment_id": "uuid",
+      "status": "pending",
+      "updated_at": ""
+    }
+  ],
+  "has_more": false,
+  "next_cursor": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/payments?status=completed" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+GET
+/payments/{paymentID}
+Получить платёж
+Возвращает детали платежа по ID.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+paymentID
+string
+да
+ID платежа
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+cancel_reason
+string
+нет
+cancel_reason
+cancelled_at
+string
+нет
+cancelled_at
+comment
+string
+нет
+comment
+completed_at
+string
+нет
+completed_at
+created_at
+string
+нет
+created_at
+currency
+string
+нет
+currency
+merchant_id
+string
+нет
+merchant_id
+merchant_order_id
+string
+нет
+Ваш идентификатор заказа (опционально)
+metadata
+object
+нет
+metadata
+payer_phone
+string
+нет
+payer_phone
+payment_id
+string
+нет
+payment_id
+status
+string
+нет
+status
+updated_at
+string
+нет
+updated_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount": 1500,
+  "cancel_reason": "",
+  "cancelled_at": "",
+  "comment": "Order #42",
+  "completed_at": "",
+  "created_at": "",
+  "currency": "KZT",
+  "merchant_id": "uuid",
+  "merchant_order_id": "order-uuid",
+  "metadata": {},
+  "payer_phone": "+77001234567",
+  "payment_id": "uuid",
+  "status": "pending",
+  "updated_at": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/payments/PAYMENT_ID" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+POST
+/payments
+Создать платёж
+Инициирует новый QR-платёж Kaspi для авторизованного API ключа устройства.
+
+Bearer авторизация
+Свернуть
+ЗАГОЛОВКИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+X-Idempotency-Key
+string
+нет
+Ключ идемпотентности
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+comment
+string
+нет
+comment
+currency
+string
+нет
+currency
+merchant_order_id
+string
+нет
+Ваш идентификатор заказа (опционально)
+metadata
+object
+нет
+metadata
+payer_phone
+string
+нет
+payer_phone
+JSON
+JSON
+Копировать
+{
+  "amount": 1500,
+  "comment": "Order #42",
+  "currency": "KZT",
+  "merchant_order_id": "order-uuid",
+  "metadata": {},
+  "payer_phone": "+77001234567"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+cancel_reason
+string
+нет
+cancel_reason
+cancelled_at
+string
+нет
+cancelled_at
+comment
+string
+нет
+comment
+completed_at
+string
+нет
+completed_at
+created_at
+string
+нет
+created_at
+currency
+string
+нет
+currency
+merchant_id
+string
+нет
+merchant_id
+merchant_order_id
+string
+нет
+Ваш идентификатор заказа (опционально)
+metadata
+object
+нет
+metadata
+payer_phone
+string
+нет
+payer_phone
+payment_id
+string
+нет
+payment_id
+status
+string
+нет
+status
+updated_at
+string
+нет
+updated_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount": 1500,
+  "cancel_reason": "",
+  "cancelled_at": "",
+  "comment": "Order #42",
+  "completed_at": "",
+  "created_at": "",
+  "currency": "KZT",
+  "merchant_id": "uuid",
+  "merchant_order_id": "order-uuid",
+  "metadata": {},
+  "payer_phone": "+77001234567",
+  "payment_id": "uuid",
+  "status": "pending",
+  "updated_at": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/payments" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: unique-request-id" \
+  -d '{
+    "payer_phone": "+77001234567",
+    "amount": 1500,
+    "comment": "Order #42",
+    "merchant_order_id": "order-uuid"
+  }'
+Попробовать
+POST
+/payments/{paymentID}/cancel
+Отменить платёж
+Отменяет ожидающий платёж.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+paymentID
+string
+да
+ID платежа
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+reason
+string
+нет
+reason
+JSON
+JSON
+Копировать
+{
+  "reason": "Customer requested cancellation"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+cancel_reason
+string
+нет
+cancel_reason
+cancelled_at
+string
+нет
+cancelled_at
+comment
+string
+нет
+comment
+completed_at
+string
+нет
+completed_at
+created_at
+string
+нет
+created_at
+currency
+string
+нет
+currency
+merchant_id
+string
+нет
+merchant_id
+merchant_order_id
+string
+нет
+Ваш идентификатор заказа (опционально)
+metadata
+object
+нет
+metadata
+payer_phone
+string
+нет
+payer_phone
+payment_id
+string
+нет
+payment_id
+status
+string
+нет
+status
+updated_at
+string
+нет
+updated_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount": 1500,
+  "cancel_reason": "",
+  "cancelled_at": "",
+  "comment": "Order #42",
+  "completed_at": "",
+  "created_at": "",
+  "currency": "KZT",
+  "merchant_id": "uuid",
+  "merchant_order_id": "order-uuid",
+  "metadata": {},
+  "payer_phone": "+77001234567",
+  "payment_id": "uuid",
+  "status": "pending",
+  "updated_at": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/payments/PAYMENT_ID/cancel" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{"reason": "Customer requested cancellation"}'
+Попробовать
+POST
+/payments/link
+Создать ссылку на оплату
+Генерирует ссылку на QR-платёж Kaspi для указанной суммы. Возвращённый URL qr_token можно показать как QR-код или открыть напрямую.
+
+Bearer авторизация
+Свернуть
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+device_interface
+string
+нет
+device_interface
+merchant_order_id
+string
+нет
+Ваш идентификатор заказа (опционально)
+JSON
+JSON
+Копировать
+{
+  "amount": 1500,
+  "device_interface": "Pos",
+  "merchant_order_id": "order-uuid"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+expire_date
+string
+нет
+expire_date
+ext_tran_id
+string
+нет
+ext_tran_id
+qr_operation_id
+integer
+нет
+qr_operation_id
+qr_token
+string
+нет
+qr_token
+status
+string
+нет
+status
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "expire_date": "2026-04-06T11:39:53.000+05:00",
+  "ext_tran_id": "QR14893934009",
+  "qr_operation_id": 14893934009,
+  "qr_token": "https://qr.kaspi.kz/55308082630746899169618031642188672381021",
+  "status": "QrTokenCreated"
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/payments/link" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 1500, "device_interface": "Pos"}'
+Попробовать
+GET
+/payments/{paymentID}/refunds
+Список возвратов по платежу
+Возвращает все возвраты для указанного платежа.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+paymentID
+string
+да
+ID платежа
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+data
+object[]
+нет
+data
+has_more
+boolean
+нет
+has_more
+next_cursor
+string
+нет
+next_cursor
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "data": [
+    {
+      "amount": 500,
+      "completed_at": "",
+      "created_at": "",
+      "fail_reason": "",
+      "merchant_id": "uuid",
+      "payment_id": "uuid",
+      "reason": "Product returned",
+      "refund_id": "uuid",
+      "status": "pending",
+      "updated_at": ""
+    }
+  ],
+  "has_more": false,
+  "next_cursor": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/payments/PAYMENT_ID/refunds" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+GET
+/refunds
+Список возвратов
+Возвращает пагинированный список всех возвратов для авторизованного мерчанта.
+
+Bearer авторизация
+Свернуть
+QUERY ПАРАМЕТРЫ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+payment_id
+string
+нет
+Фильтр по ID платежа
+status
+string
+нет
+Фильтр по статусу (pending, completed, failed)
+cursor
+string
+нет
+Курсор пагинации
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+data
+object[]
+нет
+data
+has_more
+boolean
+нет
+has_more
+next_cursor
+string
+нет
+next_cursor
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "data": [
+    {
+      "amount": 500,
+      "completed_at": "",
+      "created_at": "",
+      "fail_reason": "",
+      "merchant_id": "uuid",
+      "payment_id": "uuid",
+      "reason": "Product returned",
+      "refund_id": "uuid",
+      "status": "pending",
+      "updated_at": ""
+    }
+  ],
+  "has_more": false,
+  "next_cursor": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/refunds?status=completed" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+GET
+/refunds/{refundID}
+Получить возврат
+Возвращает детали возврата по ID.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+refundID
+string
+да
+ID возврата
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+completed_at
+string
+нет
+completed_at
+created_at
+string
+нет
+created_at
+fail_reason
+string
+нет
+fail_reason
+merchant_id
+string
+нет
+merchant_id
+payment_id
+string
+нет
+payment_id
+reason
+string
+нет
+reason
+refund_id
+string
+нет
+refund_id
+status
+string
+нет
+status
+updated_at
+string
+нет
+updated_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount": 500,
+  "completed_at": "",
+  "created_at": "",
+  "fail_reason": "",
+  "merchant_id": "uuid",
+  "payment_id": "uuid",
+  "reason": "Product returned",
+  "refund_id": "uuid",
+  "status": "pending",
+  "updated_at": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/refunds/REFUND_ID" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+POST
+/payments/{paymentID}/refund
+Создать возврат
+Инициирует возврат для завершённого платежа.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+paymentID
+string
+да
+ID платежа
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+reason
+string
+нет
+reason
+JSON
+JSON
+Копировать
+{
+  "amount": 500,
+  "reason": "Product returned"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount
+number
+нет
+amount
+completed_at
+string
+нет
+completed_at
+created_at
+string
+нет
+created_at
+fail_reason
+string
+нет
+fail_reason
+merchant_id
+string
+нет
+merchant_id
+payment_id
+string
+нет
+payment_id
+reason
+string
+нет
+reason
+refund_id
+string
+нет
+refund_id
+status
+string
+нет
+status
+updated_at
+string
+нет
+updated_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount": 500,
+  "completed_at": "",
+  "created_at": "",
+  "fail_reason": "",
+  "merchant_id": "uuid",
+  "payment_id": "uuid",
+  "reason": "Product returned",
+  "refund_id": "uuid",
+  "status": "pending",
+  "updated_at": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/payments/PAYMENT_ID/refund" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{"amount": 500, "reason": "Product returned"}'
+Попробовать
+GET
+/webhooks
+Список подписок вебхуков
+Возвращает все подписки вебхуков для авторизованного мерчанта.
+
+Bearer авторизация
+Свернуть
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscriptions
+object[]
+нет
+subscriptions
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "subscriptions": [
+    {
+      "created_at": "",
+      "description": "",
+      "events": [
+        ""
+      ],
+      "id": "uuid",
+      "is_active": true,
+      "merchant_id": "uuid",
+      "secret": "",
+      "updated_at": "",
+      "url": "https://example.com/webhook"
+    }
+  ]
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/webhooks" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+GET
+/webhooks/{subscriptionID}/deliveries
+Список доставок вебхуков
+Возвращает историю доставок для подписки вебхука.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscriptionID
+string
+да
+ID подписки
+QUERY ПАРАМЕТРЫ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+status
+string
+нет
+Фильтр по статусу (pending, delivered, failed)
+cursor
+string
+нет
+Курсор пагинации
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+data
+object[]
+нет
+data
+has_more
+boolean
+нет
+has_more
+next_cursor
+string
+нет
+next_cursor
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "data": [
+    {
+      "attempt_number": 1,
+      "created_at": "",
+      "delivered_at": "",
+      "event": "payment.completed",
+      "id": "uuid",
+      "payment_id": "uuid",
+      "response_code": 200,
+      "status": "delivered",
+      "subscription_id": "uuid"
+    }
+  ],
+  "has_more": false,
+  "next_cursor": ""
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X GET "https://api.xpayment.kz/v1/webhooks/SUBSCRIPTION_ID/deliveries?status=failed" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+POST
+/webhooks
+Создать подписку вебхука
+Регистрирует новый эндпоинт вебхука для уведомлений о платёжных событиях.
+
+Bearer авторизация
+Свернуть
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+description
+string
+нет
+description
+events
+string[]
+нет
+events
+secret
+string
+нет
+secret
+url
+string
+нет
+url
+JSON
+JSON
+Копировать
+{
+  "description": "Production webhook",
+  "events": [
+    "payment.completed",
+    "payment.cancelled"
+  ],
+  "secret": "my-secret",
+  "url": "https://example.com/webhook"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+created_at
+string
+нет
+created_at
+description
+string
+нет
+description
+events
+string[]
+нет
+events
+id
+string
+нет
+id
+is_active
+boolean
+нет
+is_active
+merchant_id
+string
+нет
+merchant_id
+secret
+string
+нет
+secret
+updated_at
+string
+нет
+updated_at
+url
+string
+нет
+url
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "created_at": "",
+  "description": "",
+  "events": [
+    ""
+  ],
+  "id": "uuid",
+  "is_active": true,
+  "merchant_id": "uuid",
+  "secret": "",
+  "updated_at": "",
+  "url": "https://example.com/webhook"
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/webhooks" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/webhook",
+    "events": ["payment.completed", "payment.cancelled"],
+    "description": "Production webhook",
+    "secret": "my-secret"
+  }'
+Попробовать
+POST
+/webhooks/{subscriptionID}/test
+Тестировать подписку вебхука
+Отправляет тестовое событие на URL подписки для проверки подключения. Тело запроса к вашему URL совпадает с форматом живых вебхуков (см. ниже), с is_test=true и delivery_id="test". Подпись HMAC-SHA256 тела передаётся в заголовке X-xPayment-Signature (формат: sha256=<hex>), вычислена на основе секрета подписки. Ваш эндпоинт должен ответить HTTP 2xx в течение 10 с.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscriptionID
+string
+да
+ID подписки
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+event
+string
+нет
+event
+JSON
+JSON
+Копировать
+{
+  "event": "payment.completed"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscription_id
+string
+нет
+subscription_id
+success
+boolean
+нет
+success
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "subscription_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "success": true
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X POST "https://api.xpayment.kz/v1/webhooks/SUBSCRIPTION_ID/test" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{"event": "payment.completed"}'
+Попробовать
+PUT
+/webhooks/{subscriptionID}
+Обновить подписку вебхука
+Обновляет URL, события или состояние активности подписки вебхука.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscriptionID
+string
+да
+ID подписки
+ТЕЛО ЗАПРОСА
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+description
+string
+нет
+description
+events
+string[]
+нет
+events
+is_active
+boolean
+нет
+is_active
+url
+string
+нет
+url
+JSON
+JSON
+Копировать
+{
+  "description": "Updated webhook",
+  "events": [
+    "payment.completed"
+  ],
+  "is_active": true,
+  "url": "https://example.com/webhook"
+}
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+created_at
+string
+нет
+created_at
+description
+string
+нет
+description
+events
+string[]
+нет
+events
+id
+string
+нет
+id
+is_active
+boolean
+нет
+is_active
+merchant_id
+string
+нет
+merchant_id
+secret
+string
+нет
+secret
+updated_at
+string
+нет
+updated_at
+url
+string
+нет
+url
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "created_at": "",
+  "description": "",
+  "events": [
+    ""
+  ],
+  "id": "uuid",
+  "is_active": true,
+  "merchant_id": "uuid",
+  "secret": "",
+  "updated_at": "",
+  "url": "https://example.com/webhook"
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X PUT "https://api.xpayment.kz/v1/webhooks/SUBSCRIPTION_ID" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/webhook",
+    "events": ["payment.completed"],
+    "description": "Updated webhook",
+    "is_active": true
+  }'
+Попробовать
+DELETE
+/webhooks/{subscriptionID}
+Удалить подписку вебхука
+Безвозвратно удаляет подписку вебхука.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+subscriptionID
+string
+да
+ID подписки
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+#!/usr/bin/env bash
+curl -X DELETE "https://api.xpayment.kz/v1/webhooks/SUBSCRIPTION_ID" \
+  -H "Authorization: Bearer xusr_live_5e1d493f51dbb0bf31b5b4295780951fe3900aee53ff81fcbe66ca5a971de7d4"
+Попробовать
+GET
+/static-qr-payments/{orderNumber}
+Получить статический QR платёж по номеру заказа
+Возвращает запись статического QR (Link) платежа из истории Kaspi.
+
+Bearer авторизация
+Свернуть
+ПАРАМЕТРЫ ПУТИ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+orderNumber
+string
+да
+Номер заказа Kaspi (например, QR15029656207)
+ОТВЕТ
+
+ИМЯ
+ТИП
+ОБЯЗ.
+ОПИСАНИЕ
+amount_raw
+string
+нет
+amount_raw
+client_short_name
+string
+нет
+client_short_name
+comment
+string
+нет
+comment
+features
+integer
+нет
+features
+id
+integer
+нет
+id
+kaspi_operation_id
+integer
+нет
+kaspi_operation_id
+operation_method
+integer
+нет
+operation_method
+operation_type
+integer
+нет
+operation_type
+order_number
+string
+нет
+order_number
+order_reg_date
+string
+нет
+order_reg_date
+sale_id
+integer
+нет
+sale_id
+sale_type
+string
+нет
+sale_type
+source_type
+string
+нет
+source_type
+synced_at
+string
+нет
+synced_at
+ОТВЕТ • JSON
+JSON
+Копировать
+{
+  "amount_raw": "12 ₸",
+  "client_short_name": "Рустем Е.",
+  "comment": "Order #45",
+  "features": 0,
+  "id": 1,
+  "kaspi_operation_id": 15029656207,
+  "operation_method": 0,
+  "operation_type": 0,
+  "order_number": "QR15029656207",
+  "order_reg_date": "2026-04-15T13:57:25+05:00",
+  "sale_id": 14930989637,
+  "sale_type": "Link",
+  "source_type": "GOLD",
+  "synced_at": "2026-04-15T14:00:00+05:00"
+}
+ПРИМЕРЫ КОДА
+
+curl
+Go
+Python
+CURL
+Копировать
+# Example not available
+Попробовать

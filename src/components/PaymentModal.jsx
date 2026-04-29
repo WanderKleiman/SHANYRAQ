@@ -120,6 +120,10 @@ function PaymentModal({ beneficiary, onClose }) {
     if (paymentMethod === 'kaspi') {
       if (isSubmitting) return;
       setIsSubmitting(true);
+
+      // Safari blocks window.open after await — open blank window synchronously first
+      const kaspiWindow = window.open('', '_blank');
+
       try {
         ymTrackHelpClick(beneficiary.id, beneficiary.title, beneficiary.target);
 
@@ -140,22 +144,26 @@ function PaymentModal({ beneficiary, onClose }) {
         );
 
         const rawText = await res.text();
-        console.log('[xpayment-link] status:', res.status, 'body:', rawText.slice(0, 300));
-
         let resData;
         try {
           resData = JSON.parse(rawText);
         } catch {
+          kaspiWindow?.close();
           throw new Error(`Сервер вернул неожиданный ответ (${res.status})`);
         }
 
         if (!res.ok) {
+          kaspiWindow?.close();
           throw new Error(resData.error || resData.message || 'Ошибка при создании ссылки');
         }
 
         const { qr_token } = resData;
 
-        window.open(qr_token, '_blank');
+        if (kaspiWindow) {
+          kaspiWindow.location.href = qr_token;
+        } else {
+          window.location.href = qr_token;
+        }
         onClose();
       } catch (error) {
         console.error('Ошибка при отправке:', error);
