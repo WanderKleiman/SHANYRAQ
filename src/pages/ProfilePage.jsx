@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
-import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
@@ -72,38 +71,34 @@ function ProfilePage() {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const visitorId = await getVisitorId();
+      const phones = new Set();
 
-      // Link this device/session to the logged-in user so cross-device lookup works.
-      // Uses service-role inside the edge function so RLS doesn't block this write.
+      // 1. Phone from localStorage — set after every payment on this device
+      const localPhone = localStorage.getItem('kaspiPhone');
+      if (localPhone) phones.add(localPhone);
+
+      // 2. Phones linked to authenticated account (cross-device lookup)
       if (user) {
-        await supabase.from('visitors').upsert({
-          visitor_id: visitorId,
-          auth_user_id: user.id,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'visitor_id' });
+        const { data: linkedVisitors } = await supabase
+          .from('visitors')
+          .select('phone')
+          .eq('auth_user_id', user.id)
+          .not('phone', 'is', null);
+        (linkedVisitors || []).forEach(v => phones.add(v.phone));
       }
 
-      // Collect phones from localStorage so the edge function can do cross-device lookup
-      const localPhone = localStorage.getItem('kaspiPhone');
-      const phones = localPhone ? [localPhone] : [];
+      if (phones.size === 0) {
+        setLoading(false);
+        return;
+      }
 
-      // Single edge-function call — uses service_role, bypasses RLS entirely
-      const res = await fetch(
-        'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/get-user-payments',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            visitorId,
-            phones,
-            authUserId: user?.id || null,
-          }),
-        }
-      );
-      const { payments: allPayments = [] } = res.ok ? await res.json() : { payments: [] };
+      const { data: allPayments } = await supabase
+        .from('kaspi_payment_requests')
+        .select('*')
+        .in('phone', [...phones])
+        .order('created_at', { ascending: false });
 
-      if (!allPayments || allPayments.length === 0) {
+      if (!allPayments?.length) {
         setLoading(false);
         return;
       }

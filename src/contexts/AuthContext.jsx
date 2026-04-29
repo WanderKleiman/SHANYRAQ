@@ -60,17 +60,11 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Link auth user to visitor record
+  // Link auth user to visitor record, preserving phone from localStorage
   const linkVisitor = async (authUser) => {
     try {
       const visitorId = await getVisitorId();
-
-      // Get existing visitor record to preserve phone
-      const { data: existing } = await supabase
-        .from('visitors')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .single();
+      const localPhone = localStorage.getItem('kaspiPhone');
 
       const upsertData = {
         visitor_id: visitorId,
@@ -78,22 +72,9 @@ export function AuthProvider({ children }) {
         email: authUser.email,
         updated_at: new Date().toISOString()
       };
-
-      // Preserve existing phone if present
-      if (existing?.phone) {
-        upsertData.phone = existing.phone;
-      }
+      if (localPhone) upsertData.phone = localPhone;
 
       await supabase.from('visitors').upsert(upsertData, { onConflict: 'visitor_id' });
-
-      // Also link all other visitors with same phone to this auth_user_id
-      if (existing?.phone) {
-        await supabase
-          .from('visitors')
-          .update({ auth_user_id: authUser.id })
-          .eq('phone', existing.phone)
-          .is('auth_user_id', null);
-      }
     } catch (error) {
       console.error('Error linking visitor:', error);
     }

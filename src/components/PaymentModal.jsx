@@ -38,37 +38,13 @@ function PaymentModal({ beneficiary, onClose }) {
     };
   }, []);
 
-  const loadSavedPhone = async () => {
-    try {
-      // First: check localStorage (most reliable, set after each successful payment)
-      const localPhone = localStorage.getItem('kaspiPhone');
-      if (localPhone) {
-        setSavedPhone(localPhone);
-        setPhoneNumber(localPhone);
-        return;
-      }
-
-      // Fallback: check most recent payment by visitor_id
-      const visitorId = await getVisitorId();
-      const { data: recentPayment } = await supabase
-        .from('kaspi_payment_requests')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .not('phone', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (recentPayment?.phone) {
-        setSavedPhone(recentPayment.phone);
-        setPhoneNumber(recentPayment.phone);
-        localStorage.setItem('kaspiPhone', recentPayment.phone);
-      }
-    } catch (error) {
-      console.error('Error loading saved phone:', error);
-    } finally {
-      setPhoneLoading(false);
+  const loadSavedPhone = () => {
+    const localPhone = localStorage.getItem('kaspiPhone');
+    if (localPhone) {
+      setSavedPhone(localPhone);
+      setPhoneNumber(localPhone);
     }
+    setPhoneLoading(false);
   };
 
   const handleTouchStart = (e) => {

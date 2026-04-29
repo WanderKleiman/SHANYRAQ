@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
-import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
 
 function ProfileSettingsPage() {
@@ -27,35 +26,10 @@ function ProfileSettingsPage() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const visitorId = await getVisitorId();
-
-      // Collect phones: localStorage first (most reliable), then visitors table, then payments
-      let allPhones = [];
+      const phones = new Set();
 
       const localPhone = localStorage.getItem('kaspiPhone');
-      if (localPhone) allPhones.push(localPhone);
-
-      const { data: visitorRecord } = await supabase
-        .from('visitors')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .single();
-
-      if (visitorRecord?.phone && !allPhones.includes(visitorRecord.phone))
-        allPhones.push(visitorRecord.phone);
-
-      // Also include phone from any direct payment by this visitor_id
-      const { data: directPayment } = await supabase
-        .from('kaspi_payment_requests')
-        .select('phone')
-        .eq('visitor_id', visitorId)
-        .not('phone', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (directPayment?.phone && !allPhones.includes(directPayment.phone))
-        allPhones.push(directPayment.phone);
+      if (localPhone) phones.add(localPhone);
 
       if (user) {
         const { data: linkedVisitors } = await supabase
@@ -63,33 +37,22 @@ function ProfileSettingsPage() {
           .select('phone')
           .eq('auth_user_id', user.id)
           .not('phone', 'is', null);
-
-        if (linkedVisitors?.length) {
-          linkedVisitors.forEach(v => {
-            if (v.phone && !allPhones.includes(v.phone)) allPhones.push(v.phone);
-          });
-        }
+        (linkedVisitors || []).forEach(v => phones.add(v.phone));
       }
 
-      if (allPhones.length === 0) return;
+      if (phones.size === 0) return;
 
-      // Fetch paid payments for all phones
-      const paymentResults = await Promise.all(
-        allPhones.map(phone =>
-          supabase.from('kaspi_payment_requests').select('*').eq('phone', phone).eq('status', 'paid')
-        )
-      );
+      const { data: payments } = await supabase
+        .from('kaspi_payment_requests')
+        .select('*')
+        .in('phone', [...phones])
+        .eq('status', 'paid');
 
-      const merged = new Map();
-      paymentResults.forEach(r => (r.data || []).forEach(p => merged.set(p.id, p)));
-      const payments = [...merged.values()];
-
-      if (payments.length > 0) {
+      if (payments?.length > 0) {
         setIsVerified(true);
         setTotalHelp(payments.reduce((sum, p) => sum + p.amount, 0));
         setBeneficiaryCount(new Set(payments.map(p => p.beneficiary_id)).size);
         setPhone(payments[0].phone);
-        // Ensure localStorage is always up to date with verified phone
         localStorage.setItem('kaspiPhone', payments[0].phone);
       }
     } catch (error) {
@@ -117,12 +80,13 @@ function ProfileSettingsPage() {
     }
 
     try {
-      const visitorId = await getVisitorId();
-      await supabase.from('visitors').upsert({
-        visitor_id: visitorId,
-        phone: editPhoneValue,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'visitor_id' });
+      localStorage.setItem('kaspiPhone', editPhoneValue);
+
+      if (user) {
+        await supabase.from('visitors')
+          .update({ phone: editPhoneValue, updated_at: new Date().toISOString() })
+          .eq('auth_user_id', user.id);
+      }
 
       setPhone(editPhoneValue);
       setIsEditingPhone(false);

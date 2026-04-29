@@ -56,7 +56,6 @@ serve(async (req) => {
       phone,
       amount,
       status: 'invoice_sent',
-      visitor_id: visitorId || null,
       apipay_invoice_id: apiPayData.id,
     })
 
