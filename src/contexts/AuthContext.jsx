@@ -60,21 +60,35 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Link auth user to visitor record, preserving phone from localStorage
+  // Link auth user to visitor record for this device
   const linkVisitor = async (authUser) => {
     try {
       const visitorId = await getVisitorId();
-      const localPhone = localStorage.getItem('kaspiPhone');
 
-      const upsertData = {
+      // Update this device's visitor entry with the auth account
+      await supabase.from('visitors').upsert({
         visitor_id: visitorId,
         auth_user_id: authUser.id,
         email: authUser.email,
         updated_at: new Date().toISOString()
-      };
-      if (localPhone) upsertData.phone = localPhone;
+      }, { onConflict: 'visitor_id' });
 
-      await supabase.from('visitors').upsert(upsertData, { onConflict: 'visitor_id' });
+      // Also link any other visitors on this device that have a phone
+      // but no auth — this connects anonymous payments to the account
+      const { data: deviceVisitor } = await supabase
+        .from('visitors')
+        .select('phone')
+        .eq('visitor_id', visitorId)
+        .not('phone', 'is', null)
+        .maybeSingle();
+
+      if (deviceVisitor?.phone) {
+        // Link all anonymous visitors with this phone to this auth account
+        await supabase.from('visitors')
+          .update({ auth_user_id: authUser.id, updated_at: new Date().toISOString() })
+          .eq('phone', deviceVisitor.phone)
+          .is('auth_user_id', null);
+      }
     } catch (error) {
       console.error('Error linking visitor:', error);
     }
