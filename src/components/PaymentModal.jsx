@@ -155,10 +155,8 @@ function PaymentModal({ beneficiary, onClose }) {
 
         const { qr_token } = resData;
 
-        onClose();
-        // Open Kaspi payment link — on mobile opens Kaspi app directly
         window.open(qr_token, '_blank');
-        toast.success('Переходим в Kaspi для оплаты', { duration: 4000 });
+        onClose();
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
@@ -276,12 +274,14 @@ function PaymentModal({ beneficiary, onClose }) {
 
           <button
             onClick={handlePayment}
-            disabled={isSubmitting || (!selectedAmount && !customAmount)}
+            disabled={!selectedAmount && !customAmount}
             className='btn-primary w-full disabled:opacity-50'
           >
-            {isSubmitting ? 'Отправка...' : (selectedAmount || customAmount)
-              ? `Помочь — ${(selectedAmount || parseInt(customAmount) || 0).toLocaleString('ru-RU')} ₸`
-              : 'Выберите сумму'}
+            {isSubmitting
+              ? 'Открываем Kaspi...'
+              : (selectedAmount || customAmount)
+                ? `Помочь — ${(selectedAmount || parseInt(customAmount) || 0).toLocaleString('ru-RU')} ₸`
+                : 'Выберите сумму'}
           </button>
         </div>
       </div>
