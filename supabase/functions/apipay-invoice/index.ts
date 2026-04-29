@@ -1,7 +1,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const APIPAY_BASE = 'https://bpapi.bazarbay.site/api/v1'
+const XPAYMENT_BASE = 'https://api.xpayment.kz/v1'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -11,40 +11,52 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { phone, amount, beneficiaryId, title, visitorId } = await req.json()
+    const { amount, beneficiaryId, title, visitorId } = await req.json()
 
-    if (!phone || !amount || !beneficiaryId) {
+    if (!amount || !beneficiaryId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    const apiKey = Deno.env.get('APIPAY_KEY')
-    // Convert 7XXXXXXXXXX → 8XXXXXXXXXX (ApiPay format)
-    const formattedPhone = '8' + phone.slice(1)
+    const token = Deno.env.get('XPAYMENT_TOKEN')
+    const merchantOrderId = crypto.randomUUID()
 
-    const res = await fetch(`${APIPAY_BASE}/invoices`, {
+    const res = await fetch(`${XPAYMENT_BASE}/payments/link`, {
       method: 'POST',
-      headers: { 'X-API-Key': apiKey!, 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': merchantOrderId,
+      },
       body: JSON.stringify({
-        phone_number: formattedPhone,
         amount,
-        description: `Помощь: ${title}`,
-        external_order_id: `${beneficiaryId}-${Date.now()}`,
+        merchant_order_id: merchantOrderId,
+        device_interface: 'Pos',
       }),
     })
 
-    const apiPayData = await res.json()
+    const text = await res.text()
+    let data: Record<string, any>
+    try {
+      data = JSON.parse(text)
+    } catch {
+      console.error('xPayment non-JSON response:', text.slice(0, 200))
+      return new Response(JSON.stringify({ error: 'xPayment unavailable' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     if (!res.ok) {
-      return new Response(JSON.stringify({ error: apiPayData.message || 'ApiPay error' }), {
+      console.error('xPayment error:', JSON.stringify(data))
+      return new Response(JSON.stringify({ error: data.message || 'xPayment error' }), {
         status: res.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Write to kaspi_payment_requests so the profile can track this invoice
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -53,17 +65,18 @@ serve(async (req) => {
     const { error: dbError } = await supabase.from('kaspi_payment_requests').insert({
       beneficiary_id: beneficiaryId,
       beneficiary_title: title,
-      phone,
       amount,
-      status: 'invoice_sent',
-      apipay_invoice_id: apiPayData.id,
+      status: 'link_created',
+      apipay_invoice_id: merchantOrderId,
     })
 
-    if (dbError) {
-      console.error('DB insert error:', JSON.stringify(dbError))
-    }
+    if (dbError) console.error('DB insert error:', JSON.stringify(dbError))
 
-    return new Response(JSON.stringify({ success: true, invoiceId: apiPayData.id, dbError: dbError?.message || null }), {
+    return new Response(JSON.stringify({
+      success: true,
+      qr_token: data.qr_token,
+      invoiceId: merchantOrderId,
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
