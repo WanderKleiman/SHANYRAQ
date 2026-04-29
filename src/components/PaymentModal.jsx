@@ -129,10 +129,7 @@ function PaymentModal({ beneficiary, onClose }) {
           'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-link',
           {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2eGNjd25kcmt2bndtZmJmaHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjE0NjAsImV4cCI6MjA4NTc5NzQ2MH0.hGWnNGkhg1htJTMtGd74y_hTJX6zMcPhQqd6ZVQO7UA',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               amount,
               beneficiaryId: beneficiary.id,
@@ -142,12 +139,21 @@ function PaymentModal({ beneficiary, onClose }) {
           }
         );
 
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Ошибка при создании ссылки');
+        const rawText = await res.text();
+        console.log('[xpayment-link] status:', res.status, 'body:', rawText.slice(0, 300));
+
+        let resData;
+        try {
+          resData = JSON.parse(rawText);
+        } catch {
+          throw new Error(`Сервер вернул неожиданный ответ (${res.status})`);
         }
 
-        const { qr_token } = await res.json();
+        if (!res.ok) {
+          throw new Error(resData.error || resData.message || 'Ошибка при создании ссылки');
+        }
+
+        const { qr_token } = resData;
 
         onClose();
         // Open Kaspi payment link — on mobile opens Kaspi app directly
