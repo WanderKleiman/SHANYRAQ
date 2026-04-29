@@ -129,7 +129,10 @@ function PaymentModal({ beneficiary, onClose }) {
           'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-link',
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ2eGNjd25kcmt2bndtZmJmaHFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMjE0NjAsImV4cCI6MjA4NTc5NzQ2MH0.hGWnNGkhg1htJTMtGd74y_hTJX6zMcPhQqd6ZVQO7UA',
+            },
             body: JSON.stringify({
               amount,
               beneficiaryId: beneficiary.id,
