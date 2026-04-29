@@ -31,7 +31,7 @@ serve(async (req) => {
         phone_number: formattedPhone,
         amount,
         description: `Помощь: ${title}`,
-        external_order_id: `ben-${beneficiaryId}`,
+        external_order_id: `${beneficiaryId}-${Date.now()}`,
       }),
     })
 
