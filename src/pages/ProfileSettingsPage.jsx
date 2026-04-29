@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import Icon from '../components/Icon';
 import { useAuth } from '../contexts/AuthContext';
-import { getVisitorId } from '../utils/fingerprint';
 
 function ProfileSettingsPage() {
   const navigate = useNavigate();
@@ -39,14 +38,8 @@ function ProfileSettingsPage() {
       }
 
       if (phones.size === 0) {
-        const visitorId = await getVisitorId();
-        const { data: visitor } = await supabase
-          .from('visitors')
-          .select('phone')
-          .eq('visitor_id', visitorId)
-          .not('phone', 'is', null)
-          .maybeSingle();
-        if (visitor?.phone) phones.add(visitor.phone);
+        const localPhone = localStorage.getItem('kaspiPhone');
+        if (localPhone) phones.add(localPhone);
       }
 
       if (phones.size === 0) return;

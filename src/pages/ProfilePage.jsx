@@ -6,7 +6,6 @@ import Icon from '../components/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import { getVisitorId } from '../utils/fingerprint';
 
 
 
@@ -74,7 +73,7 @@ function ProfilePage() {
     try {
       const phones = new Set();
 
-      // 1. Authenticated: get all phones linked to this account (server-side)
+      // 1. Authenticated: get phones linked to this account via visitors table
       if (user) {
         const { data: linkedVisitors } = await supabase
           .from('visitors')
@@ -84,16 +83,10 @@ function ProfilePage() {
         (linkedVisitors || []).forEach(v => phones.add(v.phone));
       }
 
-      // 2. Anonymous (or auth found no phones): look up by device fingerprint (server-side)
+      // 2. Anonymous: phone stored locally after payment
       if (phones.size === 0) {
-        const visitorId = await getVisitorId();
-        const { data: visitor } = await supabase
-          .from('visitors')
-          .select('phone')
-          .eq('visitor_id', visitorId)
-          .not('phone', 'is', null)
-          .maybeSingle();
-        if (visitor?.phone) phones.add(visitor.phone);
+        const localPhone = localStorage.getItem('kaspiPhone');
+        if (localPhone) phones.add(localPhone);
       }
 
       if (phones.size === 0) {
