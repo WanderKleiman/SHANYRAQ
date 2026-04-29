@@ -118,11 +118,6 @@ function PaymentModal({ beneficiary, onClose }) {
     }
 
     if (paymentMethod === 'kaspi') {
-      if (phoneNumber.length !== 11) {
-        toast.error('Пожалуйста, введите корректный номер телефона');
-        return;
-      }
-
       if (isSubmitting) return;
       setIsSubmitting(true);
       try {
@@ -131,12 +126,11 @@ function PaymentModal({ beneficiary, onClose }) {
         const visitorId = await getVisitorId();
 
         const res = await fetch(
-          'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/apipay-invoice',
+          'https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-link',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              phone: phoneNumber,
               amount,
               beneficiaryId: beneficiary.id,
               title: beneficiary.title,
@@ -147,23 +141,15 @@ function PaymentModal({ beneficiary, onClose }) {
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || 'Ошибка при создании счёта');
+          throw new Error(err.error || 'Ошибка при создании ссылки');
         }
 
-        // Save visitor phone + auth link for future autofill and cross-device profile
-        await supabase.from('visitors').upsert({
-          visitor_id: visitorId,
-          phone: phoneNumber,
-          auth_user_id: user?.id || null,
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'visitor_id' });
-
-        // Save phone locally so profile and autofill work across sessions
-        localStorage.setItem('kaspiPhone', phoneNumber);
-        window.dispatchEvent(new Event('kaspiPhoneUpdated'));
+        const { qr_token } = await res.json();
 
         onClose();
-        toast.success('Счёт отправлен в Kaspi! Откройте приложение и подтвердите оплату.', { duration: 6000 });
+        // Open Kaspi payment link — on mobile opens Kaspi app directly
+        window.open(qr_token, '_blank');
+        toast.success('Переходим в Kaspi для оплаты', { duration: 4000 });
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
@@ -264,7 +250,8 @@ function PaymentModal({ beneficiary, onClose }) {
             </div>
           </div>
 
-          {paymentMethod === 'kaspi' && !phoneLoading && !savedPhone && (
+          {/* Phone input hidden — payment goes via QR link, payer_phone is received from Kaspi via webhook */}
+          {false && paymentMethod === 'kaspi' && !phoneLoading && !savedPhone && (
             <div className='bg-blue-50 p-4 rounded-xl space-y-3'>
               <label className='text-sm text-[var(--text-secondary)] block'>Номер телефона</label>
               <input
@@ -280,7 +267,7 @@ function PaymentModal({ beneficiary, onClose }) {
 
           <button
             onClick={handlePayment}
-            disabled={isSubmitting || phoneLoading || (!selectedAmount && !customAmount)}
+            disabled={isSubmitting || (!selectedAmount && !customAmount)}
             className='btn-primary w-full disabled:opacity-50'
           >
             {isSubmitting ? 'Отправка...' : (selectedAmount || customAmount)
