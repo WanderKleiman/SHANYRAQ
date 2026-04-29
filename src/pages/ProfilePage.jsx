@@ -6,6 +6,7 @@ import Icon from '../components/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { getVisitorId } from '../utils/fingerprint';
 
 
 
@@ -61,8 +62,6 @@ function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
-    window.addEventListener('kaspiPhoneUpdated', loadProfile);
-    return () => window.removeEventListener('kaspiPhoneUpdated', loadProfile);
   }, [user]);
 
   const formatPhoneDisplay = (phone) => {
@@ -75,11 +74,7 @@ function ProfilePage() {
     try {
       const phones = new Set();
 
-      // 1. Phone from localStorage — set after every payment on this device
-      const localPhone = localStorage.getItem('kaspiPhone');
-      if (localPhone) phones.add(localPhone);
-
-      // 2. Phones linked to authenticated account (cross-device lookup)
+      // 1. Authenticated: get all phones linked to this account (server-side)
       if (user) {
         const { data: linkedVisitors } = await supabase
           .from('visitors')
@@ -87,6 +82,18 @@ function ProfilePage() {
           .eq('auth_user_id', user.id)
           .not('phone', 'is', null);
         (linkedVisitors || []).forEach(v => phones.add(v.phone));
+      }
+
+      // 2. Anonymous (or auth found no phones): look up by device fingerprint (server-side)
+      if (phones.size === 0) {
+        const visitorId = await getVisitorId();
+        const { data: visitor } = await supabase
+          .from('visitors')
+          .select('phone')
+          .eq('visitor_id', visitorId)
+          .not('phone', 'is', null)
+          .maybeSingle();
+        if (visitor?.phone) phones.add(visitor.phone);
       }
 
       if (phones.size === 0) {
