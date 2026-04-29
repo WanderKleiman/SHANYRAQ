@@ -61,6 +61,8 @@ function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
+    window.addEventListener('kaspiPhoneUpdated', loadProfile);
+    return () => window.removeEventListener('kaspiPhoneUpdated', loadProfile);
   }, [user]);
 
   const formatPhoneDisplay = (phone) => {

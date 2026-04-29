@@ -160,6 +160,7 @@ function PaymentModal({ beneficiary, onClose }) {
 
         // Save phone locally so profile and autofill work across sessions
         localStorage.setItem('kaspiPhone', phoneNumber);
+        window.dispatchEvent(new Event('kaspiPhoneUpdated'));
 
         onClose();
         toast.success('Счёт отправлен в Kaspi! Откройте приложение и подтвердите оплату.', { duration: 6000 });
