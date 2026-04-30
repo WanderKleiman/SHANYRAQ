@@ -58,6 +58,7 @@ serve(async (req) => {
       amount,
       status: 'link_created',
       merchant_order_id: merchantOrderId,
+      visitor_id: visitorId || null,
     })
 
     if (dbError) console.error('DB insert error:', JSON.stringify(dbError))

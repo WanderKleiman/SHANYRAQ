@@ -58,10 +58,10 @@ serve(async (req) => {
       return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
 
-    // 1. Find our payment record by merchant_order_id (stored in apipay_invoice_id)
+    // 1. Find our payment record by merchant_order_id
     const { data: paymentRecord, error: findErr } = await supabase
       .from('kaspi_payment_requests')
-      .select('id, beneficiary_id, amount')
+      .select('id, beneficiary_id, amount, visitor_id')
       .eq('merchant_order_id', merchantOrderId)
       .single()
 
@@ -104,17 +104,25 @@ serve(async (req) => {
       }
     }
 
-    // 4. If Kaspi gave us the payer phone — save it to visitors (links payment to a profile)
-    if (payerPhone) {
+    // 4. Real Kaspi phone → update the visitor who created the QR link
+    // This replaces any manually entered test phone with the verified bank number
+    if (payerPhone && paymentRecord?.visitor_id) {
       const { error: visitorErr } = await supabase
         .from('visitors')
-        .upsert({
+        .update({
           phone: payerPhone,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'phone' })
+        })
+        .eq('visitor_id', paymentRecord.visitor_id)
 
-      if (visitorErr) console.error('visitors upsert error:', visitorErr.message)
-      else console.log('Saved payer phone to visitors:', payerPhone)
+      if (visitorErr) console.error('visitors update error:', visitorErr.message)
+      else console.log(`Updated phone for visitor ${paymentRecord.visitor_id} → ${payerPhone}`)
+    } else if (payerPhone) {
+      // No visitor_id in record — upsert by phone as fallback
+      await supabase.from('visitors').upsert({
+        phone: payerPhone,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'phone' })
     }
   }
 
