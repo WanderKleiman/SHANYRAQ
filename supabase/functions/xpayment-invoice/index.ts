@@ -11,9 +11,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const { amount, beneficiaryId, title, visitorId, fundId, fundName } = await req.json()
+    const { phone, amount, fundId, fundName, visitorId } = await req.json()
 
-    if (!amount || (!beneficiaryId && !fundId)) {
+    if (!phone || !amount || !fundId) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -23,7 +23,8 @@ serve(async (req) => {
     const token = Deno.env.get('XPAYMENT_TOKEN')
     const merchantOrderId = crypto.randomUUID()
 
-    const res = await fetch(`${XPAYMENT_BASE}/payments/link`, {
+    // Send invoice to payer's Kaspi via push notification
+    const res = await fetch(`${XPAYMENT_BASE}/payments`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -32,15 +33,16 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         amount,
+        payer_phone: phone.startsWith('+') ? phone : `+${phone}`,
         merchant_order_id: merchantOrderId,
-        device_interface: 'Pos',
+        comment: `Ежемесячная помощь фонду ${fundName || ''}`.trim(),
       }),
     })
 
     const data = await res.json()
 
     if (!res.ok) {
-      console.error('xPayment error:', JSON.stringify(data))
+      console.error('xPayment invoice error:', JSON.stringify(data))
       return new Response(JSON.stringify({ error: data.message || 'xPayment error' }), {
         status: res.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,24 +54,21 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    const { error: dbError } = await supabase.from('kaspi_payment_requests').insert({
-      beneficiary_id: beneficiaryId || null,
-      beneficiary_title: title || null,
-      fund_id: fundId || null,
+    const { error: dbError } = await supabase.from('fund_subscriptions').insert({
+      fund_id: fundId,
       fund_name: fundName || null,
+      phone,
       amount,
-      status: 'link_created',
-      merchant_order_id: merchantOrderId,
+      payment_method: 'kaspi',
+      status: 'pending',
       visitor_id: visitorId || null,
+      merchant_order_id: merchantOrderId,
+      xpayment_payment_id: data.payment_id || null,
     })
 
     if (dbError) console.error('DB insert error:', JSON.stringify(dbError))
 
-    return new Response(JSON.stringify({
-      success: true,
-      qr_token: data.qr_token,
-      merchant_order_id: merchantOrderId,
-    }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

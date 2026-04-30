@@ -29,7 +29,8 @@ const CATEGORIES = [
   { key: 'operations', name: 'Пожилые', icon: 'user-round' },
   { key: 'animals', name: 'Животные', icon: 'heart' },
   { key: 'social', name: 'Социальные программы', icon: 'users' },
-  { key: 'non_material', name: 'Нематериальная помощь', icon: 'hand-helping' }
+  { key: 'non_material', name: 'Нематериальная помощь', icon: 'hand-helping' },
+  { key: 'funds', name: 'Фонды', icon: 'building-2' },
 ];
 
 function ProfilePage() {
@@ -201,7 +202,7 @@ function ProfilePage() {
           setDisplayName(defaultName);
         }
 
-        const beneficiaryIds = [...new Set(paidPayments.map(p => p.beneficiary_id))];
+        const beneficiaryIds = [...new Set(paidPayments.map(p => p.beneficiary_id).filter(Boolean))];
         const { data: beneficiaries } = await supabase
           .from('beneficiaries')
           .select('id, category, image_url, title, collection_status')
@@ -210,16 +211,31 @@ function ProfilePage() {
         const beneficiaryMap = {};
         (beneficiaries || []).forEach(b => { beneficiaryMap[b.id] = b; });
 
-        const donationList = paidPayments.map(p => ({
-          id: p.id,
-          beneficiaryId: p.beneficiary_id,
-          name: p.beneficiary_title,
-          amount: p.amount,
-          category: beneficiaryMap[p.beneficiary_id]?.category || 'other',
-          image: beneficiaryMap[p.beneficiary_id]?.image_url || '',
-          collectionStatus: beneficiaryMap[p.beneficiary_id]?.collection_status || 'active',
-          date: p.created_at
-        }));
+        // Fetch fund images for fund payments
+        const fundIds = [...new Set(paidPayments.map(p => p.fund_id).filter(Boolean))];
+        const fundMap = {};
+        if (fundIds.length > 0) {
+          const { data: funds } = await supabase
+            .from('partner_funds')
+            .select('id, logo_url, name')
+            .in('id', fundIds);
+          (funds || []).forEach(f => { fundMap[f.id] = f; });
+        }
+
+        const donationList = paidPayments.map(p => {
+          const isFund = !!p.fund_id;
+          return {
+            id: p.id,
+            beneficiaryId: p.beneficiary_id,
+            fundId: p.fund_id,
+            name: isFund ? (p.fund_name || fundMap[p.fund_id]?.name || 'Фонд') : p.beneficiary_title,
+            amount: p.amount,
+            category: isFund ? 'funds' : (beneficiaryMap[p.beneficiary_id]?.category || 'other'),
+            image: isFund ? (fundMap[p.fund_id]?.logo_url || '') : (beneficiaryMap[p.beneficiary_id]?.image_url || ''),
+            collectionStatus: isFund ? 'active' : (beneficiaryMap[p.beneficiary_id]?.collection_status || 'active'),
+            date: p.created_at
+          };
+        });
 
         setDonationsList(donationList);
         setTotalHelp(donationList.reduce((sum, d) => sum + d.amount, 0));
