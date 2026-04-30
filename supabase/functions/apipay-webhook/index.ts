@@ -45,16 +45,20 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // xPayment sends: { event: "payment.completed", payment: { payment_id, merchant_order_id, amount, payer_phone, ... } }
   if (event.event === 'payment.completed') {
-    const payment = event.payment || {}
-    const merchantOrderId: string = payment.merchant_order_id || ''
+    // merchant_order_id may be nested under payment/data or at top level
+    const payment = event.payment || event.data || {}
+    const merchantOrderId: string = payment.merchant_order_id || event.merchant_order_id || ''
+    const rawPhone: string = payment.payer_phone || event.payer_phone || ''
     // Normalize phone: remove leading + so format matches existing visitors records
-    const payerPhone: string = (payment.payer_phone || '').replace(/^\+/, '')
-    const amount = Number(payment.amount) || 0
+    const payerPhone: string = rawPhone.replace(/^\+/, '')
+    const amount = Number(payment.amount ?? event.amount) || 0
+
+    const paymentId: string = payment.payment_id || event.payment_id || ''
+    console.log('Webhook resolved:', JSON.stringify({ merchantOrderId, paymentId, payerPhone, amount }))
 
     if (!merchantOrderId) {
-      console.error('No merchant_order_id in payload')
+      console.error('No merchant_order_id in payload:', JSON.stringify(event))
       return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
 
@@ -67,12 +71,31 @@ serve(async (req) => {
 
     if (findErr) console.error('kaspi_payment_requests lookup error:', findErr.message)
 
+    // If payer_phone missing from webhook — fetch it from xpayment API
+    let resolvedPhone = payerPhone
+    if (!resolvedPhone && paymentId) {
+      const xpayToken = Deno.env.get('XPAYMENT_TOKEN')
+      if (xpayToken) {
+        const fetchRes = await fetch(`https://api.xpayment.kz/v1/payments/${paymentId}`, {
+          headers: { 'Authorization': `Bearer ${xpayToken}` }
+        })
+        if (fetchRes.ok) {
+          const fetchData = await fetchRes.json()
+          const raw: string = fetchData.payer_phone || ''
+          resolvedPhone = raw.replace(/^\+/, '')
+          if (resolvedPhone) console.log(`Fetched payer_phone from xpayment API: ${resolvedPhone}`)
+        } else {
+          console.error('xpayment fetch payment failed:', await fetchRes.text())
+        }
+      }
+    }
+
     // 2. Update payment status to 'paid', save payer phone
     const { error: updateErr } = await supabase
       .from('kaspi_payment_requests')
       .update({
         status: 'paid',
-        phone: payerPhone || null,
+        phone: resolvedPhone || null,
         updated_at: new Date().toISOString(),
       })
       .eq('merchant_order_id', merchantOrderId)
@@ -106,21 +129,21 @@ serve(async (req) => {
 
     // 4. Real Kaspi phone → update the visitor who created the QR link
     // This replaces any manually entered test phone with the verified bank number
-    if (payerPhone && paymentRecord?.visitor_id) {
+    if (resolvedPhone && paymentRecord?.visitor_id) {
       const { error: visitorErr } = await supabase
         .from('visitors')
         .update({
-          phone: payerPhone,
+          phone: resolvedPhone,
           updated_at: new Date().toISOString(),
         })
         .eq('visitor_id', paymentRecord.visitor_id)
 
       if (visitorErr) console.error('visitors update error:', visitorErr.message)
-      else console.log(`Updated phone for visitor ${paymentRecord.visitor_id} → ${payerPhone}`)
-    } else if (payerPhone) {
+      else console.log(`Updated phone for visitor ${paymentRecord.visitor_id} → ${resolvedPhone}`)
+    } else if (resolvedPhone) {
       // No visitor_id in record — upsert by phone as fallback
       await supabase.from('visitors').upsert({
-        phone: payerPhone,
+        phone: resolvedPhone,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'phone' })
     }

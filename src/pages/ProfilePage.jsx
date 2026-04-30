@@ -6,6 +6,7 @@ import Icon from '../components/Icon';
 import { useAuth } from '../contexts/AuthContext';
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { getVisitorId } from '../utils/fingerprint';
 
 
 
@@ -72,15 +73,22 @@ function ProfilePage() {
     setLoading(true);
     try {
       const phones = new Set();
+      const visitorIds = new Set();
 
-      // 1. Authenticated: get phones linked to this account via visitors table
+      // Current device visitor_id (works even without auth)
+      const currentVisitorId = await getVisitorId();
+      if (currentVisitorId) visitorIds.add(currentVisitorId);
+
+      // 1. Authenticated: get phones and visitor_ids linked to this account
       if (user) {
         const { data: linkedVisitors } = await supabase
           .from('visitors')
-          .select('phone')
-          .eq('auth_user_id', user.id)
-          .not('phone', 'is', null);
-        (linkedVisitors || []).forEach(v => phones.add(v.phone));
+          .select('phone, visitor_id')
+          .eq('auth_user_id', user.id);
+        (linkedVisitors || []).forEach(v => {
+          if (v.phone) phones.add(v.phone);
+          if (v.visitor_id) visitorIds.add(v.visitor_id);
+        });
       }
 
       // 2. Anonymous: phone stored locally after payment
@@ -89,15 +97,20 @@ function ProfilePage() {
         if (localPhone) phones.add(localPhone);
       }
 
-      if (phones.size === 0) {
+      if (phones.size === 0 && visitorIds.size === 0) {
         setLoading(false);
         return;
       }
 
+      // Build OR filter: match by phone OR by visitor_id
+      const orParts = [];
+      if (phones.size > 0) orParts.push(`phone.in.(${[...phones].join(',')})`);
+      if (visitorIds.size > 0) orParts.push(`visitor_id.in.(${[...visitorIds].join(',')})`);
+
       const { data: allPayments } = await supabase
         .from('kaspi_payment_requests')
         .select('*')
-        .in('phone', [...phones])
+        .or(orParts.join(','))
         .order('created_at', { ascending: false });
 
       if (!allPayments?.length) {
