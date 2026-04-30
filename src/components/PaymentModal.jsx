@@ -275,7 +275,8 @@ function PaymentModal({ beneficiary, onClose }) {
           <button
             onClick={handlePayment}
             disabled={!selectedAmount && !customAmount}
-            className='w-full disabled:opacity-50 py-3 rounded-xl font-medium text-white bg-orange-500'
+            className='w-full disabled:opacity-50 py-3 rounded-xl font-medium text-white'
+            style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
           >
             {isSubmitting
               ? 'Открываем Kaspi...'

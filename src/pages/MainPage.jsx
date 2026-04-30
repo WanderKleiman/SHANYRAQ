@@ -7,6 +7,7 @@ import { usePartnerFunds } from '../hooks/usePartnerFunds';
 import { supabase } from '../supabaseClient';
 import CharityModal from '../components/CharityModal';
 import Icon from '../components/Icon';
+import { getVisitorId } from '../utils/fingerprint';
 
 const isNative = Capacitor.isNativePlatform();
 
@@ -60,7 +61,8 @@ function MainPage() {
   const [mainCustomSub, setMainCustomSub] = useState('');
   const [showMainSubModal, setShowMainSubModal] = useState(false);
   const [mainSubPhone, setMainSubPhone] = useState('');
-  const [mainSubStep, setMainSubStep] = useState('method');
+  const [mainSubStep, setMainSubStep] = useState('phone');
+  const [mainSubSubmitting, setMainSubSubmitting] = useState(false);
   const MAIN_SUB_PRESETS = [1000, 3000, 5000, 10000];
 
   // Redirect old shared links /?beneficiary=X to /feed
@@ -497,7 +499,7 @@ function MainPage() {
                 if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
                 setMainSubAmount(finalAmount);
                 setShowMainSubModal(true);
-                setMainSubStep('method');
+                setMainSubStep('phone');
                 setMainSubPhone('');
               }}
               className='w-full py-3 bg-[#2f8f6a] text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
@@ -712,53 +714,22 @@ function MainPage() {
     {showMainSubModal && (
       <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowMainSubModal(false)}>
         <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-5' onClick={e => e.stopPropagation()}>
-          <div className='flex items-center justify-between mb-4'>
-            <h3 className='text-lg font-bold'>
-              {mainSubStep === 'method' && 'Способ оплаты'}
-              {mainSubStep === 'kaspi' && 'Оплата через Kaspi'}
-              {mainSubStep === 'done' && 'Заявка отправлена'}
-            </h3>
+          <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4' />
+          <div className='flex items-center justify-between mb-2'>
+            <h3 className='text-lg font-bold'>{mainSubStep === 'done' ? 'Подписка оформлена' : 'Ежемесячная помощь'}</h3>
             <button onClick={() => setShowMainSubModal(false)} className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'>
               <Icon name="x" size={16} />
             </button>
           </div>
 
-          <p className='text-sm text-[var(--text-secondary)] mb-1'>Ежемесячная помощь фонду «Шаңырақ»</p>
-          <p className='text-xl font-bold text-[var(--text-primary)] mb-5'>{mainSubAmount.toLocaleString('ru-RU')} ₸ / мес</p>
-
-          {mainSubStep === 'method' && (
-            <div className='space-y-3'>
-              <button
-                onClick={() => setMainSubStep('kaspi')}
-                className='w-full flex items-center space-x-4 p-4 rounded-2xl bg-[var(--bg-secondary)] active:bg-gray-100 transition-colors'
-              >
-                <div className='w-12 h-12 bg-[#FF0000] rounded-xl flex items-center justify-center flex-shrink-0'>
-                  <span className='text-white font-bold text-lg'>K</span>
-                </div>
-                <div className='text-left flex-1'>
-                  <p className='font-semibold'>Kaspi</p>
-                  <p className='text-xs text-[var(--text-secondary)]'>Оплата через Kaspi</p>
-                </div>
-                <Icon name="chevron-right" size={20} className="text-[var(--text-secondary)]" />
-              </button>
-              <button disabled className='w-full flex items-center space-x-4 p-4 rounded-2xl bg-[var(--bg-secondary)] opacity-50'>
-                <div className='w-12 h-12 bg-gray-300 rounded-xl flex items-center justify-center flex-shrink-0'>
-                  <Icon name="credit-card" size={22} className="text-gray-500" />
-                </div>
-                <div className='text-left flex-1'>
-                  <p className='font-semibold text-[var(--text-secondary)]'>Банковская карта</p>
-                  <p className='text-xs text-[var(--text-secondary)]'>Скоро</p>
-                </div>
-              </button>
-            </div>
-          )}
-
-          {mainSubStep === 'kaspi' && (
-            <div>
-              <label className='block text-sm font-medium mb-2'>Номер телефона</label>
+          {mainSubStep === 'phone' && (
+            <>
+              <p className='text-sm text-[var(--text-secondary)] mb-1'>Фонд «Шаңырақ»</p>
+              <p className='text-xl font-bold text-[var(--text-primary)] mb-5'>{mainSubAmount.toLocaleString('ru-RU')} ₸ / мес</p>
+              <label className='block text-sm font-medium mb-1'>Номер телефона Kaspi</label>
+              <p className='text-xs text-[var(--text-secondary)] mb-3'>На этот номер придёт запрос на оплату в Kaspi</p>
               <input
-                type='tel'
-                inputMode='numeric'
+                type='tel' inputMode='numeric'
                 placeholder='+7 ___ ___ __ __'
                 value={formatPhoneDisplay(mainSubPhone)}
                 onChange={(e) => {
@@ -767,27 +738,39 @@ function MainPage() {
                   if (val && !val.startsWith('7')) val = '7' + val;
                   setMainSubPhone(val);
                 }}
-                className='w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[16px] mb-4'
+                style={{ fontSize: '16px' }}
+                className='w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] mb-4'
               />
+              {mainSubPhone.length > 0 && mainSubPhone.length < 11 && (
+                <p className='text-xs text-red-500 -mt-3 mb-4'>Введите 11 цифр</p>
+              )}
               <button
                 onClick={async () => {
-                  if (mainSubPhone.length !== 11) { toast.error('Введите номер телефона (11 цифр)'); return; }
-                  const { error } = await supabase.from('fund_subscriptions').insert({
-                    fund_name: 'Шаңырақ',
-                    phone: mainSubPhone,
-                    amount: mainSubAmount,
-                    payment_method: 'kaspi',
-                    visitor_id: localStorage.getItem('visitorId') || null,
-                  });
-                  if (error) { toast.error('Ошибка: ' + error.message); return; }
-                  setMainSubStep('done');
+                  if (mainSubPhone.length !== 11) { toast.error('Введите номер телефона'); return; }
+                  setMainSubSubmitting(true);
+                  try {
+                    const visitorId = await getVisitorId();
+                    const res = await fetch('https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-invoice', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ phone: mainSubPhone, amount: mainSubAmount, fundId: null, fundName: 'Шаңырақ', visitorId }),
+                    });
+                    const result = await res.json();
+                    if (!res.ok) throw new Error(result.error || 'Ошибка');
+                    setMainSubStep('done');
+                  } catch (err) {
+                    toast.error(err.message || 'Произошла ошибка');
+                  } finally {
+                    setMainSubSubmitting(false);
+                  }
                 }}
-                disabled={mainSubPhone.length !== 11}
-                className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm disabled:opacity-50 active:scale-[0.98] transition-transform'
+                disabled={mainSubPhone.length !== 11 || mainSubSubmitting}
+                className='w-full py-3 text-white font-bold rounded-xl text-sm disabled:opacity-50 active:scale-[0.98] transition-transform'
+                style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
               >
-                Отправить заявку
+                {mainSubSubmitting ? 'Отправляем...' : 'Подтвердить подписку'}
               </button>
-            </div>
+            </>
           )}
 
           {mainSubStep === 'done' && (
@@ -795,9 +778,10 @@ function MainPage() {
               <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
                 <Icon name="check" size={32} className="text-[var(--primary-color)]" />
               </div>
-              <p className='text-[var(--text-primary)] font-semibold mb-2'>Заявка на подписку отправлена!</p>
-              <p className='text-sm text-[var(--text-secondary)] mb-4'>Мы свяжемся с вами для подтверждения ежемесячного платежа.</p>
-              <button onClick={() => setShowMainSubModal(false)} className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm'>
+              <p className='font-semibold mb-2'>Запрос на оплату отправлен!</p>
+              <p className='text-sm text-[var(--text-secondary)] mb-4'>Откройте Kaspi и подтвердите платёж. Каждый месяц будет приходить новый запрос.</p>
+              <button onClick={() => { setShowMainSubModal(false); setMainSubStep('phone'); }}
+                className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm'>
                 Готово
               </button>
             </div>

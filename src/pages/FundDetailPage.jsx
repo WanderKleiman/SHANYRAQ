@@ -311,7 +311,7 @@ function FundDetailPage() {
                 if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
                 setSubAmount(finalAmount);
                 setShowSubModal(true);
-                setSubStep('method');
+                setSubStep('phone');
                 setSubPhone('');
               }}
               className='w-full py-3 bg-white text-[#2f8f6a] font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
