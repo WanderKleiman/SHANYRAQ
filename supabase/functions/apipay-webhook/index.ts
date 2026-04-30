@@ -49,7 +49,8 @@ serve(async (req) => {
   if (event.event === 'payment.completed') {
     const payment = event.payment || {}
     const merchantOrderId: string = payment.merchant_order_id || ''
-    const payerPhone: string = payment.payer_phone || ''
+    // Normalize phone: remove leading + so format matches existing visitors records
+    const payerPhone: string = (payment.payer_phone || '').replace(/^\+/, '')
     const amount = Number(payment.amount) || 0
 
     if (!merchantOrderId) {
