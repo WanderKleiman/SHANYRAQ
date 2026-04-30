@@ -57,7 +57,7 @@ serve(async (req) => {
       beneficiary_title: title,
       amount,
       status: 'link_created',
-      apipay_invoice_id: merchantOrderId,
+      merchant_order_id: merchantOrderId,
     })
 
     if (dbError) console.error('DB insert error:', JSON.stringify(dbError))

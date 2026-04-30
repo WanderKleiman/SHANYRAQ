@@ -61,7 +61,7 @@ serve(async (req) => {
     const { data: paymentRecord, error: findErr } = await supabase
       .from('kaspi_payment_requests')
       .select('id, beneficiary_id, amount')
-      .eq('apipay_invoice_id', merchantOrderId)
+      .eq('merchant_order_id', merchantOrderId)
       .single()
 
     if (findErr) console.error('kaspi_payment_requests lookup error:', findErr.message)
@@ -74,7 +74,7 @@ serve(async (req) => {
         phone: payerPhone || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('apipay_invoice_id', merchantOrderId)
+      .eq('merchant_order_id', merchantOrderId)
 
     if (updateErr) console.error('kaspi_payment_requests update error:', updateErr.message)
     else console.log('Payment marked as paid:', merchantOrderId)
@@ -125,7 +125,7 @@ serve(async (req) => {
       await supabase
         .from('kaspi_payment_requests')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-        .eq('apipay_invoice_id', merchantOrderId)
+        .eq('merchant_order_id', merchantOrderId)
 
       console.log('Payment marked as cancelled:', merchantOrderId)
     }
