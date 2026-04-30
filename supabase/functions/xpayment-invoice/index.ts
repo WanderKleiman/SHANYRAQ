@@ -13,7 +13,7 @@ serve(async (req) => {
   try {
     const { phone, amount, fundId, fundName, visitorId } = await req.json()
 
-    if (!phone || !amount || !fundId) {
+    if (!phone || !amount) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
