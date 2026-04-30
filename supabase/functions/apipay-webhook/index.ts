@@ -141,23 +141,44 @@ serve(async (req) => {
       if (visitorErr) console.error('visitors update error:', visitorErr.message)
       else console.log(`Updated phone for visitor ${paymentRecord.visitor_id} → ${resolvedPhone}`)
     } else if (resolvedPhone) {
-      // No visitor_id in record — upsert by phone as fallback
       await supabase.from('visitors').upsert({
         phone: resolvedPhone,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'phone' })
     }
+
+    // 5. Check if this payment belongs to a subscription — activate it
+    const { data: subRecord } = await supabase
+      .from('fund_subscriptions')
+      .select('id')
+      .eq('merchant_order_id', merchantOrderId)
+      .maybeSingle()
+
+    if (subRecord) {
+      await supabase
+        .from('fund_subscriptions')
+        .update({ status: 'active', last_payment_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq('id', subRecord.id)
+      console.log('Subscription activated:', subRecord.id)
+    }
   }
 
   if (event.event === 'payment.cancelled') {
     const payment = event.payment || {}
-    const merchantOrderId: string = payment.merchant_order_id || ''
+    const merchantOrderId: string = payment.merchant_order_id || event.merchant_order_id || ''
 
     if (merchantOrderId) {
       await supabase
         .from('kaspi_payment_requests')
         .update({ status: 'cancelled', updated_at: new Date().toISOString() })
         .eq('merchant_order_id', merchantOrderId)
+
+      // Also mark pending subscription as cancelled if payment was rejected
+      await supabase
+        .from('fund_subscriptions')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('merchant_order_id', merchantOrderId)
+        .eq('status', 'pending')
 
       console.log('Payment marked as cancelled:', merchantOrderId)
     }

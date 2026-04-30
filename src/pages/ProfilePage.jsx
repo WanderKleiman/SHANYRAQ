@@ -61,6 +61,7 @@ function ProfilePage() {
   const [thankYouItems, setThankYouItems] = useState([]);
   const [profileTab, setProfileTab] = useState('collection');
   const [donationsList, setDonationsList] = useState([]);
+  const [activeSubscriptions, setActiveSubscriptions] = useState([]);
 
   useEffect(() => {
     loadProfile();
@@ -114,6 +115,20 @@ function ProfilePage() {
         .select('*')
         .or(orParts.join(','))
         .order('created_at', { ascending: false });
+
+      // Load active subscriptions (by visitor_id or phone)
+      const subOrParts = []
+      if (visitorIds.size > 0) subOrParts.push(`visitor_id.in.(${[...visitorIds].join(',')})`)
+      if (phones.size > 0) subOrParts.push(`phone.in.(${[...phones].join(',')})`)
+      if (subOrParts.length > 0) {
+        const { data: subs } = await supabase
+          .from('fund_subscriptions')
+          .select('id, fund_name, amount, status, created_at')
+          .or(subOrParts.join(','))
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+        setActiveSubscriptions(subs || [])
+      }
 
       if (!allPayments?.length) {
         setLoading(false);
@@ -534,6 +549,38 @@ function ProfilePage() {
                   className='flex items-center justify-center w-full py-3 bg-green-500 text-white rounded-xl text-sm font-medium'
                 >
                   Счёт выставлен, оплатить
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active subscriptions */}
+      {activeSubscriptions.length > 0 && (
+        <div className='px-4 mt-6'>
+          <h2 className='text-lg font-semibold text-[var(--text-primary)] mb-3'>Мои подписки</h2>
+          <div className='space-y-3'>
+            {activeSubscriptions.map(sub => (
+              <div key={sub.id} className='rounded-2xl p-4 text-white flex items-center justify-between' style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}>
+                <div>
+                  <p className='font-semibold text-sm'>{sub.fund_name || 'Фонд'}</p>
+                  <p className='text-white/80 text-sm'>{sub.amount?.toLocaleString('ru-RU')} ₸ / мес</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!confirm('Отменить подписку?')) return;
+                    const { error } = await supabase
+                      .from('fund_subscriptions')
+                      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                      .eq('id', sub.id);
+                    if (error) { toast.error('Ошибка отмены'); return; }
+                    setActiveSubscriptions(prev => prev.filter(s => s.id !== sub.id));
+                    toast.success('Подписка отменена');
+                  }}
+                  className='bg-white/20 border border-white/30 rounded-xl px-3 py-1.5 text-xs font-medium hover:bg-white/30 transition-colors'
+                >
+                  Отменить
                 </button>
               </div>
             ))}

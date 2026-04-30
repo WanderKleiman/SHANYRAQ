@@ -6,6 +6,8 @@ import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
 import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 function PaymentModal({ beneficiary, onClose }) {
   const { user } = useAuth();
@@ -155,8 +157,12 @@ function PaymentModal({ beneficiary, onClose }) {
         const { qr_token } = resData;
 
         onClose();
-        // Redirect current page — on return from Kaspi app the user comes back to our site
-        window.location.href = qr_token;
+        // Native app: open in system browser so OS routes Universal Link to Kaspi app
+        if (Capacitor.isNativePlatform()) {
+          await Browser.open({ url: qr_token, presentationStyle: 'popover' });
+        } else {
+          window.location.href = qr_token;
+        }
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
