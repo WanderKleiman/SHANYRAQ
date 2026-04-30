@@ -3,3 +3,6 @@ dist
 .DS_Store
 *.log
 .env
+# Android/iOS secrets
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
