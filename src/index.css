@@ -122,3 +122,8 @@ body {
     left: 0;
   }
 }
+
+@keyframes ob-progress {
+  from { width: 0% }
+  to { width: 100% }
+}

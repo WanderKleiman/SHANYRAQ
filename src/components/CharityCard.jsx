@@ -16,7 +16,9 @@ function CharityCard({ data, onCardClick, index = 0 }) {
 
   const handleShare = async () => {
     ymTrackShareClick(data.id, data.title);
-    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}`;
+    const { getVisitorId } = await import('../utils/fingerprint');
+    const visitorId = await getVisitorId();
+    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
     try {
       await Share.share({
         title: data.title,
@@ -25,7 +27,6 @@ function CharityCard({ data, onCardClick, index = 0 }) {
         dialogTitle: 'Поделиться'
       });
     } catch (e) {
-      // Fallback for browsers without Share API
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
         toast.success('Ссылка скопирована в буфер обмена');

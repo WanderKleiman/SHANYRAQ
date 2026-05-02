@@ -81,12 +81,14 @@ function MainPage() {
   const [mainSubSubmitting, setMainSubSubmitting] = useState(false);
   const MAIN_SUB_PRESETS = [1000, 3000, 5000, 10000];
 
-  // Redirect old shared links /?beneficiary=X to /feed
+  // Redirect old shared links /?beneficiary=X to /feed (preserve ref param)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const beneficiaryId = params.get('beneficiary');
     if (beneficiaryId) {
-      navigate(`/feed?beneficiary=${beneficiaryId}`, { replace: true });
+      const ref = params.get('ref');
+      const target = `/feed?beneficiary=${beneficiaryId}${ref ? `&ref=${ref}` : ''}`;
+      navigate(target, { replace: true });
     }
   }, [navigate]);
 

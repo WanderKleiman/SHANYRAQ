@@ -51,7 +51,9 @@ function CharityModal({ data, onClose }) {
   };
 
   const handleShare = async () => {
-    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}`;
+    const { getVisitorId } = await import('../utils/fingerprint');
+    const visitorId = await getVisitorId();
+    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
     try {
       await Share.share({
         title: data.title,

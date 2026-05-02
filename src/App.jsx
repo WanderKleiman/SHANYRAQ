@@ -107,7 +107,10 @@ function AppLayout({ children, selectedCity, onCityChange, hideHeader }) {
 }
 
 function App() {
-  const [showOnboarding, setShowOnboarding] = useState(shouldShowOnboarding);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    if (new URLSearchParams(window.location.search).get('preview_onboarding') === '1') return true;
+    return shouldShowOnboarding();
+  });
   const [selectedCity, setSelectedCity] = React.useState(() => {
     return localStorage.getItem('selectedCity') || 'Алматы';
   });

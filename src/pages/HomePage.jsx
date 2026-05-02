@@ -57,6 +57,26 @@ function HomePage({ selectedCity, onCityChange }) {
   }, [searchParams, setSearchParams]);
 
   
+  // Обрабатываем реферальный параметр
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get('ref');
+    const beneficiaryId = params.get('beneficiary');
+    if (ref && ref !== localStorage.getItem('referralRef')) {
+      localStorage.setItem('referralRef', ref);
+      // Записываем клик асинхронно, не блокируем UI
+      import('../utils/fingerprint').then(({ getVisitorId }) =>
+        getVisitorId().then(visitorId => {
+          supabase.from('referral_clicks').insert({
+            ref_visitor_id: ref,
+            visitor_id: visitorId || null,
+            beneficiary_id: beneficiaryId ? parseInt(beneficiaryId) : null,
+          });
+        })
+      );
+    }
+  }, []);
+
   // Открываем подопечного из URL (загружаем напрямую, без фильтра по городу)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

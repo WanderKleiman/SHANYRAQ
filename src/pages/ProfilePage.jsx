@@ -63,9 +63,53 @@ function ProfilePage() {
   const [donationsList, setDonationsList] = useState([]);
   const [activeSubscriptions, setActiveSubscriptions] = useState([]);
 
+  // Referral stats
+  const [refStats, setRefStats] = useState(null); // { clicks, helpers, totalAmount }
+
   useEffect(() => {
     loadProfile();
+    loadRefStats();
   }, [user]);
+
+  const loadRefStats = async () => {
+    // Собираем все visitor_id текущего пользователя (текущее устройство + все привязанные к аккаунту)
+    const myVisitorIds = new Set();
+    const currentVisitorId = await getVisitorId();
+    if (currentVisitorId) myVisitorIds.add(currentVisitorId);
+
+    if (user) {
+      const { data: linkedVisitors } = await supabase
+        .from('visitors')
+        .select('visitor_id')
+        .eq('auth_user_id', user.id);
+      (linkedVisitors || []).forEach(v => { if (v.visitor_id) myVisitorIds.add(v.visitor_id); });
+    }
+
+    if (!myVisitorIds.size) return;
+
+    // Клики по всем реферальным ссылкам пользователя
+    const { data: clicks } = await supabase
+      .from('referral_clicks')
+      .select('visitor_id')
+      .in('ref_visitor_id', [...myVisitorIds])
+      .not('visitor_id', 'is', null);
+
+    if (!clicks?.length) { setRefStats({ clicks: 0, helpers: 0, totalAmount: 0 }); return; }
+
+    const clickedVisitorIds = [...new Set(clicks.map(c => c.visitor_id))];
+
+    // Платежи от этих visitor_id
+    const { data: payments } = await supabase
+      .from('kaspi_payment_requests')
+      .select('amount, visitor_id')
+      .in('visitor_id', clickedVisitorIds)
+      .eq('status', 'paid');
+
+    const totalAmount = (payments || []).reduce((s, p) => s + (p.amount || 0), 0);
+    const helpers = new Set((payments || []).map(p => p.visitor_id)).size;
+
+    setRefStats({ clicks: clicks.length, helpers, totalAmount });
+  };
 
   const formatPhoneDisplay = (phone) => {
     if (!phone || phone.length < 11) return phone || '';
@@ -458,6 +502,30 @@ function ProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Referral stats */}
+      {refStats && (refStats.clicks > 0 || refStats.helpers > 0) && (
+        <div className='mx-4 mt-4 rounded-2xl p-4' style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}>
+          <div className='flex items-center gap-2 mb-3'>
+            <Icon name="share-2" size={16} className="text-white" />
+            <p className='text-sm font-semibold text-white'>Ваш вклад через репосты</p>
+          </div>
+          <div className='flex gap-3'>
+            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
+              <p className='text-2xl font-bold text-white'>{refStats.clicks}</p>
+              <p className='text-xs text-white/80 mt-0.5'>перешли по ссылке</p>
+            </div>
+            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
+              <p className='text-2xl font-bold text-white'>{refStats.helpers}</p>
+              <p className='text-xs text-white/80 mt-0.5'>помогли</p>
+            </div>
+            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
+              <p className='text-lg font-bold text-white leading-tight'>{refStats.totalAmount.toLocaleString('ru-RU')} ₸</p>
+              <p className='text-xs text-white/80 mt-0.5'>собрано</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Auth banner for anonymous users with donations */}
       {!user && donationsList.length > 0 && (
