@@ -92,6 +92,15 @@ function MainPage() {
     }
   }, [navigate]);
 
+  // Auto-open kaspi-bonus popup via ?action=kaspi-bonus
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'kaspi-bonus') {
+      setBannerPayment(PROMO_BANNERS[0].payment);
+      window.history.replaceState({}, '', '/');
+    }
+  }, []);
+
   // Show download section when scrolling to beneficiaries
   useEffect(() => {
     const node = beneficiariesRef.current;
