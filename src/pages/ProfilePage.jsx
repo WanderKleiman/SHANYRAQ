@@ -87,29 +87,43 @@ function ProfilePage() {
 
     if (!myVisitorIds.size) return;
 
-    // Клики по всем реферальным ссылкам пользователя (считаем все, включая без visitor_id)
+    // Клики по всем реферальным ссылкам пользователя
     const { data: allClicks } = await supabase
       .from('referral_clicks')
-      .select('visitor_id')
+      .select('visitor_id, created_at')
       .in('ref_visitor_id', [...myVisitorIds]);
 
     if (!allClicks?.length) { setRefStats({ clicks: 0, helpers: 0, totalAmount: 0 }); return; }
 
     const totalClicks = allClicks.length;
-    const clickedVisitorIds = [...new Set(allClicks.filter(c => c.visitor_id).map(c => c.visitor_id))];
 
-    // Платежи от этих visitor_id
+    // Для каждого visitor_id берём самое раннее время клика
+    const clickTimeByVisitor = {};
+    allClicks.forEach(c => {
+      if (!c.visitor_id) return;
+      if (!clickTimeByVisitor[c.visitor_id] || c.created_at < clickTimeByVisitor[c.visitor_id]) {
+        clickTimeByVisitor[c.visitor_id] = c.created_at;
+      }
+    });
+
+    const clickedVisitorIds = Object.keys(clickTimeByVisitor);
+
+    // Платежи от этих visitor_id — только те, что сделаны ПОСЛЕ клика
     let totalAmount = 0;
     let helpers = 0;
     if (clickedVisitorIds.length) {
       const { data: payments } = await supabase
         .from('kaspi_payment_requests')
-        .select('amount, visitor_id')
+        .select('amount, visitor_id, created_at')
         .in('visitor_id', clickedVisitorIds)
         .eq('status', 'paid');
 
-      totalAmount = (payments || []).reduce((s, p) => s + (p.amount || 0), 0);
-      helpers = new Set((payments || []).map(p => p.visitor_id)).size;
+      const validPayments = (payments || []).filter(p =>
+        clickTimeByVisitor[p.visitor_id] && p.created_at >= clickTimeByVisitor[p.visitor_id]
+      );
+
+      totalAmount = validPayments.reduce((s, p) => s + (p.amount || 0), 0);
+      helpers = new Set(validPayments.map(p => p.visitor_id)).size;
     }
 
     setRefStats({ clicks: totalClicks, helpers, totalAmount });
