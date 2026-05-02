@@ -87,28 +87,32 @@ function ProfilePage() {
 
     if (!myVisitorIds.size) return;
 
-    // Клики по всем реферальным ссылкам пользователя
-    const { data: clicks } = await supabase
+    // Клики по всем реферальным ссылкам пользователя (считаем все, включая без visitor_id)
+    const { data: allClicks } = await supabase
       .from('referral_clicks')
       .select('visitor_id')
-      .in('ref_visitor_id', [...myVisitorIds])
-      .not('visitor_id', 'is', null);
+      .in('ref_visitor_id', [...myVisitorIds]);
 
-    if (!clicks?.length) { setRefStats({ clicks: 0, helpers: 0, totalAmount: 0 }); return; }
+    if (!allClicks?.length) { setRefStats({ clicks: 0, helpers: 0, totalAmount: 0 }); return; }
 
-    const clickedVisitorIds = [...new Set(clicks.map(c => c.visitor_id))];
+    const totalClicks = allClicks.length;
+    const clickedVisitorIds = [...new Set(allClicks.filter(c => c.visitor_id).map(c => c.visitor_id))];
 
     // Платежи от этих visitor_id
-    const { data: payments } = await supabase
-      .from('kaspi_payment_requests')
-      .select('amount, visitor_id')
-      .in('visitor_id', clickedVisitorIds)
-      .eq('status', 'paid');
+    let totalAmount = 0;
+    let helpers = 0;
+    if (clickedVisitorIds.length) {
+      const { data: payments } = await supabase
+        .from('kaspi_payment_requests')
+        .select('amount, visitor_id')
+        .in('visitor_id', clickedVisitorIds)
+        .eq('status', 'paid');
 
-    const totalAmount = (payments || []).reduce((s, p) => s + (p.amount || 0), 0);
-    const helpers = new Set((payments || []).map(p => p.visitor_id)).size;
+      totalAmount = (payments || []).reduce((s, p) => s + (p.amount || 0), 0);
+      helpers = new Set((payments || []).map(p => p.visitor_id)).size;
+    }
 
-    setRefStats({ clicks: clicks.length, helpers, totalAmount });
+    setRefStats({ clicks: totalClicks, helpers, totalAmount });
   };
 
   const formatPhoneDisplay = (phone) => {

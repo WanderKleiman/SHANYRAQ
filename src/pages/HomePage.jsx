@@ -59,9 +59,8 @@ function HomePage({ selectedCity, onCityChange }) {
   
   // Обрабатываем реферальный параметр
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const ref = params.get('ref');
-    const beneficiaryId = params.get('beneficiary');
+    const ref = searchParams.get('ref');
+    const beneficiaryId = searchParams.get('beneficiary');
     if (ref && ref !== localStorage.getItem('referralRef')) {
       localStorage.setItem('referralRef', ref);
       // Записываем клик асинхронно, не блокируем UI
