@@ -8,8 +8,6 @@ import Icon from '../components/Icon';
 import { optimizeImage } from '../utils/imageUtils';
 import { getCategoryName } from '../utils/charityData';
 import { getVisitorId } from '../utils/fingerprint';
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
 
 function formatPhoneDisplay(digits) {
   if (!digits) return '+7';
@@ -424,11 +422,7 @@ function FundDetailPage() {
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Ошибка');
                   setShowDonateModal(false);
-                  if (Capacitor.isNativePlatform()) {
-                    await Browser.open({ url: data.qr_token, presentationStyle: 'popover' });
-                  } else {
-                    window.location.href = data.qr_token;
-                  }
+                  window.location.href = data.qr_token;
                 } catch (err) {
                   toast.error(err.message || 'Произошла ошибка');
                 } finally {
