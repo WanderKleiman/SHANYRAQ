@@ -61,18 +61,23 @@ function HomePage({ selectedCity, onCityChange }) {
   useEffect(() => {
     const ref = searchParams.get('ref');
     const beneficiaryId = searchParams.get('beneficiary');
-    if (ref && ref !== localStorage.getItem('referralRef')) {
-      localStorage.setItem('referralRef', ref);
-      // Записываем клик асинхронно, не блокируем UI
-      import('../utils/fingerprint').then(({ getVisitorId }) =>
-        getVisitorId().then(visitorId => {
-          supabase.from('referral_clicks').insert({
+    // sessionStorage — деduplication только в рамках одной сессии браузера
+    const sessionKey = `referralRef_${ref}`;
+    if (ref && !sessionStorage.getItem(sessionKey)) {
+      sessionStorage.setItem(sessionKey, '1');
+      import('../utils/fingerprint').then(async ({ getVisitorId }) => {
+        try {
+          const visitorId = await getVisitorId();
+          const { error } = await supabase.from('referral_clicks').insert({
             ref_visitor_id: ref,
             visitor_id: visitorId || null,
             beneficiary_id: beneficiaryId ? parseInt(beneficiaryId) : null,
           });
-        })
-      );
+          if (error) console.error('Referral click insert error:', error);
+        } catch (e) {
+          console.error('Referral tracking error:', e);
+        }
+      });
     }
   }, []);
 
