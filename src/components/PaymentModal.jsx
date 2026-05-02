@@ -9,7 +9,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
-function PaymentModal({ beneficiary, onClose }) {
+const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
+
+function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [selectedAmount, setSelectedAmount] = useState(1000);
@@ -200,8 +202,20 @@ function PaymentModal({ beneficiary, onClose }) {
 
         <div className='p-6 space-y-6'>
           <div>
-            <h2 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Помочь подопечному</h2>
-            <p className='text-sm text-[var(--text-secondary)]'>{beneficiary?.title}</p>
+            {kaspiBonus ? (
+              <>
+                <img src={KASPI_LOGO} alt='Kaspi' className='h-16 object-contain mb-3' />
+                <p className='text-sm text-[var(--text-secondary)]'>
+                  Выберите сумму помощи и оплатите бонусами на{' '}
+                  <a href='https://kaspi.kz' target='_blank' rel='noopener noreferrer' className='text-[#ef3340] underline'>Kaspi.kz</a>
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className='text-xl font-bold text-[var(--text-primary)] mb-2'>Помочь подопечному</h2>
+                <p className='text-sm text-[var(--text-secondary)]'>{beneficiary?.title}</p>
+              </>
+            )}
           </div>
 
           <div>
@@ -213,9 +227,14 @@ function PaymentModal({ beneficiary, onClose }) {
                   onClick={() => handleAmountClick(amount)}
                   className={`py-3 rounded-xl font-medium transition-all ${
                     selectedAmount === amount
-                      ? 'bg-[var(--primary-color)] text-white'
+                      ? 'text-white'
                       : 'bg-gray-100 text-[var(--text-primary)]'
                   }`}
+                  style={selectedAmount === amount ? {
+                    background: kaspiBonus
+                      ? 'linear-gradient(135deg, #9b1c1c 0%, #ef3340 40%, #f87171 100%)'
+                      : 'var(--primary-color)'
+                  } : {}}
                 >
                   {amount.toLocaleString("ru-RU")} ₸
                 </button>
@@ -234,34 +253,36 @@ function PaymentModal({ beneficiary, onClose }) {
             </div>
           </div>
 
-          <div>
-            <h3 className='text-sm font-semibold text-[var(--text-primary)] mb-3'>Способ оплаты</h3>
-            <div className='space-y-2'>
-              <label className='flex items-center space-x-3 p-4 rounded-xl cursor-not-allowed bg-gray-100 opacity-50'>
-                <input
-                  type='radio'
-                  name='payment'
-                  value='card'
-                  disabled
-                  className='w-5 h-5 text-[var(--primary-color)]'
-                />
-                <Icon name="credit-card" size={20} className="text-gray-400" />
-                <span className='text-gray-400'>Банковская карта</span>
-                <span className='text-xs text-gray-400 ml-auto'>скоро</span>
-              </label>
-              <label className={`flex items-center space-x-3 p-4 h-14 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
-                <input
-                  type='radio'
-                  name='payment'
-                  value='kaspi'
-                  checked={paymentMethod === 'kaspi'}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className='w-5 h-5 text-[var(--primary-color)]'
-                />
-                <img src="https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png" alt="Kaspi" className="h-16 object-contain" />
-              </label>
+          {!kaspiBonus && (
+            <div>
+              <h3 className='text-sm font-semibold text-[var(--text-primary)] mb-3'>Способ оплаты</h3>
+              <div className='space-y-2'>
+                <label className='flex items-center space-x-3 p-4 rounded-xl cursor-not-allowed bg-gray-100 opacity-50'>
+                  <input
+                    type='radio'
+                    name='payment'
+                    value='card'
+                    disabled
+                    className='w-5 h-5 text-[var(--primary-color)]'
+                  />
+                  <Icon name="credit-card" size={20} className="text-gray-400" />
+                  <span className='text-gray-400'>Банковская карта</span>
+                  <span className='text-xs text-gray-400 ml-auto'>скоро</span>
+                </label>
+                <label className={`flex items-center space-x-3 p-4 h-14 rounded-xl cursor-pointer ${paymentMethod === 'kaspi' ? 'bg-blue-50 ring-2 ring-[var(--primary-color)]' : 'bg-gray-100'}`}>
+                  <input
+                    type='radio'
+                    name='payment'
+                    value='kaspi'
+                    checked={paymentMethod === 'kaspi'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className='w-5 h-5 text-[var(--primary-color)]'
+                  />
+                  <img src={KASPI_LOGO} alt="Kaspi" className="h-16 object-contain" />
+                </label>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Phone input hidden — payment goes via QR link, payer_phone is received from Kaspi via webhook */}
           {false && paymentMethod === 'kaspi' && !phoneLoading && !savedPhone && (
@@ -282,7 +303,10 @@ function PaymentModal({ beneficiary, onClose }) {
             onClick={handlePayment}
             disabled={!selectedAmount && !customAmount}
             className='w-full disabled:opacity-50 py-3 rounded-xl font-medium text-white'
-            style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
+            style={{ background: kaspiBonus
+              ? 'linear-gradient(135deg, #9b1c1c 0%, #ef3340 40%, #f87171 100%)'
+              : 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)'
+            }}
           >
             {isSubmitting
               ? 'Открываем Kaspi...'
