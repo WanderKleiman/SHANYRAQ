@@ -5,51 +5,110 @@ const SLIDE_DURATION = 7000;
 
 const BRAND_GRADIENT = 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)';
 
-const SLIDES = [
-  {
-    image: '/onboarding/1.jpg',
-    title: 'Благотворительный фонд «Шанырак»',
-    text: 'Помогаем подопечным из всех уголков Казахстана сделать жизнь лучше',
-    bullets: null,
-    footer: null,
-  },
-  {
-    image: '/onboarding/2.jpg',
-    title: 'Куда направляется помощь?',
-    text: null,
-    bullets: [
-      'Оплачиваем реабилитации и операции людям с онко-заболеваниями',
-      'Помогаем малообеспеченным семьям',
-      'Спонсируем социальные проекты',
-      'Оказываем помощь детским домам',
-    ],
-    footer: 'Работаем только с проверенными и официальными фондами',
-  },
-  {
-    image: '/onboarding/3.jpg',
-    title: 'Просто и прозрачно',
-    text: null,
-    bullets: [
-      'Вы сами выбираете, кому помочь',
-      'Вся оказанная благотворительность отображается в вашем личном кабинете',
-    ],
-    footer: 'При помощи в фонд вы будете получать фотоотчет и чеки о доставленной помощи',
-  },
-  {
-    image: '/onboarding/4.jpg',
-    title: 'Сделайте первый шаг',
-    text: 'Выберите подопечного, познакомьтесь с его историей и поддержите разовыми или регулярными пожертвованиями',
-    bullets: null,
-    footer: null,
-  },
+const IMAGES = [
+  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/onboarding/Ellipse%202190-2.png',
+  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/onboarding/Ellipse%202191.png',
+  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/onboarding/Ellipse%202190.png',
+  'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/onboarding/Ellipse%202190-1.png',
 ];
 
+const CONTENT = {
+  ru: {
+    skip: 'Пропустить',
+    next: 'Далее',
+    start: 'Начать',
+    slides: [
+      {
+        title: 'Благотворительный фонд «Шанырак»',
+        text: 'Помогаем подопечным из всех уголков Казахстана сделать жизнь лучше',
+        bullets: null,
+        footer: null,
+      },
+      {
+        title: 'Куда направляется помощь?',
+        text: null,
+        bullets: [
+          'Оплачиваем реабилитации и операции людям с онко-заболеваниями',
+          'Помогаем малообеспеченным семьям',
+          'Спонсируем социальные проекты',
+          'Оказываем помощь детским домам',
+        ],
+        footer: 'Работаем только с проверенными и официальными фондами',
+      },
+      {
+        title: 'Просто и прозрачно',
+        text: null,
+        bullets: [
+          'Вы сами выбираете, кому помочь',
+          'Вся оказанная благотворительность отображается в вашем личном кабинете',
+        ],
+        footer: 'При помощи в фонд вы будете получать фотоотчет и чеки о доставленной помощи',
+      },
+      {
+        title: 'Сделайте первый шаг',
+        text: 'Выберите подопечного, познакомьтесь с его историей и поддержите разовыми или регулярными пожертвованиями',
+        bullets: null,
+        footer: null,
+      },
+    ],
+  },
+  kz: {
+    skip: 'Өткізу',
+    next: 'Келесі',
+    start: 'Бастау',
+    slides: [
+      {
+        title: '«Шаңырақ» қайырымдылық қоры',
+        text: 'Қазақстанның барлық өңірлерінен қолдаушыларға өмірді жақсартуға көмектесеміз',
+        bullets: null,
+        footer: null,
+      },
+      {
+        title: 'Көмек қайда бағытталады?',
+        text: null,
+        bullets: [
+          'Онкологиялық аурулары бар адамдарға реабилитация мен операцияларды төлейміз',
+          'Аз қамтылған отбасыларға көмектесеміз',
+          'Әлеуметтік жобаларды қаржыландырамыз',
+          'Балалар үйлеріне қолдау көрсетеміз',
+        ],
+        footer: 'Тек тексерілген және ресми қорлармен жұмыс істейміз',
+      },
+      {
+        title: 'Қарапайым және ашық',
+        text: null,
+        bullets: [
+          'Кімге көмектесетінді өзіңіз таңдайсыз',
+          'Барлық қайырымдылық жеке кабинетіңізде көрсетіледі',
+        ],
+        footer: 'Қорға көмек берген кезде жеткізілген көмек туралы фотоесеп пен чектер аласыз',
+      },
+      {
+        title: 'Алғашқы қадам жасаңыз',
+        text: 'Қолдаушыны таңдаңыз, оның тарихымен танысыңыз және бір реттік немесе тұрақты қайырымдылықпен қолдаңыз',
+        bullets: null,
+        footer: null,
+      },
+    ],
+  },
+};
+
 export default function Onboarding({ onComplete }) {
+  const [lang, setLang] = useState(() => localStorage.getItem('app_lang') || 'ru');
   const [current, setCurrent] = useState(0);
   const touchStart = useRef(0);
   const touchEnd = useRef(0);
   const didSwipe = useRef(false);
   const timerRef = useRef(null);
+
+  const t = CONTENT[lang];
+  const slide = t.slides[current];
+  const isLast = current === t.slides.length - 1;
+
+  const switchLang = (l) => {
+    setLang(l);
+    localStorage.setItem('app_lang', l);
+  };
 
   const handleFinish = useCallback(() => {
     localStorage.setItem('onboarding_done', 'true');
@@ -57,7 +116,7 @@ export default function Onboarding({ onComplete }) {
   }, [onComplete]);
 
   const goToSlide = useCallback((index) => {
-    if (index >= SLIDES.length) handleFinish();
+    if (index >= CONTENT.ru.slides.length) handleFinish();
     else if (index >= 0) setCurrent(index);
   }, [handleFinish]);
 
@@ -84,9 +143,6 @@ export default function Onboarding({ onComplete }) {
     }
   };
 
-  const slide = SLIDES[current];
-  const isLast = current === SLIDES.length - 1;
-
   return (
     <div
       className='fixed inset-0 z-[100] bg-white flex flex-col'
@@ -99,18 +155,17 @@ export default function Onboarding({ onComplete }) {
         className='relative flex-shrink-0 overflow-hidden'
         style={{ height: '48dvh', borderRadius: '0 0 32px 32px' }}
       >
-        {/* Только фото-часть картинки (обрезаем снизу где текст) */}
-        {SLIDES.map((s, i) => (
+        {IMAGES.map((src, i) => (
           <img
-            key={s.image}
-            src={s.image}
+            key={src}
+            src={src}
             alt=""
             className='absolute inset-0 w-full h-full object-cover transition-opacity duration-500'
-            style={{ opacity: i === current ? 1 : 0, objectPosition: 'center top' }}
+            style={{ opacity: i === current ? 1 : 0, objectPosition: 'center center' }}
           />
         ))}
 
-        {/* Затемнение сверху для прогресс-баров */}
+        {/* Затемнение сверху */}
         <div className='absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/50 to-transparent pointer-events-none' />
 
         {/* Прогресс-бары */}
@@ -118,12 +173,35 @@ export default function Onboarding({ onComplete }) {
           className='absolute top-0 left-0 right-0 flex gap-1.5 px-4'
           style={{ paddingTop: 'max(44px, calc(env(safe-area-inset-top, 0px) + 10px))' }}
         >
-          {SLIDES.map((_, i) => (
+          {IMAGES.map((_, i) => (
             <div key={i} className='flex-1 h-[3px] bg-white/35 rounded-full overflow-hidden'>
               {i < current && <div className='h-full w-full bg-white' />}
               {i === current && <div key={current} className='h-full bg-white ob-progress-active' />}
             </div>
           ))}
+        </div>
+
+        {/* Переключатель языка — левый верхний угол */}
+        <div
+          className='absolute left-4 flex items-center gap-1 bg-black/30 rounded-full px-1 py-1'
+          style={{ top: 'max(52px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
+        >
+          <button
+            onClick={() => switchLang('ru')}
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${
+              lang === 'ru' ? 'bg-white text-[#1e6b4e]' : 'text-white/80'
+            }`}
+          >
+            РУ
+          </button>
+          <button
+            onClick={() => switchLang('kz')}
+            className={`text-xs font-semibold px-2.5 py-1 rounded-full transition-all ${
+              lang === 'kz' ? 'bg-white text-[#1e6b4e]' : 'text-white/80'
+            }`}
+          >
+            ҚАЗ
+          </button>
         </div>
 
         {/* Пропустить */}
@@ -133,11 +211,11 @@ export default function Onboarding({ onComplete }) {
             className='absolute right-4 text-white text-sm font-medium'
             style={{ top: 'max(52px, calc(env(safe-area-inset-top, 0px) + 18px))' }}
           >
-            Пропустить
+            {t.skip}
           </button>
         )}
 
-        {/* Тап-зоны (не перекрывают кнопки) */}
+        {/* Тап-зоны */}
         <div className='absolute left-0 right-0 bottom-0 flex' style={{ top: '70px' }}>
           <div className='flex-1' onClick={() => !didSwipe.current && goToSlide(current - 1)} />
           <div className='flex-1' onClick={() => !didSwipe.current && goToSlide(current + 1)} />
@@ -206,7 +284,7 @@ export default function Onboarding({ onComplete }) {
             className='w-full py-3.5 text-white rounded-2xl font-semibold text-base'
             style={{ background: BRAND_GRADIENT }}
           >
-            {isLast ? 'Начать' : 'Далее'}
+            {isLast ? t.start : t.next}
           </button>
         </div>
       </div>
