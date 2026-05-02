@@ -6,6 +6,7 @@ import { useMainPageData } from '../hooks/useMainPageData';
 import { usePartnerFunds } from '../hooks/usePartnerFunds';
 import { supabase } from '../supabaseClient';
 import CharityModal from '../components/CharityModal';
+import PaymentModal from '../components/PaymentModal';
 import Icon from '../components/Icon';
 import { getVisitorId } from '../utils/fingerprint';
 
@@ -19,6 +20,19 @@ const CATEGORY_CARDS = [
   { key: 'urgent', label: 'Взрослые', image: `${SUPABASE_IMG}/people.png`, isGreen: false, bottomAligned: true },
   { key: 'operations', label: 'Пожилые', image: `${SUPABASE_IMG}/grandma2.png`, isGreen: true },
   { key: 'social', label: 'Социальные проекты', image: `${SUPABASE_IMG}/social.png`, isGreen: false, bottomAligned: true },
+];
+
+const PROMO_BANNERS = [
+  {
+    image: `${SUPABASE_IMG}/image.png`,
+    buttonText: 'Помочь бонусами',
+    payment: { id: 'kaspi-bonus', title: 'Помощь бонусами Kaspi', target: 0 },
+  },
+  {
+    image: `${SUPABASE_IMG}/9%20may.png`,
+    buttonText: 'Помочь ветеранам',
+    payment: { id: '9may-veterans', title: 'Помощь ветеранам', target: 0 },
+  },
 ];
 
 const CATEGORY_NAMES = {
@@ -55,6 +69,8 @@ function MainPage() {
   const [showDownloadSection, setShowDownloadSection] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const beneficiariesRef = React.useRef(null);
+
+  const [bannerPayment, setBannerPayment] = useState(null);
 
   // Subscription state
   const [mainSubAmount, setMainSubAmount] = useState(3000);
@@ -288,6 +304,40 @@ function MainPage() {
             </div>
           )}
 
+          {/* Desktop Promo Banners Carousel */}
+          <div className='mb-[3vh]'>
+            <div
+              className='flex gap-[1vw] overflow-x-auto scrollbar-hide'
+              style={{ scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}
+            >
+              {PROMO_BANNERS.map((banner, i) => (
+                <div
+                  key={i}
+                  className='flex-shrink-0'
+                  style={{ width: 'calc(100% - 2vw)', scrollSnapAlign: 'start' }}
+                >
+                  <div
+                    className='rounded-2xl overflow-hidden cursor-pointer hover:opacity-95 transition-opacity'
+                    onClick={() => setBannerPayment(banner.payment)}
+                  >
+                    <img
+                      src={banner.image}
+                      alt={banner.buttonText}
+                      className='w-full h-auto object-cover'
+                      style={{ borderRadius: '16px' }}
+                    />
+                  </div>
+                  <button
+                    onClick={() => setBannerPayment(banner.payment)}
+                    className='w-full mt-2 py-[1.2vh] bg-[#2f8f6a] text-white font-bold rounded-xl text-[1vw] hover:opacity-90 transition-opacity active:scale-[0.98]'
+                  >
+                    {banner.buttonText}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className='flex justify-center mt-[2vh] mb-[80px]'>
             <button
               onClick={() => navigate('/feed')}
@@ -511,6 +561,32 @@ function MainPage() {
         </div>
       </div>
 
+      {/* Kaspi Bonus Banner */}
+      <div className='px-3 mb-6'>
+        <div
+          className='rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform'
+          onClick={() => setBannerPayment(PROMO_BANNERS[0].payment)}
+        >
+          <img
+            src={PROMO_BANNERS[0].image}
+            alt={PROMO_BANNERS[0].buttonText}
+            className='w-full h-auto rounded-2xl'
+          />
+        </div>
+        <button
+          onClick={() => setBannerPayment(PROMO_BANNERS[0].payment)}
+          className='w-full mt-3 py-3 text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2'
+          style={{ background: 'linear-gradient(135deg, #9b1c1c 0%, #ef3340 40%, #f87171 100%)' }}
+        >
+          <img
+            src={`${SUPABASE_IMG}/png-klev-club-xxta-p-kaspii-logotip-png-10.png`}
+            alt='Kaspi'
+            className='h-5 object-contain brightness-0 invert'
+          />
+          {PROMO_BANNERS[0].buttonText}
+        </button>
+      </div>
+
       {/* Partner Funds */}
       {funds.length > 0 && (
         <div className='mb-6'>
@@ -551,6 +627,26 @@ function MainPage() {
           </div>
         </div>
       )}
+
+      {/* 9 May Veterans Banner */}
+      <div className='px-3 mb-6'>
+        <div
+          className='rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform'
+          onClick={() => setBannerPayment(PROMO_BANNERS[1].payment)}
+        >
+          <img
+            src={PROMO_BANNERS[1].image}
+            alt={PROMO_BANNERS[1].buttonText}
+            className='w-full h-auto rounded-2xl'
+          />
+        </div>
+        <button
+          onClick={() => setBannerPayment(PROMO_BANNERS[1].payment)}
+          className='w-full mt-3 py-3 bg-[#2f8f6a] text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform'
+        >
+          {PROMO_BANNERS[1].buttonText}
+        </button>
+      </div>
 
       {/* Beneficiaries */}
       <div className='px-3' ref={beneficiariesRef}>
@@ -704,6 +800,15 @@ function MainPage() {
         </div>
       )}
     </div>
+
+    {/* Banner payment modal */}
+    {bannerPayment && (
+      <PaymentModal
+        beneficiary={bannerPayment}
+        onClose={() => setBannerPayment(null)}
+        kaspiBonus={bannerPayment.id === 'kaspi-bonus'}
+      />
+    )}
 
     {/* Charity Modal (shared for both views) */}
     {selectedCharity && (
