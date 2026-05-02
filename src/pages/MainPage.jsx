@@ -554,7 +554,7 @@ function MainPage() {
                 setMainSubStep('phone');
                 setMainSubPhone('');
               }}
-              className='w-full py-3 bg-[#2f8f6a] text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
+              className='w-full py-3 bg-blue-600 text-white font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
             >
               <Icon name="heart" size={16} className="text-white" />
               <span>Помогать ежемесячно</span>
