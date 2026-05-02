@@ -151,7 +151,7 @@ function FundDetailPage() {
           <div className='card mb-6'>
             <div className='flex flex-col items-center text-center'>
               <img
-                src={optimizeImage(fund.logo_url, { width: 160, quality: 75 })}
+                src={fund.logo_url}
                 alt={fund.name}
                 className='w-24 h-24 object-contain rounded-2xl mb-3'
                 onError={(e) => {
