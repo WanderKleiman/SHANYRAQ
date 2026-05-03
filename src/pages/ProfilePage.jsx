@@ -300,7 +300,7 @@ function ProfilePage() {
         }
 
         const donationList = paidPayments.map(p => {
-          const isFund = !!p.fund_id;
+          const isFund = !!p.fund_id || (!!p.fund_name && !p.beneficiary_id);
           return {
             id: p.id,
             beneficiaryId: p.beneficiary_id,

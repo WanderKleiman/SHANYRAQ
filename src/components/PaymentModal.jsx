@@ -137,6 +137,7 @@ function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
               amount,
               beneficiaryId: beneficiary.id,
               title: beneficiary.title,
+              fundId: beneficiary.fundId || null,
               visitorId,
             }),
           }
