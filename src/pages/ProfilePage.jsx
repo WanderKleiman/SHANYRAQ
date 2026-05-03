@@ -43,6 +43,10 @@ function ProfilePage() {
   const [emailSent, setEmailSent] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [showEmailInput, setShowEmailInput] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+
+  const TEST_EMAIL = 'review@shanyrak.world';
+  const isTestAccount = emailInput.trim().toLowerCase() === TEST_EMAIL;
 
   // Profile state
   const [isActivated, setIsActivated] = useState(false);
@@ -573,27 +577,57 @@ function ProfilePage() {
                   Войти через Email
                 </button>
               ) : (
-                <div className='flex gap-2'>
-                  <input
-                    type='email'
-                    value={emailInput}
-                    onChange={(e) => setEmailInput(e.target.value)}
-                    placeholder='Ваш email'
-                    autoFocus
-                    style={{ fontSize: '16px' }}
-                    className='flex-1 px-3 py-2.5 bg-white/90 text-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/60 placeholder-gray-400'
-                  />
-                  <button
-                    onClick={async () => {
-                      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
-                      setAuthLoading(true);
-                      try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
-                    }}
-                    disabled={authLoading}
-                    className='px-4 py-2.5 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap'
-                  >
-                    Войти
-                  </button>
+                <div className='flex flex-col gap-2'>
+                  <div className='flex gap-2'>
+                    <input
+                      type='email'
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder='Ваш email'
+                      autoFocus
+                      style={{ fontSize: '16px' }}
+                      className='flex-1 px-3 py-2.5 bg-white/90 text-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/60 placeholder-gray-400'
+                    />
+                    {!isTestAccount && (
+                      <button
+                        onClick={async () => {
+                          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
+                          setAuthLoading(true);
+                          try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
+                        }}
+                        disabled={authLoading}
+                        className='px-4 py-2.5 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap'
+                      >
+                        Войти
+                      </button>
+                    )}
+                  </div>
+                  {isTestAccount && (
+                    <div className='flex gap-2'>
+                      <input
+                        type='password'
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        placeholder='Пароль'
+                        style={{ fontSize: '16px' }}
+                        className='flex-1 px-3 py-2.5 bg-white/90 text-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/60 placeholder-gray-400'
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!passwordInput) return;
+                          setAuthLoading(true);
+                          try {
+                            const { signInWithPassword } = await import('../utils/auth');
+                            await signInWithPassword(emailInput, passwordInput);
+                          } catch(e) { toast.error('Неверный пароль'); console.error(e); } finally { setAuthLoading(false); }
+                        }}
+                        disabled={authLoading}
+                        className='px-4 py-2.5 bg-white text-gray-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors whitespace-nowrap'
+                      >
+                        {authLoading ? '...' : 'Войти'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )
             ) : (
@@ -706,18 +740,46 @@ function ProfilePage() {
                       style={{ fontSize: '16px' }}
                       className='w-full px-4 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-center'
                     />
-                    <button
-                      onClick={async () => {
-                        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
-                        setAuthLoading(true);
-                        try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
-                      }}
-                      disabled={authLoading}
-                      className='w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl text-[var(--text-primary)] font-medium hover:bg-gray-50'
-                    >
-                      <Icon name="mail" size={20} />
-                      <span>Войти через Email</span>
-                    </button>
+                    {isTestAccount ? (
+                      <>
+                        <input
+                          type='password'
+                          value={passwordInput}
+                          onChange={(e) => setPasswordInput(e.target.value)}
+                          placeholder='Пароль'
+                          style={{ fontSize: '16px' }}
+                          className='w-full px-4 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] text-center'
+                        />
+                        <button
+                          onClick={async () => {
+                            if (!passwordInput) return;
+                            setAuthLoading(true);
+                            try {
+                              const { signInWithPassword } = await import('../utils/auth');
+                              await signInWithPassword(emailInput, passwordInput);
+                            } catch(e) { toast.error('Неверный пароль'); console.error(e); } finally { setAuthLoading(false); }
+                          }}
+                          disabled={authLoading}
+                          className='w-full flex items-center justify-center space-x-2 py-3 px-4 bg-[var(--primary-color)] rounded-xl text-white font-medium'
+                        >
+                          <Icon name="log-in" size={20} />
+                          <span>{authLoading ? 'Входим...' : 'Войти'}</span>
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) { toast.error('Введите корректный email'); return; }
+                          setAuthLoading(true);
+                          try { await signInWithEmail(emailInput); setEmailSent(true); } catch(e) { toast.error('Ошибка отправки'); console.error(e); } finally { setAuthLoading(false); }
+                        }}
+                        disabled={authLoading}
+                        className='w-full flex items-center justify-center space-x-2 py-3 px-4 bg-gray-100 border border-gray-300 rounded-xl text-[var(--text-primary)] font-medium hover:bg-gray-50'
+                      >
+                        <Icon name="mail" size={20} />
+                        <span>Войти через Email</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className='bg-green-50 border border-green-200 rounded-xl p-4'>
