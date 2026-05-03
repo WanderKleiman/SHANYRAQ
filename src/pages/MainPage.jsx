@@ -26,12 +26,12 @@ const PROMO_BANNERS = [
   {
     image: `${SUPABASE_IMG}/image.png`,
     buttonText: 'Помочь бонусами',
-    payment: { id: 'kaspi-bonus', title: 'Помощь бонусами Kaspi', target: 0 },
+    payment: { id: 'kaspi-bonus', title: 'Помощь бонусами Kaspi', target: 0, fundId: 3 },
   },
   {
     image: `${SUPABASE_IMG}/9%20may.png`,
     buttonText: 'Помочь ветеранам',
-    payment: { id: '9may-veterans', title: 'Помощь ветеранам', target: 0 },
+    payment: { id: '9may-veterans', title: 'Помощь ветеранам', target: 0, fundId: 3 },
   },
 ];
 

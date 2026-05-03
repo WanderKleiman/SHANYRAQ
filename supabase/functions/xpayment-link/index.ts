@@ -23,6 +23,11 @@ serve(async (req) => {
     const token = Deno.env.get('XPAYMENT_TOKEN')
     const merchantOrderId = crypto.randomUUID()
 
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+
     const res = await fetch(`${XPAYMENT_BASE}/payments/link`, {
       method: 'POST',
       headers: {
@@ -47,15 +52,17 @@ serve(async (req) => {
       })
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    )
+    // Write to DB AFTER getting qr_token — if this fails, webhook will still fire
+    // because merchant_order_id is already registered in xPayment
+    // beneficiaryId must be a valid integer — 'kaspi-bonus' and similar strings are not real DB IDs
+    const numericBeneficiaryId = beneficiaryId && /^\d+$/.test(String(beneficiaryId)) ? Number(beneficiaryId) : null
+
+    const numericFundId = fundId && /^\d+$/.test(String(fundId)) ? Number(fundId) : null
 
     const { error: dbError } = await supabase.from('kaspi_payment_requests').insert({
-      beneficiary_id: beneficiaryId || null,
+      beneficiary_id: numericBeneficiaryId,
       beneficiary_title: title || null,
-      fund_id: fundId || null,
+      fund_id: numericFundId,
       fund_name: fundName || null,
       amount,
       status: 'link_created',
