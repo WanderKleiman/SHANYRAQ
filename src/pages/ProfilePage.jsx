@@ -66,6 +66,7 @@ function ProfilePage() {
   const [profileTab, setProfileTab] = useState('collection');
   const [donationsList, setDonationsList] = useState([]);
   const [activeSubscriptions, setActiveSubscriptions] = useState([]);
+  const [subDetailId, setSubDetailId] = useState(null);
 
   // Referral stats
   const [refStats, setRefStats] = useState(null); // { clicks, helpers, totalAmount }
@@ -688,25 +689,52 @@ function ProfilePage() {
                   <p className='text-white/80 text-sm'>{sub.amount?.toLocaleString('ru-RU')} ₸ / мес</p>
                 </div>
                 <button
-                  onClick={async () => {
-                    if (!confirm('Отменить подписку?')) return;
-                    const { error } = await supabase
-                      .from('fund_subscriptions')
-                      .update({ status: 'cancelled', updated_at: new Date().toISOString() })
-                      .eq('id', sub.id);
-                    if (error) { toast.error('Ошибка отмены'); return; }
-                    setActiveSubscriptions(prev => prev.filter(s => s.id !== sub.id));
-                    toast.success('Подписка отменена');
-                  }}
+                  onClick={() => setSubDetailId(sub.id)}
                   className='bg-white/20 border border-white/30 rounded-xl px-3 py-1.5 text-xs font-medium hover:bg-white/30 transition-colors'
                 >
-                  Отменить
+                  ···
                 </button>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {subDetailId && (() => {
+        const sub = activeSubscriptions.find(s => s.id === subDetailId);
+        if (!sub) return null;
+        return (
+          <div className='fixed inset-0 bg-black/50 flex items-end z-50' onClick={() => setSubDetailId(null)}>
+            <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-5' onClick={e => e.stopPropagation()}>
+              <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4' />
+              <div className='flex flex-col items-center text-center mb-5'>
+                <div className='w-14 h-14 rounded-full flex items-center justify-center mb-3' style={{ background: 'linear-gradient(135deg, #1e6b4e, #5ec49a)' }}>
+                  <Icon name="heart" size={28} className="text-white" />
+                </div>
+                <p className='font-bold text-lg'>{sub.fund_name || 'Фонд'}</p>
+                <p className='text-[var(--text-secondary)] text-sm mt-1'>Вы подписаны на ежемесячную помощь фонду</p>
+                <p className='text-2xl font-bold mt-3'>{sub.amount?.toLocaleString('ru-RU')} ₸ <span className='text-base font-normal text-[var(--text-secondary)]'>/ мес</span></p>
+              </div>
+              <button
+                onClick={async () => {
+                  if (!confirm('Вы уверены, что хотите отменить подписку?')) return;
+                  const { error } = await supabase
+                    .from('fund_subscriptions')
+                    .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+                    .eq('id', sub.id);
+                  if (error) { toast.error('Ошибка отмены'); return; }
+                  setActiveSubscriptions(prev => prev.filter(s => s.id !== sub.id));
+                  setSubDetailId(null);
+                  toast.success('Подписка отменена');
+                }}
+                className='w-full py-2.5 text-sm text-red-500 font-medium'
+              >
+                Отменить подписку
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Category Sections */}
       <div className='px-4 mt-6 space-y-6 pb-4'>
