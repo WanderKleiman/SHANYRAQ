@@ -508,8 +508,7 @@ function FundDetailPage() {
                 </div>
                 <p className='font-semibold mb-2'>Запрос на оплату отправлен!</p>
                 <p className='text-sm text-[var(--text-secondary)] mb-4'>Откройте Kaspi и подтвердите платёж. Каждый месяц будет приходить новый запрос.</p>
-                <a href='https://kaspi.kz' target='_blank' rel='noopener noreferrer'
-                  onClick={() => { setShowSubModal(false); setSubStep('phone'); }}
+                <a href='https://kaspi.kz'
                   className='block w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm text-center'>
                   Готово
                 </a>
