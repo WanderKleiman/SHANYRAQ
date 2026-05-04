@@ -52,17 +52,18 @@ serve(async (req) => {
       })
     }
 
-    // Write to DB AFTER getting qr_token — if this fails, webhook will still fire
-    // because merchant_order_id is already registered in xPayment
     // beneficiaryId must be a valid integer — 'kaspi-bonus' and similar strings are not real DB IDs
     const numericBeneficiaryId = beneficiaryId && /^\d+$/.test(String(beneficiaryId)) ? Number(beneficiaryId) : null
-
     const numericFundId = fundId && /^\d+$/.test(String(fundId)) ? Number(fundId) : null
+
+    // DB requires either beneficiary_id OR fund_id to be set (CHECK constraint).
+    // Old cached frontend sends beneficiaryId='kaspi-bonus' without fundId — fall back to Shanyraq (3).
+    const effectiveFundId = numericFundId ?? (numericBeneficiaryId === null ? 3 : null)
 
     const { error: dbError } = await supabase.from('kaspi_payment_requests').insert({
       beneficiary_id: numericBeneficiaryId,
       beneficiary_title: title || null,
-      fund_id: numericFundId,
+      fund_id: effectiveFundId,
       fund_name: fundName || null,
       amount,
       status: 'link_created',

@@ -63,13 +63,11 @@ serve(async (req) => {
     }
 
     // 1. Find our payment record by merchant_order_id
-    const { data: paymentRecord, error: findErr } = await supabase
+    const { data: paymentRecord } = await supabase
       .from('kaspi_payment_requests')
       .select('id, beneficiary_id, amount, visitor_id')
       .eq('merchant_order_id', merchantOrderId)
-      .single()
-
-    if (findErr) console.error('kaspi_payment_requests lookup error:', findErr.message)
+      .maybeSingle()
 
     // If payer_phone missing from webhook — fetch it from xpayment API
     let resolvedPhone = payerPhone
@@ -90,18 +88,29 @@ serve(async (req) => {
       }
     }
 
-    // 2. Update payment status to 'paid', save payer phone
-    const { error: updateErr } = await supabase
-      .from('kaspi_payment_requests')
-      .update({
-        status: 'paid',
-        phone: resolvedPhone || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('merchant_order_id', merchantOrderId)
-
-    if (updateErr) console.error('kaspi_payment_requests update error:', updateErr.message)
-    else console.log('Payment marked as paid:', merchantOrderId)
+    // 2. Update or insert payment record
+    if (paymentRecord) {
+      // Normal path: record exists, just mark as paid
+      const { error: updateErr } = await supabase
+        .from('kaspi_payment_requests')
+        .update({ status: 'paid', phone: resolvedPhone || null, updated_at: new Date().toISOString() })
+        .eq('merchant_order_id', merchantOrderId)
+      if (updateErr) console.error('kaspi_payment_requests update error:', updateErr.message)
+      else console.log('Payment marked as paid:', merchantOrderId)
+    } else {
+      // Orphan path: xpayment-link DB insert failed, create record now
+      const { error: insertErr } = await supabase
+        .from('kaspi_payment_requests')
+        .insert({
+          merchant_order_id: merchantOrderId,
+          fund_id: 3,
+          amount,
+          status: 'paid',
+          phone: resolvedPhone || null,
+        })
+      if (insertErr) console.error('kaspi_payment_requests orphan insert error:', insertErr.message)
+      else console.log('Orphan payment inserted as paid:', merchantOrderId)
+    }
 
     // 3. Update beneficiary raised_amount
     const beneficiaryId = paymentRecord?.beneficiary_id
