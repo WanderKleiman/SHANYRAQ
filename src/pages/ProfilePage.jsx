@@ -110,7 +110,7 @@ function ProfilePage() {
       }
     });
 
-    const clickedVisitorIds = Object.keys(clickTimeByVisitor);
+    const clickedVisitorIds = Object.keys(clickTimeByVisitor).filter(id => !myVisitorIds.has(id));
 
     // Платежи от этих visitor_id — только те, что сделаны ПОСЛЕ клика
     let totalAmount = 0;

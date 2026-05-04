@@ -508,8 +508,12 @@ function FundDetailPage() {
                 </div>
                 <p className='font-semibold mb-2'>Запрос на оплату отправлен!</p>
                 <p className='text-sm text-[var(--text-secondary)] mb-4'>Откройте Kaspi и подтвердите платёж. Каждый месяц будет приходить новый запрос.</p>
+                <button onClick={() => window.open('https://kaspi.kz', '_blank')}
+                  className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm mb-2'>
+                  Открыть Kaspi
+                </button>
                 <button onClick={() => { setShowSubModal(false); setSubStep('phone'); }}
-                  className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm'>
+                  className='w-full py-3 bg-gray-100 text-[var(--text-primary)] font-bold rounded-xl text-sm'>
                   Готово
                 </button>
               </div>
