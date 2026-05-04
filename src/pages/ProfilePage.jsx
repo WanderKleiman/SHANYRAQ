@@ -528,23 +528,23 @@ function ProfilePage() {
 
       {/* Referral stats */}
       {refStats && (refStats.clicks > 0 || refStats.helpers > 0) && (
-        <div className='mx-4 mt-4 rounded-2xl p-4' style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}>
+        <div className='mx-4 mt-4 rounded-2xl p-4 bg-[var(--bg-secondary)] border border-[var(--border-color)]'>
           <div className='flex items-center gap-2 mb-3'>
-            <Icon name="share-2" size={16} className="text-white" />
-            <p className='text-sm font-semibold text-white'>Ваш вклад через репосты</p>
+            <Icon name="share-2" size={16} className="text-[var(--primary-color)]" />
+            <p className='text-sm font-semibold text-[var(--text-primary)]'>Ваш вклад через репосты</p>
           </div>
           <div className='flex gap-3'>
-            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
-              <p className='text-2xl font-bold text-white'>{refStats.clicks}</p>
-              <p className='text-xs text-white/80 mt-0.5'>перешли по ссылке</p>
+            <div className='flex-1 bg-[var(--bg-primary)] rounded-xl p-3 text-center'>
+              <p className='text-2xl font-bold text-[var(--text-primary)]'>{refStats.clicks}</p>
+              <p className='text-xs text-[var(--text-secondary)] mt-0.5'>перешли по ссылке</p>
             </div>
-            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
-              <p className='text-2xl font-bold text-white'>{refStats.helpers}</p>
-              <p className='text-xs text-white/80 mt-0.5'>помогли</p>
+            <div className='flex-1 bg-[var(--bg-primary)] rounded-xl p-3 text-center'>
+              <p className='text-2xl font-bold text-[var(--text-primary)]'>{refStats.helpers}</p>
+              <p className='text-xs text-[var(--text-secondary)] mt-0.5'>помогли</p>
             </div>
-            <div className='flex-1 bg-white/15 rounded-xl p-3 text-center'>
-              <p className='text-lg font-bold text-white leading-tight'>{refStats.totalAmount.toLocaleString('ru-RU')} ₸</p>
-              <p className='text-xs text-white/80 mt-0.5'>собрано</p>
+            <div className='flex-1 bg-[var(--bg-primary)] rounded-xl p-3 text-center'>
+              <p className='text-lg font-bold text-[var(--primary-color)] leading-tight'>{refStats.totalAmount.toLocaleString('ru-RU')} ₸</p>
+              <p className='text-xs text-[var(--text-secondary)] mt-0.5'>собрано</p>
             </div>
           </div>
         </div>
