@@ -57,6 +57,20 @@ function HomePage({ selectedCity, onCityChange }) {
   }, [searchParams, setSearchParams]);
 
   
+  // Логируем визит
+  useEffect(() => {
+    if (sessionStorage.getItem('pageViewLogged')) return;
+    sessionStorage.setItem('pageViewLogged', '1');
+    import('../utils/fingerprint').then(async ({ getVisitorId }) => {
+      try {
+        const visitorId = await getVisitorId();
+        await supabase.from('page_views').insert({ visitor_id: visitorId });
+      } catch (e) {
+        console.error('Page view tracking error:', e);
+      }
+    });
+  }, []);
+
   // Обрабатываем реферальный параметр
   useEffect(() => {
     const ref = searchParams.get('ref');
