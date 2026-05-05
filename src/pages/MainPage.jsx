@@ -232,7 +232,7 @@ function MainPage() {
                 <a href='https://play.google.com/store/apps/details?id=world.shanyrak.app&pcampaignid=web_share' target='_blank' rel='noopener noreferrer' className='block'>
                   <img src={`${SUPABASE_IMG}/Google%20.png`} alt='Google Play' className='h-[5.5vh] object-contain' />
                 </a>
-                <a href='#' className='block'>
+                <a href='https://apps.apple.com/kz/app/%D1%88%D0%B0%D0%BD%D1%8B%D1%80%D0%B0%D0%BA/id6766084376' target='_blank' rel='noopener noreferrer' className='block'>
                   <img src={`${SUPABASE_IMG}/app%20store%20.png`} alt='App Store' className='h-[5.5vh] object-contain' />
                 </a>
               </div>
@@ -747,7 +747,7 @@ function MainPage() {
             <a href='https://play.google.com/store/apps/details?id=world.shanyrak.app&pcampaignid=web_share' target='_blank' rel='noopener noreferrer' className='block flex-1'>
               <img src={`${SUPABASE_IMG}/Google%20.png`} alt='Google Play' className='h-[52px] w-full object-contain' />
             </a>
-            <a href='#' className='block flex-1'>
+            <a href='https://apps.apple.com/kz/app/%D1%88%D0%B0%D0%BD%D1%8B%D1%80%D0%B0%D0%BA/id6766084376' target='_blank' rel='noopener noreferrer' className='block flex-1'>
               <img src={`${SUPABASE_IMG}/app%20store%20.png`} alt='App Store' className='h-[52px] w-full object-contain' />
             </a>
           </div>
