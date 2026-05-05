@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { signInWithGoogle, signInWithEmail, signOut as authSignOut } from '../utils/auth';
+import { signInWithGoogle, signInWithApple, signInWithEmail, signOut as authSignOut } from '../utils/auth';
 import { getVisitorId, clearVisitorCache } from '../utils/fingerprint';
 import { Capacitor } from '@capacitor/core';
 
@@ -124,6 +124,7 @@ export function AuthProvider({ children }) {
       user,
       loading,
       signInWithGoogle,
+      signInWithApple,
       signInWithEmail,
       signOut: handleSignOut,
       deleteAccount

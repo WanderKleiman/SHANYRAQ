@@ -28,6 +28,31 @@ export async function signInWithGoogle() {
   return data;
 }
 
+export async function signInWithApple() {
+  if (Capacitor.isNativePlatform()) {
+    const { Browser } = await import('@capacitor/browser');
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: SITE_URL + '/auth-callback',
+        skipBrowserRedirect: true
+      }
+    });
+    if (error) throw error;
+    if (data?.url) {
+      await Browser.open({ url: data.url, presentationStyle: 'popover' });
+    }
+    return data;
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'apple',
+    options: { redirectTo: window.location.origin + '/profile' }
+  });
+  if (error) throw error;
+  return data;
+}
+
 export async function signInWithEmail(email) {
   const redirectTo = Capacitor.isNativePlatform()
     ? SITE_URL + '/auth-callback'
