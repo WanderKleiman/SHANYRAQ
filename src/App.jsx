@@ -27,6 +27,11 @@ const AdminDashboardPage = React.lazy(() => import('./pages/admin/AdminDashboard
 const AdminKaspiRequestsPage = React.lazy(() => import('./pages/admin/AdminKaspiRequestsPage'));
 const PolicyPage = React.lazy(() => import('./pages/PolicyPage'));
 const OfertaPage = React.lazy(() => import('./pages/OfertaPage'));
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+const CompaniesPage = React.lazy(() => import('./pages/CompaniesPage'));
+const CompaniesV1Page = React.lazy(() => import('./pages/CompaniesV1Page'));
+const CompaniesV3Page = React.lazy(() => import('./pages/CompaniesV3Page'));
+const CompaniesV4Page = React.lazy(() => import('./pages/CompaniesV4Page'));
 
 function PageLoader() {
   return (
@@ -221,6 +226,11 @@ function App() {
               </AppLayout>
             }
           />
+          <Route path='/landing' element={<LandingPage />} />
+          <Route path='/companies' element={<CompaniesPage />} />
+          <Route path='/companies-v1' element={<CompaniesV1Page />} />
+          <Route path='/companies-v3' element={<CompaniesV3Page />} />
+          <Route path='/companies-v4' element={<CompaniesV4Page />} />
           <Route path='/admin' element={<AdminLoginPage />} />
           <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
