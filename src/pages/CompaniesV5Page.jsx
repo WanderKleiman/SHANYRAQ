@@ -10,7 +10,7 @@ const MENU = [
   { label: 'Фонды-партнёры', path: '/partner-funds' },
   { label: 'Документы',    path: '/documents' },
   { label: 'Контакты',     path: '/contacts' },
-  { label: 'Компаниям',    path: '/companies-v5', highlight: true },
+  { label: 'Компаниям',    path: '/b2b', highlight: true },
 ];
 
 /* ─── SVG иконки ─── */
@@ -649,7 +649,7 @@ export default function CompaniesV5Page() {
             <div>
               <p className='text-xs font-bold text-[#a8c4b8] uppercase tracking-wider mb-5'>Компания</p>
               <div className='space-y-3.5'>
-                {[{ l: 'Компаниям', p: '/companies-v5' }, { l: 'Контакты', p: '/contacts' }, { l: 'О фонде', p: '/about' }].map(l => (
+                {[{ l: 'Компаниям', p: '/b2b' }, { l: 'Контакты', p: '/contacts' }, { l: 'О фонде', p: '/about' }].map(l => (
                   <button key={l.l} onClick={() => navigate(l.p)} className='block text-base text-[#6b8c7a] hover:text-[#1e6b4e] transition-colors text-left'>{l.l}</button>
                 ))}
               </div>

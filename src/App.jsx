@@ -232,7 +232,7 @@ function App() {
           <Route path='/companies-v1' element={<CompaniesV1Page />} />
           <Route path='/companies-v3' element={<CompaniesV3Page />} />
           <Route path='/companies-v4' element={<CompaniesV4Page />} />
-          <Route path='/companies-v5' element={<CompaniesV5Page />} />
+          <Route path='/b2b' element={<CompaniesV5Page />} />
           <Route path='/admin' element={<AdminLoginPage />} />
           <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
