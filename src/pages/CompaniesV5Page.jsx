@@ -164,7 +164,7 @@ export default function CompaniesV5Page() {
 
       {/* ── HEADER ── */}
       <header className='sticky top-0 z-50 bg-white/85 backdrop-blur-xl border-b border-gray-100'>
-        <div className='max-w-7xl mx-auto px-8 h-16 flex items-center justify-between'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5 h-16 flex items-center justify-between'>
           <div className='flex items-center gap-3 cursor-pointer' onClick={() => navigate('/')}>
             <img src={`${IMG}/14.png`} alt='Шаңырақ' className='w-8 h-8 object-contain' />
             <span className='font-bold text-gray-900 text-lg'>Шаңырақ</span>
@@ -185,21 +185,18 @@ export default function CompaniesV5Page() {
       </header>
 
       {/* ── HERO — белый фон + #7EF1D0 blur blob как на MainPage ── */}
-      <section className='relative overflow-hidden pt-24 pb-32 bg-white'>
-        {/* Blur blob — точно как на главной странице */}
+      <section className='relative overflow-hidden pt-24 pb-32 bg-white max-md:pt-14 max-md:pb-16'>
         <div className='absolute top-0 right-0 w-1/2 h-full pointer-events-none'
           style={{ background: '#7EF1D0', borderRadius: '20%', filter: 'blur(200px)', opacity: 0.38 }} />
-        <div className='max-w-7xl mx-auto px-8 relative z-10'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5 relative z-10'>
           <div className='max-w-4xl'>
-            {/* Бейджик */}
-            <div className='inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full border border-[#c8f0e0] bg-white/80 backdrop-blur-sm'>
+            <div className='inline-flex items-center gap-2 mb-8 max-md:mb-5 px-4 py-2 rounded-full border border-[#c8f0e0] bg-white/80 backdrop-blur-sm'>
               <div className='w-2 h-2 rounded-full animate-pulse' style={{ background: '#2f8f6a' }} />
               <span className='text-sm font-semibold text-[#1e6b4e]'>CSR & ESG платформа Казахстана</span>
             </div>
 
-            {/* Заголовок — 3 строки: «cycling» + «эффект» зелёный на 3-й строке */}
-            <h1 className='font-extrabold text-[#0f1f17] leading-[1.08] tracking-tight mb-6'
-              style={{ fontSize: 'clamp(38px, 5vw, 64px)' }}>
+            <h1 className='font-extrabold text-[#0f1f17] leading-[1.08] tracking-tight mb-6 max-md:mb-4'
+              style={{ fontSize: 'clamp(28px, 7vw, 64px)' }}>
               Превратите социальную<br />
               ответственность в реальный<br />
               <span style={{
@@ -214,24 +211,24 @@ export default function CompaniesV5Page() {
               </span>
             </h1>
 
-            <p className='text-xl text-[#3d6052] leading-relaxed mb-12 max-w-2xl'>
+            <p className='text-xl max-md:text-base text-[#3d6052] leading-relaxed mb-12 max-md:mb-8 max-w-2xl'>
               Шаңырақ — CSR платформа для вовлечения сотрудников в социальную ответственность вашей компании
             </p>
 
-            <div className='flex items-center gap-5'>
+            <div className='flex items-center gap-5 max-md:flex-col max-md:items-stretch max-md:gap-3'>
               <a href='#contact'
-                className='inline-flex items-center gap-3 px-8 py-4 rounded-full font-bold text-base text-white hover:opacity-90 transition-all'
+                className='inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-base text-white hover:opacity-90 transition-all'
                 style={{ background: G, boxShadow: '0 10px 32px rgba(47,143,106,0.35)' }}>
                 Подключить компанию
                 <Ic n='arrowr' s={18} c='white' />
               </a>
-              <a href='#how' className='text-[#3d6052] text-base hover:text-[#1e6b4e] transition-colors font-medium'>
+              <a href='#how' className='text-[#3d6052] text-base hover:text-[#1e6b4e] transition-colors font-medium max-md:text-center'>
                 Как это работает ↓
               </a>
             </div>
 
             {/* Статы */}
-            <div className='flex gap-8 mt-16 pt-10 border-t border-[#d4f0e4]'>
+            <div className='flex gap-8 mt-16 pt-10 border-t border-[#d4f0e4] max-md:grid max-md:grid-cols-2 max-md:gap-x-6 max-md:gap-y-5 max-md:mt-10 max-md:pt-6'>
               {[{ v: '×2', l: 'матчинг от компании' }, { v: '10+', l: 'верифицированных фондов' }, { v: '100%', l: 'прозрачность переводов' }, { v: '30 дн.', l: 'до первого ESG-отчёта' }].map(m => (
                 <div key={m.l}>
                   <div className='text-3xl font-extrabold text-[#1e6b4e] mb-1'>{m.v}</div>
@@ -244,39 +241,35 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── КАК РАБОТАЕТ — горизонтальный флоу процесса ── */}
-      <section id='how' className='py-24 bg-white'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='mb-14'>
+      <section id='how' className='py-24 bg-white max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='mb-14 max-md:mb-8'>
             <p className='text-sm font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Процесс · Как работает</p>
-            <h2 className='text-4xl font-extrabold text-[#0f1f17] tracking-tight mb-4'>
+            <h2 className='text-4xl font-extrabold text-[#0f1f17] tracking-tight mb-4 max-md:text-2xl'>
               От начисления бонусов до устойчивого развития
             </h2>
-            <p className='text-lg text-[#4a6358] max-w-2xl'>Пять последовательных шагов — от настройки до ESG-отчёта</p>
+            <p className='text-lg text-[#4a6358] max-w-2xl max-md:text-base'>Пять последовательных шагов — от настройки до ESG-отчёта</p>
           </div>
 
-          {/* Горизонтальная линия-флоу */}
           <div className='relative'>
-            {/* Соединительная линия */}
             <div className='absolute top-[28px] left-[60px] right-[60px] h-px hidden lg:block'
               style={{ background: 'linear-gradient(90deg, #c8f0e0, #2f8f6a, #c8f0e0)' }} />
 
-            <div className='grid grid-cols-5 gap-4 relative'>
+            <div className='grid grid-cols-5 gap-4 relative max-md:grid-cols-1 max-md:gap-5'>
               {STEPS.map((step, i) => (
-                <div key={step.num} className='flex flex-col items-center text-center group'>
-                  {/* Кружок с номером */}
-                  <div className='w-14 h-14 rounded-full flex items-center justify-center text-white font-extrabold text-lg mb-5 relative z-10 ring-4 ring-white transition-transform group-hover:scale-110'
-                    style={{ background: i === STEPS.length - 1
-                      ? 'linear-gradient(135deg, #0f3324, #1e6b4e)'
-                      : G }}>
+                <div key={step.num} className='flex flex-col items-center text-center group max-md:flex-row max-md:text-left max-md:items-start max-md:gap-4'>
+                  <div className='w-14 h-14 rounded-full flex items-center justify-center text-white font-extrabold text-lg mb-5 max-md:mb-0 max-md:flex-shrink-0 relative z-10 ring-4 ring-white transition-transform group-hover:scale-110'
+                    style={{ background: i === STEPS.length - 1 ? 'linear-gradient(135deg, #0f3324, #1e6b4e)' : G }}>
                     {i + 1}
                   </div>
-                  {/* Иконка */}
-                  <div className='w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all group-hover:shadow-md'
+                  <div className='max-md:hidden w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-all group-hover:shadow-md'
                     style={{ background: 'linear-gradient(135deg, #f0faf6, #daf2e8)' }}>
                     <Ic n={step.icon} s={22} c='#1e6b4e' />
                   </div>
-                  <h3 className='text-base font-bold text-[#0f1f17] mb-2 leading-snug'>{step.title}</h3>
-                  <p className='text-sm text-[#5a7b6a] leading-relaxed'>{step.desc}</p>
+                  <div className='max-md:flex-1'>
+                    <h3 className='text-base font-bold text-[#0f1f17] mb-2 max-md:mb-1 leading-snug'>{step.title}</h3>
+                    <p className='text-sm text-[#5a7b6a] leading-relaxed'>{step.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -285,12 +278,12 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── КАРУСЕЛЬ — светлые карточки, чёткая иерархия ── */}
-      <section className='py-24 bg-[#f5f6f5]'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='mb-14'>
+      <section className='py-24 bg-[#f5f6f5] max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='mb-14 max-md:mb-8'>
             <p className='text-sm font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Ценность</p>
-            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5'>Три направления импакта</h2>
-            <p className='text-xl text-[#4a6358]'>Измеримые результаты по каждому направлению</p>
+            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5 max-md:text-3xl'>Три направления импакта</h2>
+            <p className='text-xl text-[#4a6358] max-md:text-base'>Измеримые результаты по каждому направлению</p>
           </div>
 
           <div ref={carouselRef}
@@ -304,7 +297,7 @@ export default function CompaniesV5Page() {
             {CAROUSEL.map((card, ci2) => (
               <div key={ci2}
                 className='flex-shrink-0 rounded-3xl bg-white border-2 border-[#d4f0e4] overflow-hidden hover:shadow-xl transition-all'
-                style={{ width: 'calc(33.33% - 16px)', minWidth: '360px', scrollSnapAlign: 'start' }}>
+                style={{ width: 'calc(33.33% - 16px)', minWidth: 'min(360px, 82vw)', scrollSnapAlign: 'start' }}>
                 {/* Цветная шапка карточки */}
                 <div className='px-8 py-7 flex items-center gap-5'
                   style={{ background: `linear-gradient(135deg, ${card.color}, #2f8f6a)` }}>
@@ -347,12 +340,12 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── ПРОВЕРЕННЫЕ ФОНДЫ — ЦУР + хештеги ── */}
-      <section className='py-24 bg-white'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='grid grid-cols-2 gap-20 items-start'>
+      <section className='py-24 bg-white max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='grid grid-cols-2 gap-20 items-start max-md:grid-cols-1 max-md:gap-10'>
             <div>
               <p className='text-base font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Безопасность</p>
-              <h2 className='text-4xl font-extrabold text-[#0f1f17] tracking-tight mb-5'>
+              <h2 className='text-4xl font-extrabold text-[#0f1f17] tracking-tight mb-5 max-md:text-2xl'>
                 Только проверенные фонды
               </h2>
               <p className='text-lg text-[#4a6358] leading-relaxed mb-8'>
@@ -422,16 +415,16 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── ФОРМАТЫ РАБОТЫ ── */}
-      <section className='py-24 bg-[#f5f6f5]'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='text-center mb-16'>
+      <section className='py-24 bg-[#f5f6f5] max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='text-center mb-16 max-md:mb-8'>
             <p className='text-base font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Модели</p>
-            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5'>Форматы работы</h2>
-            <p className='text-xl text-[#4a6358]'>Выберите подходящий — или совместите оба</p>
+            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5 max-md:text-3xl'>Форматы работы</h2>
+            <p className='text-xl text-[#4a6358] max-md:text-base'>Выберите подходящий — или совместите оба</p>
           </div>
-          <div className='grid grid-cols-2 gap-6'>
+          <div className='grid grid-cols-2 gap-6 max-md:grid-cols-1'>
             {/* Формат 1 */}
-            <div className='rounded-3xl p-10 relative overflow-hidden'
+            <div className='rounded-3xl p-10 max-md:p-7 relative overflow-hidden'
               style={{ background: 'linear-gradient(145deg, #0f3324, #1e6b4e, #2f8f6a)' }}>
               <div className='absolute top-0 right-0 w-64 h-64 rounded-full opacity-10'
                 style={{ background: 'radial-gradient(circle, #7EF1D0, transparent)', transform: 'translate(30%,-30%)' }} />
@@ -459,7 +452,7 @@ export default function CompaniesV5Page() {
             </div>
 
             {/* Формат 2 */}
-            <div className='rounded-3xl p-10 bg-white border-2 border-[#d4f0e4]'>
+            <div className='rounded-3xl p-10 max-md:p-7 bg-white border-2 border-[#d4f0e4]'>
               <div className='w-16 h-16 rounded-2xl flex items-center justify-center mb-8'
                 style={{ background: 'linear-gradient(135deg, #e4f7ee, #c8f0e0)' }}>
                 <Ic n='doublearr' s={30} c='#1e6b4e' />
@@ -489,14 +482,14 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── ЧТО ПОЛУЧАЮТ СТОРОНЫ ── */}
-      <section className='py-24 bg-white'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='text-center mb-16'>
+      <section className='py-24 bg-white max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='text-center mb-16 max-md:mb-8'>
             <p className='text-base font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Win-Win</p>
-            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5'>Что получают стороны</h2>
+            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5 max-md:text-3xl'>Что получают стороны</h2>
           </div>
-          <div className='grid grid-cols-2 gap-6'>
-            <div className='rounded-3xl p-10 bg-white border-2 border-[#d4f0e4]'>
+          <div className='grid grid-cols-2 gap-6 max-md:grid-cols-1'>
+            <div className='rounded-3xl p-10 max-md:p-7 bg-white border-2 border-[#d4f0e4]'>
               <div className='flex items-center gap-4 mb-8'>
                 <div className='w-14 h-14 rounded-2xl flex items-center justify-center'
                   style={{ background: 'linear-gradient(135deg, #e4f7ee, #c8f0e0)' }}>
@@ -516,7 +509,7 @@ export default function CompaniesV5Page() {
                 ))}
               </ul>
             </div>
-            <div className='rounded-3xl p-10 relative overflow-hidden'
+            <div className='rounded-3xl p-10 max-md:p-7 relative overflow-hidden'
               style={{ background: 'linear-gradient(150deg, #0f3324, #1e6b4e)' }}>
               <div className='absolute top-0 right-0 w-56 h-56 rounded-full opacity-10'
                 style={{ background: 'radial-gradient(circle, #7EF1D0, transparent)', transform: 'translate(25%,-25%)' }} />
@@ -546,14 +539,14 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── ЧТО ДАЁТ КОМПАНИИ ── */}
-      <section className='py-24 bg-[#f5f6f5]'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='text-center mb-16'>
+      <section className='py-24 bg-[#f5f6f5] max-md:py-14'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='text-center mb-16 max-md:mb-8'>
             <p className='text-base font-bold text-[#2f8f6a] uppercase tracking-widest mb-3'>Результаты</p>
-            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5'>Что это даёт компании</h2>
-            <p className='text-xl text-[#4a6358]'>Измеримые результаты для HR, PR и руководства</p>
+            <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight mb-5 max-md:text-3xl'>Что это даёт компании</h2>
+            <p className='text-xl text-[#4a6358] max-md:text-base'>Измеримые результаты для HR, PR и руководства</p>
           </div>
-          <div className='grid grid-cols-3 gap-5'>
+          <div className='grid grid-cols-3 gap-5 max-md:grid-cols-1 max-md:gap-4'>
             {COMPANY_GETS.map((item, i) => (
               <div key={item.title}
                 className='rounded-2xl p-8 bg-white border border-[#d4f0e4] hover:border-[#7EF1D0] hover:shadow-lg transition-all group'>
@@ -570,18 +563,17 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── ФОРМА — градиент как в hero, форма поверх на белой плашке ── */}
-      <section id='contact' className='relative overflow-hidden py-28 bg-white'>
-        {/* Тот же blur blob что в hero */}
+      <section id='contact' className='relative overflow-hidden py-28 bg-white max-md:py-14'>
         <div className='absolute top-0 right-0 w-1/2 h-full pointer-events-none'
           style={{ background: '#7EF1D0', borderRadius: '20%', filter: 'blur(200px)', opacity: 0.38 }} />
-        <div className='max-w-7xl mx-auto px-8 relative z-10'>
-          <div className='grid grid-cols-2 gap-20 items-start'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5 relative z-10'>
+          <div className='grid grid-cols-2 gap-20 items-start max-md:grid-cols-1 max-md:gap-10'>
             <div>
               <p className='text-sm font-bold text-[#2f8f6a] uppercase tracking-widest mb-4'>Начало</p>
-              <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight leading-tight mb-5'>
+              <h2 className='text-5xl font-extrabold text-[#0f1f17] tracking-tight leading-tight mb-5 max-md:text-3xl'>
                 Начните инвестировать в ценности
               </h2>
-              <p className='text-xl text-[#4a6358] leading-relaxed mb-12'>
+              <p className='text-xl text-[#4a6358] leading-relaxed mb-12 max-md:text-base max-md:mb-8'>
                 Помогите своим сотрудникам стать меценатами, а компании — лидером социального импакта.
               </p>
               <div className='space-y-7'>
@@ -614,16 +606,16 @@ export default function CompaniesV5Page() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className='border-t border-[#e4f0ea] bg-white pt-16 pb-8'>
-        <div className='max-w-7xl mx-auto px-8'>
-          <div className='grid grid-cols-5 gap-8 mb-12'>
+      <footer className='border-t border-[#e4f0ea] bg-white pt-16 pb-8 max-md:pt-10'>
+        <div className='max-w-7xl mx-auto px-8 max-md:px-5'>
+          <div className='grid grid-cols-5 gap-8 mb-12 max-md:grid-cols-2 max-md:gap-6'>
             <div className='col-span-2'>
               <div className='flex items-center gap-2.5 mb-4 cursor-pointer' onClick={() => navigate('/')}>
                 <img src={`${IMG}/14.png`} alt='' className='w-8 h-8 object-contain' />
                 <span className='font-bold text-[#0f1f17] text-lg'>Шаңырақ</span>
               </div>
               <p className='text-base text-[#6b8c7a] leading-relaxed mb-6 max-w-xs'>Платформа корпоративной благотворительности Казахстана</p>
-              <div className='flex gap-3'>
+              <div className='flex gap-3 max-md:flex-col max-md:items-start'>
                 <a href='https://apps.apple.com/kz/app/%D1%88%D0%B0%D0%BD%D1%8B%D1%80%D0%B0%D0%BA/id6766084376'
                   target='_blank' rel='noopener noreferrer'
                   className='flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#d4f0e4] hover:border-[#a8e6cc] hover:bg-[#f4fcf8] transition-all'>
@@ -663,7 +655,7 @@ export default function CompaniesV5Page() {
               </div>
             </div>
           </div>
-          <div className='border-t border-[#e4f0ea] pt-6 flex items-center justify-between'>
+          <div className='border-t border-[#e4f0ea] pt-6 flex items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3'>
             <p className='text-sm text-[#a8c4b8]'>© 2025 Шаңырақ. Все права защищены.</p>
             <div className='flex items-center gap-2'>
               <div className='w-5 h-5 rounded-full flex items-center justify-center' style={{ background: G }}>
