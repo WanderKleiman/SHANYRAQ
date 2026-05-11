@@ -46,19 +46,19 @@ function PageLoader() {
 function AuthCallback() {
   const navigate = useNavigate();
   useEffect(() => {
-    let hadSession = false;
-    // Check if user already has a session on mount
+    // Подписываемся ПОСЛЕ getSession(), чтобы hadSession был уже известен
+    // когда Supabase восстановит сессию из localStorage (иначе race condition → редирект на /profile)
+    let unsubscribe;
     supabase.auth.getSession().then(({ data: { session } }) => {
-      hadSession = !!session;
+      const hadSession = !!session;
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
+        if (event === 'SIGNED_IN' && !hadSession && newSession) {
+          navigate('/profile', { replace: true });
+        }
+      });
+      unsubscribe = () => subscription.unsubscribe();
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      // Only redirect on fresh sign-in (user didn't have session before)
-      if (event === 'SIGNED_IN' && !hadSession) {
-        hadSession = true;
-        navigate('/profile', { replace: true });
-      }
-    });
-    return () => { subscription.unsubscribe(); };
+    return () => unsubscribe?.();
   }, [navigate]);
   return null;
 }
