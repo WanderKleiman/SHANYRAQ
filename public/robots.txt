@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Закрываем служебные страницы от индексации
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth-callback
+Disallow: /admin-access
+
+# Sitemap
+Sitemap: https://www.shanyrak.world/sitemap.xml
+
+# llms.txt для ИИ-моделей
+# https://www.shanyrak.world/llms.txt
