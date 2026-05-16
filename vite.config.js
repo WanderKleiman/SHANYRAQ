@@ -5,6 +5,7 @@ export default defineConfig({
   plugins: [react()],
   base: '/',
   build: {
+    target: 'es2019',  // react-snap uses Chrome 78/79 which doesn't support ?. (ES2020)
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
