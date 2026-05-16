@@ -119,17 +119,10 @@ function BenCard({ b, onClick }) {
 
       {/* контент */}
       <div className='p-4'>
-        <p className='font-bold text-gray-900 text-sm leading-snug mb-1 line-clamp-2'>{b.title}</p>
+        <p className='font-bold text-gray-900 text-sm leading-snug mb-2 line-clamp-2'>{b.title}</p>
         {b.city && <p className='text-xs text-gray-500 mb-3'>📍 {b.city}</p>}
-
-        {/* прогресс */}
-        <div className='w-full bg-gray-100 rounded-full overflow-hidden mb-2' style={{ height: '6px' }}>
-          <div className='h-full rounded-full transition-all duration-700'
-            style={{ width: `${pct}%`, background: G }} />
-        </div>
-        <div className='flex justify-between items-center'>
-          <span className='text-xs font-semibold text-[#2f8f6a]'>{pct}%</span>
-          <span className='text-xs text-gray-500'>{raised.toLocaleString('ru-RU')} ₸</span>
+        <div className='inline-flex items-center gap-1 text-xs font-semibold text-[#2f8f6a] bg-[#e8f8f2] px-2.5 py-1 rounded-full'>
+          💚 {raised.toLocaleString('ru-RU')} ₸ собрано
         </div>
       </div>
     </div>
@@ -220,7 +213,7 @@ export default function LandingPage() {
         <div className='max-w-7xl mx-auto px-8 py-20 flex items-center gap-16 relative z-10 max-md:px-5 max-md:py-12 max-md:flex-col max-md:gap-8'>
           <div className='flex-1 max-w-xl max-md:max-w-full'>
             <div className='inline-flex items-center gap-2 bg-[#e8f8f2] text-[#2f8f6a] text-xs font-semibold px-3 py-1.5 rounded-full mb-6'>
-              🇰🇿 Благотворительность в Казахстане
+              🇰🇿 Благотворительный фонд «Шаңырақ»
             </div>
             <h1 className='text-5xl font-bold text-gray-900 leading-tight mb-5 max-md:text-3xl'>
               Помогайте тем,<br />кто нуждается<br />
@@ -257,7 +250,7 @@ export default function LandingPage() {
         <div className='max-w-7xl mx-auto px-8 py-16 max-md:px-5 max-md:py-12'>
           <div className='grid grid-cols-4 gap-8 max-md:grid-cols-2 max-md:gap-8'>
             <StatItem value={totalBeneficiaries} suffix='+' label='Подопечных на платформе' icon='🤲' />
-            <StatItem value={Math.round(totalRaised / 1000)} suffix=' тыс ₸' label='Собрано в общей сложности' icon='💚' />
+            <StatItem value={Math.floor(totalRaised / 1_000_000)} suffix=' млн+ ₸' label='Поддержано подопечных' icon='💚' />
             <StatItem value={totalPercent} suffix='%' label='От общей цели сборов' icon='🎯' />
             <StatItem value={funds.length} suffix='' label='Фондов-партнёров' icon='🏛️' />
           </div>
@@ -402,8 +395,8 @@ export default function LandingPage() {
                 style={{ background: 'linear-gradient(to right, white, transparent)' }} />
               <div className='absolute right-0 top-0 bottom-0 z-10 pointer-events-none w-20'
                 style={{ background: 'linear-gradient(to left, white, transparent)' }} />
-              <div ref={fundsCarouselRef} className='funds-carousel flex gap-6' style={{ width: 'max-content' }}>
-                {[...funds, ...funds].map((fund, i) => (
+              <div className='funds-carousel flex gap-6' style={{ width: 'max-content' }}>
+                {[...funds, ...funds, ...funds, ...funds].map((fund, i) => (
                   <div key={fund.id + '-' + i} onClick={() => navigate(`/fund/${encodeURIComponent(fund.name)}`)}
                     className='bg-white rounded-2xl cursor-pointer flex-shrink-0 hover:shadow-md transition-shadow border border-gray-100'
                     style={{ width: '160px', padding: '16px' }}>
@@ -540,7 +533,7 @@ export default function LandingPage() {
                 <span className='font-bold text-gray-900 text-base'>Шаңырақ</span>
               </div>
               <p className='text-sm text-gray-700 leading-relaxed mb-3'>
-                Благотворительная платформа Казахстана. Объединяем фонды, попечителей и технологии.
+                Благотворительный фонд Казахстана. Объединяем фонды, попечителей и технологии.
               </p>
               <p className='text-xs text-gray-500'>БИН: 240440030399</p>
               <p className='text-xs text-gray-500'>Зарегистрирован в РК</p>
@@ -599,11 +592,11 @@ export default function LandingPage() {
       </footer>
 
       <style>{`
-        .funds-carousel { animation: scroll-left 30s linear infinite; }
+        .funds-carousel { animation: funds-scroll 35s linear infinite; }
         .funds-carousel:hover { animation-play-state: paused; }
-        @keyframes scroll-left {
+        @keyframes funds-scroll {
           0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+          100% { transform: translateX(-25%); }
         }
         /* hide scrollbar in beneficiary carousel */
         section div::-webkit-scrollbar { display: none; }
