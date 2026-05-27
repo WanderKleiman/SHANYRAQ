@@ -33,6 +33,7 @@ const CompaniesV1Page = React.lazy(() => import('./pages/CompaniesV1Page'));
 const CompaniesV3Page = React.lazy(() => import('./pages/CompaniesV3Page'));
 const CompaniesV4Page = React.lazy(() => import('./pages/CompaniesV4Page'));
 const CompaniesV5Page = React.lazy(() => import('./pages/CompaniesV5Page'));
+const WidgetPage = React.lazy(() => import('./pages/WidgetPage'));
 
 function PageLoader() {
   return (
@@ -233,6 +234,7 @@ function App() {
           <Route path='/companies-v3' element={<CompaniesV3Page />} />
           <Route path='/companies-v4' element={<CompaniesV4Page />} />
           <Route path='/b2b' element={<CompaniesV5Page />} />
+          <Route path='/widget/:fundId' element={<WidgetPage />} />
           <Route path='/admin' element={<AdminLoginPage />} />
           <Route path='/admin/dashboard' element={<AdminDashboardPage />} />
           <Route path='/admin/kaspi-requests' element={<AdminKaspiRequestsPage />} />
