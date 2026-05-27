@@ -74,30 +74,38 @@
     return el;
   }
 
+  function openModal(src) {
+    injectStyles();
+    var modal = getOrCreateModal();
+    var box   = modal.querySelector('.__sw_box');
+
+    box.innerHTML = '';
+    var iframe = document.createElement('iframe');
+    iframe.src   = src;
+    iframe.title = 'Шаңырақ';
+    iframe.allow = 'payment';
+    box.appendChild(iframe);
+
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+
+    ShanyrakWidget._escHandler = function (e) {
+      if (e.key === 'Escape') ShanyrakWidget.close();
+    };
+    document.addEventListener('keydown', ShanyrakWidget._escHandler);
+  }
+
   var ShanyrakWidget = {
-    open: function (fundId, options) {
+    // Полный виджет: подопечные + оплата
+    open: function (fundId) {
       if (!fundId) { console.warn('[Shanyrak] fundId is required'); return; }
+      openModal(BASE_URL + '/widget/' + encodeURIComponent(fundId));
+    },
 
-      injectStyles();
-      var modal = getOrCreateModal();
-      var box   = modal.querySelector('.__sw_box');
-
-      // destroy old iframe, build fresh one
-      box.innerHTML = '';
-      var iframe = document.createElement('iframe');
-      iframe.src   = BASE_URL + '/widget/' + encodeURIComponent(fundId);
-      iframe.title = 'Шаңырақ — оплата';
-      iframe.allow = 'payment';
-      box.appendChild(iframe);
-
-      modal.classList.add('visible');
-      document.body.style.overflow = 'hidden';
-
-      // close on Escape
-      ShanyrakWidget._escHandler = function (e) {
-        if (e.key === 'Escape') ShanyrakWidget.close();
-      };
-      document.addEventListener('keydown', ShanyrakWidget._escHandler);
+    // Виджет подписки: подписка + Kaspi бонусы + разовая оплата
+    openSubscribe: function (fundId) {
+      if (!fundId) { console.warn('[Shanyrak] fundId is required'); return; }
+      openModal(BASE_URL + '/widget-sub/' + encodeURIComponent(fundId));
     },
 
     close: function () {
