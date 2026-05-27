@@ -21,3 +21,10 @@
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
+
+# Виджет можно встраивать на любой сайт через iframe
+[[headers]]
+  for = "/widget/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    Content-Security-Policy = "frame-ancestors *"
