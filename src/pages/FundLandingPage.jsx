@@ -1,405 +1,581 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
-import { getVisitorId } from '../utils/fingerprint';
 import toast, { Toaster } from 'react-hot-toast';
+import { supabase } from '../supabaseClient';
+import CharityCard from '../components/CharityCard';
+import CharityModal from '../components/CharityModal';
+import PaymentModal from '../components/PaymentModal';
+import Icon from '../components/Icon';
+import { getCategoryName } from '../utils/charityData';
+import { getVisitorId } from '../utils/fingerprint';
 
-const SUPABASE_URL = 'https://bvxccwndrkvnwmfbfhql.supabase.co';
-const G  = 'linear-gradient(135deg, #1e6b4e, #5ec49a)';
-const GB = 'linear-gradient(160deg, #0f4f35 0%, #1e7a52 50%, #3aab78 100%)';
+const SUPABASE_IMG = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images';
+const KASPI_LOGO = `${SUPABASE_IMG}/png-klev-club-xxta-p-kaspii-logotip-png-10.png`;
 
-const AMOUNTS = [500, 1000, 2000, 5000];
-const TABS = [
-  { id: 'subscribe', icon: '🔄', label: 'Подписка',     sub: 'ежемесячно' },
-  { id: 'once',      icon: '💳', label: 'Разово',        sub: 'один раз'  },
-  { id: 'kaspi',     icon: '📱', label: 'Kaspi бонусы', sub: 'бонусами'  },
-];
+function formatPhoneDisplay(digits) {
+  if (!digits) return '+7';
+  if (digits.length <= 1) return '+7';
+  if (digits.length <= 4) return `+7 ${digits.slice(1)}`;
+  if (digits.length <= 7) return `+7 ${digits.slice(1, 4)} ${digits.slice(4)}`;
+  return `+7 ${digits.slice(1, 4)} ${digits.slice(4, 7)} ${digits.slice(7, 11)}`;
+}
 
-const CAT = {
-  children: 'Дети', animals: 'Питомцы', urgent: 'Взрослые',
-  operations: 'Пожилые', social: 'Соц. проект',
-};
-
-export default function FundLandingPage() {
+function FundLandingPage() {
   const { fundId } = useParams();
-
-  const [fund, setFund]       = useState(null);
-  const [bens, setBens]       = useState([]);
+  const [fund, setFund] = useState(null);
+  const [beneficiaries, setBeneficiaries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCharity, setSelectedCharity] = useState(null);
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [isDescriptionLong, setIsDescriptionLong] = useState(false);
+  const [activeTab, setActiveTab] = useState('active');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const descRef = useRef(null);
 
-  const [tab, setTab]         = useState('subscribe');
-  const [amount, setAmount]   = useState(1000);
-  const [custom, setCustom]   = useState('');
-  const [selBen, setSelBen]   = useState(null);
-  const [paying, setPaying]   = useState(false);
-  const [done, setDone]       = useState(false);
+  // One-time donation state
+  const [showDonateModal, setShowDonateModal] = useState(false);
+  const [donateAmount, setDonateAmount] = useState(1000);
+  const [customDonateAmount, setCustomDonateAmount] = useState('');
+  const [donateSubmitting, setDonateSubmitting] = useState(false);
+  const DONATE_PRESETS = [500, 1000, 2000, 5000];
+
+  // Subscription state
+  const [subAmount, setSubAmount] = useState(3000);
+  const [customSubAmount, setCustomSubAmount] = useState('');
+  const [showSubModal, setShowSubModal] = useState(false);
+  const [subPhone, setSubPhone] = useState('');
+  const [subStep, setSubStep] = useState('phone'); // 'phone' | 'done'
+  const [subSubmitting, setSubSubmitting] = useState(false);
+  const SUB_PRESETS = [1000, 3000, 5000, 10000];
+
+  // Kaspi bonus state
+  const [kaspiPayment, setKaspiPayment] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      const [{ data: f }, { data: b }] = await Promise.all([
-        supabase.from('partner_funds').select('*').eq('id', fundId).single(),
-        supabase.from('beneficiaries')
-          .select('id,title,description,image_url,images,raised_amount,target_amount,category,city,is_urgent')
-          .eq('is_active', true)
-          .order('created_at', { ascending: false })
-          .limit(10),
-      ]);
-      setFund(f);
-      // filter by fund name after fetch (partner_fund field)
-      const filtered = b ? b.filter(x => f && x.partner_fund === f.name) : [];
-      // if no fund-specific bens, show all (fallback)
-      setBens(filtered.length ? filtered : (b || []).slice(0, 6));
-      if (filtered.length) setSelBen(filtered[0]);
-      else if (b && b[0]) setSelBen(b[0]);
-      setLoading(false);
+    async function loadData() {
+      try {
+        const { data: fundData, error: fundError } = await supabase
+          .from('partner_funds')
+          .select('*')
+          .eq('id', fundId)
+          .single();
+
+        if (fundError) throw fundError;
+        setFund(fundData);
+
+        const { data: beneficiariesData, error: beneficiariesError } = await supabase
+          .from('beneficiaries')
+          .select('*')
+          .eq('partner_fund', fundData.name)
+          .order('created_at', { ascending: false });
+
+        if (beneficiariesError) throw beneficiariesError;
+
+        const formatted = beneficiariesData.map(item => ({
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          category: item.category,
+          categoryName: getCategoryName(item.category),
+          partnerFund: item.partner_fund,
+          image: item.image_url,
+          images: item.images || [item.image_url],
+          videos: item.videos || [],
+          helpersCount: item.helpers_count,
+          documentsLink: item.documents_link,
+          raised: item.raised_amount || 0,
+          target: item.target_amount || 0,
+          isUrgent: item.is_urgent,
+          collectionStatus: item.collection_status,
+          focalX: item.focal_x ?? 50,
+          focalY: item.focal_y ?? 50,
+        }));
+
+        setBeneficiaries(formatted);
+      } catch (err) {
+        console.error('Ошибка загрузки данных:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    if (fundId) load();
+
+    if (fundId) loadData();
   }, [fundId]);
 
-  useEffect(() => { setCustom(''); setAmount(1000); }, [tab]);
+  const filteredBeneficiaries = useMemo(() => {
+    return beneficiaries.filter(b => b.collectionStatus === activeTab);
+  }, [beneficiaries, activeTab]);
 
-  const finalAmount = custom ? parseInt(custom) : amount;
-  const ig = fund?.social_links?.instagram;
-  const wa = fund?.social_links?.whatsapp;
-
-  async function handlePay() {
-    if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
-    if (!selBen) { toast.error('Нет доступных подопечных'); return; }
-    setPaying(true);
-    try {
-      const visitorId = await getVisitorId();
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/xpayment-link`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: finalAmount, beneficiaryId: selBen.id,
-          title: selBen.title, fundId: fund.id, visitorId,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Ошибка');
-      window.location.href = data.qr_token;
-      setDone(true);
-    } catch (e) {
-      toast.error(e.message || 'Произошла ошибка');
-    } finally {
-      setPaying(false);
+  useEffect(() => {
+    if (descRef.current) {
+      const lineHeight = parseFloat(getComputedStyle(descRef.current).lineHeight);
+      const height = descRef.current.scrollHeight;
+      setIsDescriptionLong(height > lineHeight * 5);
     }
+  }, [fund]);
+
+  if (loading) {
+    return (
+      <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
+        <Icon name="loader" size={28} className="text-[var(--primary-color)] animate-spin" />
+      </div>
+    );
   }
 
-  // ── loading ──────────────────────────────────────────────────────────────
-  if (loading) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f7f9f8' }}>
-      <div style={{ width: 36, height: 36, borderRadius: '50%', border: '3px solid #2f8f6a', borderTopColor: 'transparent', animation: 'spin .8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
-
-  if (!fund) return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#888' }}>Страница не найдена</p>
-    </div>
-  );
-
-  const totalRaised = bens.reduce((s, b) => s + (b.raised_amount || 0), 0);
-
-  return (
-    <div style={{ fontFamily: 'system-ui,-apple-system,sans-serif', background: '#f7f9f8', minHeight: '100vh' }}>
-      <Toaster position='top-center' toastOptions={{ style: { fontSize: 13 } }} />
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        * { box-sizing: border-box; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
-        input[type=number] { -moz-appearance: textfield; }
-      `}</style>
-
-      {/* ── HERO ──────────────────────────────────────────────────────────── */}
-      <div style={{ background: GB, position: 'relative', overflow: 'hidden', paddingBottom: 48 }}>
-        {/* blob */}
-        <div style={{
-          position: 'absolute', top: -80, right: -80, width: 400, height: 400,
-          background: 'radial-gradient(circle, rgba(126,241,208,0.25) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }} />
-
-        {/* logo row */}
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: '28px 24px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          {fund.logo_url ? (
-            <div style={{ background: 'white', borderRadius: 16, padding: '8px 14px', display: 'inline-flex', alignItems: 'center' }}>
-              <img src={fund.logo_url} alt={fund.name} style={{ height: 44, maxWidth: 140, objectFit: 'contain' }} />
-            </div>
-          ) : (
-            <span style={{ color: 'white', fontWeight: 800, fontSize: 18 }}>{fund.name}</span>
-          )}
-          {fund.is_verified && (
-            <div style={{ background: 'rgba(255,255,255,0.15)', borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 14 }}>✅</span>
-              <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: 600 }}>Верифицирован</span>
-            </div>
-          )}
-        </div>
-
-        {/* headline */}
-        <div style={{ maxWidth: 680, margin: '0 auto', padding: '28px 24px 0' }}>
-          <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,38px)', fontWeight: 800, lineHeight: 1.2, margin: '0 0 14px' }}>
-            {fund.name}
-          </h1>
-          <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: 15, lineHeight: 1.6, margin: '0 0 28px', maxWidth: 520 }}>
-            {fund.description}
-          </p>
-
-          {/* stats */}
-          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-            {[
-              { v: '35 000+', l: 'семей получили помощь' },
-              { v: fund.location || 'Казахстан', l: 'город присутствия' },
-              { v: new Date(fund.founded_date).getFullYear(), l: 'год основания' },
-            ].map(s => (
-              <div key={s.l} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 14, padding: '12px 18px', backdropFilter: 'blur(8px)' }}>
-                <div style={{ color: 'white', fontWeight: 800, fontSize: 20, lineHeight: 1 }}>{s.v}</div>
-                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11, marginTop: 3 }}>{s.l}</div>
-              </div>
-            ))}
-          </div>
+  if (!fund) {
+    return (
+      <div className='min-h-screen bg-[var(--bg-secondary)] flex items-center justify-center'>
+        <div className='text-center'>
+          <p className='text-[var(--text-secondary)] mb-4'>Фонд не найден</p>
         </div>
       </div>
+    );
+  }
 
-      {/* ── DONATION CARD (overlap) ───────────────────────────────────────── */}
-      <div style={{ maxWidth: 680, margin: '-32px auto 0', padding: '0 16px' }}>
-        <div style={{ background: 'white', borderRadius: 24, boxShadow: '0 8px 40px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
+  const socialLinks = fund.social_links || {};
+  const hasDetails = fund.bin || fund.founded_date || fund.location;
 
-          {/* tabs */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderBottom: '1px solid #f0f0f0' }}>
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} style={{
-                padding: '16px 8px', border: 'none', cursor: 'pointer', background: 'none',
-                borderBottom: tab === t.id ? '2.5px solid #2f8f6a' : '2.5px solid transparent',
-                transition: 'all .15s',
-              }}>
-                <div style={{ fontSize: 20, marginBottom: 3 }}>{t.icon}</div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: tab === t.id ? '#1e6b4e' : '#444' }}>{t.label}</div>
-                <div style={{ fontSize: 11, color: '#999', marginTop: 1 }}>{t.sub}</div>
-              </button>
-            ))}
+  // Build Kaspi bonus payment object from first active beneficiary (or fund directly)
+  const firstActiveBen = beneficiaries.find(b => b.collectionStatus === 'active');
+  const kaspiPaymentObj = firstActiveBen
+    ? { ...firstActiveBen, fundId: fund.id }
+    : { id: 'kaspi-bonus', title: `Помощь бонусами Kaspi — ${fund.name}`, target: 0, fundId: fund.id };
+
+  return (
+    <>
+      <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+      <div className='min-h-screen bg-[var(--bg-secondary)]'>
+        {/* Minimal header — no back button */}
+        <header className='bg-[var(--bg-primary)] border-b border-[var(--border-color)] p-4'>
+          <div className='flex items-center justify-between'>
+            <h1 className='text-xl font-bold'>{fund.name}</h1>
+            <div className='flex items-center gap-1.5 opacity-50'>
+              <img
+                src={`${SUPABASE_IMG}/14.png`}
+                alt='Шаңырақ'
+                className='w-5 h-5 object-contain'
+              />
+              <span className='text-xs text-[var(--text-secondary)]'>Шаңырақ</span>
+            </div>
           </div>
+        </header>
 
-          <div style={{ padding: '20px 20px 24px' }}>
-            {/* context message */}
-            <div style={{
-              background: tab === 'subscribe' ? '#f0faf5' : tab === 'kaspi' ? '#fff8f0' : '#f5f5ff',
-              borderRadius: 12, padding: '12px 16px', marginBottom: 18, display: 'flex', alignItems: 'flex-start', gap: 10
-            }}>
-              <span style={{ fontSize: 22, flexShrink: 0 }}>
-                {tab === 'subscribe' ? '💚' : tab === 'kaspi' ? '💛' : '🤝'}
-              </span>
-              <p style={{ margin: 0, fontSize: 13, color: '#444', lineHeight: 1.55 }}>
-                {tab === 'subscribe' && 'Регулярные взносы позволяют фонду планировать закупки продуктов заранее. Списание происходит автоматически каждый месяц.'}
-                {tab === 'kaspi' && 'Ваши бонусы Kaspi Gold превращаются в реальную продуктовую помощь. 1 бонус = 1 тенге.'}
-                {tab === 'once' && 'Каждые 10 000 ₸ — это полная продуктовая корзина для одной семьи на месяц.'}
-              </p>
+        <div className='p-4 pb-8'>
+          {/* Fund card */}
+          <div className='card mb-6'>
+            <div className='flex flex-col items-center text-center'>
+              <img
+                src={fund.logo_url}
+                alt={fund.name}
+                className='w-24 h-24 object-contain rounded-2xl mb-3'
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = 'https://via.placeholder.com/96?text=' + fund.name.charAt(0);
+                }}
+              />
+              <div className='flex items-center space-x-2 mb-3'>
+                <h2 className='text-xl font-bold'>{fund.name}</h2>
+                {fund.is_verified && (
+                  <img
+                    src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Galochka.png'
+                    alt='Верифицирован'
+                    className='w-6 h-6'
+                  />
+                )}
+              </div>
             </div>
 
-            {/* beneficiary selector (compact) */}
-            {bens.length > 1 && (
-              <div style={{ marginBottom: 18 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
-                  Куда пойдут деньги
+            {/* Description with "ещё" */}
+            {fund.description && (
+              <div className='mb-4'>
+                <p
+                  ref={descRef}
+                  className={`text-[var(--text-secondary)] text-sm leading-relaxed ${!showFullDescription && isDescriptionLong ? 'line-clamp-5' : ''}`}
+                >
+                  {fund.description}
                 </p>
-                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
-                  {bens.map(b => (
-                    <button key={b.id} onClick={() => setSelBen(b)} style={{
-                      flexShrink: 0, padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      border: selBen?.id === b.id ? '1.5px solid #2f8f6a' : '1.5px solid #e5e5e5',
-                      background: selBen?.id === b.id ? '#e8f8f2' : '#f9f9f9',
-                      color: selBen?.id === b.id ? '#1e6b4e' : '#555',
-                      transition: 'all .15s', whiteSpace: 'nowrap',
-                    }}>
-                      {b.title.length > 28 ? b.title.slice(0, 28) + '…' : b.title}
-                    </button>
-                  ))}
-                </div>
+                {isDescriptionLong && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className='text-[var(--primary-color)] text-sm font-medium mt-1'
+                  >
+                    {showFullDescription ? 'Свернуть' : 'Ещё'}
+                  </button>
+                )}
               </div>
             )}
 
-            {/* amount */}
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#999', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 10px' }}>
-              Сумма{tab === 'subscribe' ? ' в месяц' : ''}
+            {/* Fund details — collapsible */}
+            {hasDetails && (
+              <div className='pt-3 border-t border-[var(--border-color)]'>
+                <button
+                  onClick={() => setDetailsOpen(v => !v)}
+                  className='flex items-center justify-between w-full text-sm font-medium text-[var(--text-secondary)]'
+                >
+                  <span>Сведения о фонде</span>
+                  <Icon
+                    name={detailsOpen ? 'chevron-up' : 'chevron-down'}
+                    size={16}
+                    className='text-[var(--text-secondary)]'
+                  />
+                </button>
+
+                {detailsOpen && (
+                  <div className='space-y-3 mt-3'>
+                    {fund.bin && (
+                      <div className='flex items-center space-x-3'>
+                        <Icon name="file-check" size={18} className="text-[var(--text-secondary)]" />
+                        <div>
+                          <p className='text-xs text-[var(--text-secondary)]'>БИН</p>
+                          <p className='text-sm font-medium'>{fund.bin}</p>
+                        </div>
+                      </div>
+                    )}
+                    {fund.founded_date && (
+                      <div className='flex items-center space-x-3'>
+                        <Icon name="database" size={18} className="text-[var(--text-secondary)]" />
+                        <div>
+                          <p className='text-xs text-[var(--text-secondary)]'>Дата создания</p>
+                          <p className='text-sm font-medium'>{new Date(fund.founded_date).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        </div>
+                      </div>
+                    )}
+                    {fund.location && (
+                      <div className='flex items-center space-x-3'>
+                        <Icon name="map-pin" size={18} className="text-[var(--text-secondary)]" />
+                        <div>
+                          <p className='text-xs text-[var(--text-secondary)]'>Расположение</p>
+                          <p className='text-sm font-medium'>{fund.location}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Social links — always visible */}
+            {(socialLinks.website || socialLinks.instagram || socialLinks.facebook || socialLinks.whatsapp) && (
+              <div className='pt-3 mt-3 border-t border-[var(--border-color)]'>
+                <p className='text-xs text-[var(--text-secondary)] mb-2'>Социальные сети</p>
+                <div className='flex flex-wrap gap-2'>
+                  {socialLinks.website && (
+                    <a href={socialLinks.website} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="external-link" size={14} className="text-[var(--primary-color)]" />
+                      <span>Сайт</span>
+                    </a>
+                  )}
+                  {socialLinks.instagram && (
+                    <a href={socialLinks.instagram} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="instagram" size={14} className="text-[#E4405F]" />
+                      <span>Instagram</span>
+                    </a>
+                  )}
+                  {socialLinks.facebook && (
+                    <a href={socialLinks.facebook} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="users" size={14} className="text-[#1877F2]" />
+                      <span>Facebook</span>
+                    </a>
+                  )}
+                  {socialLinks.whatsapp && (
+                    <a href={`https://wa.me/${socialLinks.whatsapp.replace(/\D/g, '')}`} target='_blank' rel='noopener noreferrer' className='flex items-center space-x-1.5 px-3 py-2 bg-[var(--bg-secondary)] rounded-xl text-sm'>
+                      <Icon name="message-circle" size={14} className="text-[#25D366]" />
+                      <span>WhatsApp</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Help fund button */}
+          <button
+            onClick={() => { setShowDonateModal(true); setDonateAmount(1000); setCustomDonateAmount(''); }}
+            className='flex items-center justify-center space-x-2 w-full py-4 rounded-2xl mb-4 font-bold text-white active:scale-[0.98] transition-transform'
+            style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
+          >
+            <Icon name="heart" size={18} className="text-white" />
+            <span>Помочь фонду</span>
+          </button>
+
+          {/* Subscription card */}
+          <div className='rounded-2xl p-5 mb-4 text-white' style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}>
+            <div className='flex items-center space-x-2 mb-1'>
+              <Icon name="heart-handshake" size={22} className="text-white" />
+              <h3 className='text-[15px] font-bold'>Помогать ежемесячно</h3>
+            </div>
+            <p className='text-[13px] text-white/80 mb-4'>Подпишитесь на регулярную помощь фонду</p>
+
+            <div className='flex gap-2 mb-3'>
+              {SUB_PRESETS.map(amount => (
+                <button
+                  key={amount}
+                  onClick={() => { setSubAmount(amount); setCustomSubAmount(''); }}
+                  className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-colors ${
+                    subAmount === amount && !customSubAmount
+                      ? 'bg-white text-[#2f8f6a]'
+                      : 'bg-white/20 text-white'
+                  }`}
+                >
+                  {amount >= 10000 ? `${amount / 1000}k` : amount.toLocaleString('ru-RU')} ₸
+                </button>
+              ))}
+            </div>
+
+            <div className='relative mb-4'>
+              <input
+                type='number'
+                inputMode='numeric'
+                placeholder='Своя сумма'
+                value={customSubAmount}
+                onFocus={() => setSubAmount(0)}
+                onChange={(e) => { setCustomSubAmount(e.target.value); setSubAmount(0); }}
+                className='w-full h-10 px-4 pr-8 rounded-xl bg-white/20 text-white placeholder-white/60 text-[16px] font-medium focus:outline-none focus:bg-white/30'
+              />
+              <span className='absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm'>₸</span>
+            </div>
+
+            <button
+              onClick={() => {
+                const finalAmount = customSubAmount ? parseInt(customSubAmount) : subAmount;
+                if (!finalAmount || finalAmount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
+                setSubAmount(finalAmount);
+                setShowSubModal(true);
+                setSubStep('phone');
+                setSubPhone('');
+              }}
+              className='w-full py-3 bg-white text-[#2f8f6a] font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
+            >
+              <Icon name="heart" size={16} className="text-[#2f8f6a]" />
+              <span>Помогать ежемесячно</span>
+            </button>
+          </div>
+
+          {/* Kaspi bonuses card */}
+          <div className='rounded-2xl p-5 mb-6 text-white' style={{ background: 'linear-gradient(135deg, #9b1c1c 0%, #ef3340 40%, #f87171 100%)' }}>
+            <div className='flex items-center space-x-2 mb-1'>
+              <img src={KASPI_LOGO} alt='Kaspi' className='h-5 object-contain brightness-0 invert' />
+              <h3 className='text-[15px] font-bold'>Помочь бонусами Kaspi</h3>
+            </div>
+            <p className='text-[13px] text-white/80 mb-4'>
+              Потратьте накопленные бонусы Kaspi Gold на реальную помощь. Курс 1 бонус = 1 тенге.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 10 }}>
-              {AMOUNTS.map(a => (
-                <button key={a} onClick={() => { setAmount(a); setCustom(''); }} style={{
-                  padding: '11px 4px', borderRadius: 12, border: '1.5px solid transparent', cursor: 'pointer',
-                  background: amount === a && !custom ? G : '#f2f2f2',
-                  color: amount === a && !custom ? 'white' : '#333',
-                  fontSize: 13, fontWeight: 700, transition: 'all .15s',
-                }}>
-                  {a.toLocaleString('ru-RU')}
+            <button
+              onClick={() => setKaspiPayment(kaspiPaymentObj)}
+              className='w-full py-3 bg-white text-[#ef3340] font-bold rounded-xl text-sm active:scale-[0.98] transition-transform flex items-center justify-center space-x-2'
+            >
+              <img src={KASPI_LOGO} alt='Kaspi' className='h-4 object-contain' />
+              <span>Помочь бонусами</span>
+            </button>
+          </div>
+
+          {/* Beneficiaries list */}
+          <div className='mb-4'>
+            <h3 className='text-lg font-semibold mb-3'>
+              Подопечные фонда ({beneficiaries.length})
+            </h3>
+            <div className='flex rounded-xl overflow-hidden border border-[var(--border-color)]'>
+              {[
+                { key: 'active', label: 'Активные' },
+                { key: 'completed', label: 'Завершённые' },
+                { key: 'reported', label: 'Отчёты' },
+              ].map(tab => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
+                    activeTab === tab.key
+                      ? 'text-white'
+                      : 'text-[var(--text-secondary)] bg-[var(--bg-primary)]'
+                  }`}
+                  style={activeTab === tab.key ? { background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' } : undefined}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredBeneficiaries.length === 0 ? (
+            <div className='text-center py-8'>
+              <Icon name="users" size={32} className="text-gray-400 mx-auto mb-4" />
+              <p className='text-[var(--text-secondary)]'>
+                {activeTab === 'active' && 'Нет активных подопечных'}
+                {activeTab === 'completed' && 'Нет завершённых сборов'}
+                {activeTab === 'reported' && 'Нет отчётов'}
+              </p>
+            </div>
+          ) : (
+            <div className='cards-grid'>
+              {filteredBeneficiaries.map(item => (
+                <CharityCard
+                  key={item.id}
+                  data={item}
+                  onCardClick={() => setSelectedCharity(item)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selectedCharity && (
+        <CharityModal
+          data={selectedCharity}
+          onClose={() => setSelectedCharity(null)}
+        />
+      )}
+
+      {/* Kaspi bonus modal */}
+      {kaspiPayment && (
+        <PaymentModal
+          beneficiary={kaspiPayment}
+          onClose={() => setKaspiPayment(null)}
+          kaspiBonus={true}
+        />
+      )}
+
+      {/* One-time donation modal */}
+      {showDonateModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowDonateModal(false)}>
+          <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-5' onClick={e => e.stopPropagation()}>
+            <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4' />
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-lg font-bold'>Помочь фонду</h3>
+              <button onClick={() => setShowDonateModal(false)} className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'>
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            <p className='text-sm text-[var(--text-secondary)] mb-4'>{fund.name}</p>
+
+            <div className='grid grid-cols-2 gap-3 mb-3'>
+              {DONATE_PRESETS.map(a => (
+                <button key={a} onClick={() => { setDonateAmount(a); setCustomDonateAmount(''); }}
+                  className={`py-3 rounded-xl font-medium transition-all ${donateAmount === a && !customDonateAmount ? 'bg-[var(--primary-color)] text-white' : 'bg-gray-100 text-[var(--text-primary)]'}`}>
+                  {a.toLocaleString('ru-RU')} ₸
                 </button>
               ))}
             </div>
             <input
-              type='number' placeholder='Своя сумма ₸' value={custom}
-              onChange={e => { setCustom(e.target.value); setAmount(0); }}
-              style={{
-                width: '100%', padding: '11px 14px', borderRadius: 12, marginBottom: 16,
-                border: `1.5px solid ${custom ? '#2f8f6a' : '#e5e5e5'}`,
-                fontSize: 13, outline: 'none', background: custom ? 'white' : '#fafafa', color: '#333',
-              }}
+              type='text' inputMode='numeric'
+              value={customDonateAmount}
+              onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); setCustomDonateAmount(v); setDonateAmount(0); }}
+              placeholder='Своя сумма'
+              style={{ fontSize: '16px' }}
+              className='w-full px-4 py-3 bg-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary-color)] mb-4'
             />
-
-            {/* pay button */}
-            <button onClick={handlePay} disabled={paying} style={{
-              width: '100%', padding: '16px', borderRadius: 16, border: 'none', cursor: paying ? 'not-allowed' : 'pointer',
-              background: tab === 'kaspi' ? '#ef3340' : G,
-              color: 'white', fontWeight: 800, fontSize: 16, opacity: paying ? 0.75 : 1, transition: 'opacity .15s',
-            }}>
-              {paying ? 'Обрабатываем...' : (
-                tab === 'subscribe' ? `Подписаться · ${finalAmount ? finalAmount.toLocaleString('ru-RU') + ' ₸/мес' : '—'}` :
-                tab === 'kaspi'     ? `Помочь бонусами · ${finalAmount ? finalAmount.toLocaleString('ru-RU') + ' ₸' : '—'}` :
-                                      `Помочь · ${finalAmount ? finalAmount.toLocaleString('ru-RU') + ' ₸' : '—'}`
-              )}
+            <button
+              onClick={async () => {
+                const amount = donateAmount || parseInt(customDonateAmount);
+                if (!amount || amount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
+                setDonateSubmitting(true);
+                try {
+                  const visitorId = await getVisitorId();
+                  const res = await fetch('https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, fundId: fund.id, fundName: fund.name, visitorId }),
+                  });
+                  const data = await res.json();
+                  if (!res.ok) throw new Error(data.error || 'Ошибка');
+                  setShowDonateModal(false);
+                  window.location.href = data.qr_token;
+                } catch (err) {
+                  toast.error(err.message || 'Произошла ошибка');
+                } finally {
+                  setDonateSubmitting(false);
+                }
+              }}
+              disabled={donateSubmitting || (!donateAmount && !customDonateAmount)}
+              className='w-full py-3 rounded-xl font-bold text-white disabled:opacity-50 active:scale-[0.98] transition-transform'
+              style={{ background: 'linear-gradient(135deg, #1e6b4e 0%, #2f8f6a 40%, #5ec49a 100%)' }}
+            >
+              {donateSubmitting ? 'Открываем Kaspi...' : `Помочь — ${(donateAmount || parseInt(customDonateAmount) || 0).toLocaleString('ru-RU')} ₸`}
             </button>
-
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#bbb', margin: '12px 0 0' }}>
-              🔒 Безопасный платёж · Powered by Шаңырақ
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* ── BENEFICIARIES ─────────────────────────────────────────────────── */}
-      {bens.length > 0 && (
-        <div style={{ maxWidth: 680, margin: '40px auto 0', padding: '0 16px' }}>
-          <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0f1f17', margin: '0 0 16px' }}>
-            Кому помогает фонд
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {bens.map(b => {
-              const img = b.image_url || (b.images && b.images[0]);
-              const pct = b.target_amount ? Math.min(Math.round((b.raised_amount / b.target_amount) * 100), 100) : 0;
-              return (
-                <div key={b.id} style={{
-                  background: 'white', borderRadius: 20, overflow: 'hidden',
-                  boxShadow: '0 2px 12px rgba(0,0,0,0.07)', display: 'flex',
-                }}>
-                  {/* photo */}
-                  <div style={{ width: 100, flexShrink: 0, position: 'relative' }}>
-                    {img
-                      ? <img src={img} alt={b.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      : <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg,#e8f8f2,#c8f0e0)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>🤲</div>
-                    }
-                    {b.is_urgent && (
-                      <div style={{ position: 'absolute', top: 8, left: 8, background: '#ef4444', borderRadius: 6, padding: '2px 6px', fontSize: 9, fontWeight: 700, color: 'white' }}>
-                        СРОЧНО
-                      </div>
-                    )}
-                  </div>
-                  {/* content */}
-                  <div style={{ padding: '14px 16px', flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: 10, fontWeight: 700, background: '#f0faf5', color: '#2f8f6a', borderRadius: 6, padding: '2px 8px' }}>
-                        {CAT[b.category] || b.category}
-                      </span>
-                      {b.city && (
-                        <span style={{ fontSize: 10, color: '#999' }}>📍 {b.city}</span>
-                      )}
-                    </div>
-                    <p style={{ margin: '0 0 10px', fontWeight: 700, fontSize: 13, color: '#111', lineHeight: 1.3 }}>
-                      {b.title}
-                    </p>
-                    {/* progress */}
-                    <div style={{ background: '#f0f0f0', borderRadius: 4, height: 5, overflow: 'hidden', marginBottom: 5 }}>
-                      <div style={{ width: `${pct}%`, height: '100%', background: G, borderRadius: 4 }} />
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-                      <span style={{ color: '#2f8f6a', fontWeight: 700 }}>{pct}%</span>
-                      <span style={{ color: '#999' }}>{(b.raised_amount || 0).toLocaleString('ru-RU')} / {(b.target_amount || 0).toLocaleString('ru-RU')} ₸</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </div>
       )}
 
-      {/* ── ABOUT ─────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 680, margin: '36px auto 0', padding: '0 16px' }}>
-        <div style={{ background: 'white', borderRadius: 20, padding: '24px', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 800, color: '#0f1f17' }}>О фонде</h3>
-          <p style={{ margin: '0 0 18px', fontSize: 13, color: '#555', lineHeight: 1.65 }}>{fund.description}</p>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {[
-              fund.location && { icon: '📍', text: fund.location },
-              fund.bin      && { icon: '📋', text: `БИН ${fund.bin}` },
-              fund.founded_date && { icon: '📅', text: `С ${new Date(fund.founded_date).getFullYear()} года` },
-            ].filter(Boolean).map(item => (
-              <div key={item.text} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f7f9f8', borderRadius: 10, padding: '6px 12px' }}>
-                <span style={{ fontSize: 14 }}>{item.icon}</span>
-                <span style={{ fontSize: 12, color: '#555', fontWeight: 500 }}>{item.text}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* social */}
-          {(ig || wa) && (
-            <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-              {ig && (
-                <a href={ig} target='_blank' rel='noopener noreferrer' style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-                  background: 'linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)',
-                  borderRadius: 12, textDecoration: 'none', color: 'white', fontSize: 13, fontWeight: 600,
-                }}>
-                  📸 Instagram
-                </a>
-              )}
-              {wa && (
-                <a href={`https://wa.me/${wa.replace(/\D/g, '')}`} target='_blank' rel='noopener noreferrer' style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-                  background: '#25D366', borderRadius: 12, textDecoration: 'none',
-                  color: 'white', fontSize: 13, fontWeight: 600,
-                }}>
-                  💬 WhatsApp
-                </a>
-              )}
+      {/* Subscription modal */}
+      {showSubModal && (
+        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-end z-50' onClick={() => setShowSubModal(false)}>
+          <div className='bg-[var(--bg-primary)] w-full rounded-t-3xl p-5' onClick={e => e.stopPropagation()}>
+            <div className='w-10 h-1 bg-gray-300 rounded-full mx-auto mb-4' />
+            <div className='flex items-center justify-between mb-2'>
+              <h3 className='text-lg font-bold'>{subStep === 'done' ? 'Подписка оформлена' : 'Ежемесячная помощь'}</h3>
+              <button onClick={() => setShowSubModal(false)} className='w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center'>
+                <Icon name="x" size={16} />
+              </button>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* ── SECOND CTA ────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 680, margin: '32px auto 0', padding: '0 16px' }}>
-        <div style={{ background: G, borderRadius: 20, padding: '28px 24px', textAlign: 'center' }}>
-          <p style={{ color: 'white', fontWeight: 800, fontSize: 18, margin: '0 0 8px' }}>
-            Каждая продуктовая корзина — это накормленная семья
-          </p>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, margin: '0 0 20px' }}>
-            10 000 ₸ = 1 полная корзина продуктов на месяц
-          </p>
-          <button onClick={() => { setTab('subscribe'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            style={{ background: 'white', border: 'none', borderRadius: 50, padding: '12px 28px', fontWeight: 800, fontSize: 14, color: '#1e6b4e', cursor: 'pointer' }}>
-            Поддержать фонд →
-          </button>
-        </div>
-      </div>
+            {subStep === 'phone' && (
+              <>
+                <p className='text-sm text-[var(--text-secondary)] mb-1'>{fund.name}</p>
+                <p className='text-xl font-bold text-[var(--text-primary)] mb-5'>{subAmount.toLocaleString('ru-RU')} ₸ / мес</p>
+                <label className='block text-sm font-medium mb-2'>Номер телефона Kaspi</label>
+                <p className='text-xs text-[var(--text-secondary)] mb-3'>На этот номер придёт запрос на оплату в Kaspi</p>
+                <input
+                  type='tel' inputMode='numeric'
+                  placeholder='+7 ___ ___ __ __'
+                  value={formatPhoneDisplay(subPhone)}
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/\D/g, '');
+                    if (val.length > 11) val = val.slice(0, 11);
+                    if (val && !val.startsWith('7')) val = '7' + val;
+                    setSubPhone(val);
+                  }}
+                  style={{ fontSize: '16px' }}
+                  className='w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] mb-4'
+                />
+                {subPhone.length > 0 && subPhone.length < 11 && (
+                  <p className='text-xs text-red-500 -mt-3 mb-4'>Введите 11 цифр</p>
+                )}
+                <button
+                  onClick={async () => {
+                    if (subPhone.length !== 11) { toast.error('Введите номер телефона'); return; }
+                    setSubSubmitting(true);
+                    try {
+                      const visitorId = await getVisitorId();
+                      const res = await fetch('https://bvxccwndrkvnwmfbfhql.supabase.co/functions/v1/xpayment-invoice', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phone: subPhone, amount: subAmount, fundId: fund.id, fundName: fund.name, visitorId }),
+                      });
+                      const result = await res.json();
+                      if (!res.ok) throw new Error(result.error || 'Ошибка');
+                      setSubStep('done');
+                    } catch (err) {
+                      toast.error(err.message || 'Произошла ошибка');
+                    } finally {
+                      setSubSubmitting(false);
+                    }
+                  }}
+                  disabled={subPhone.length !== 11 || subSubmitting}
+                  className='w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm disabled:opacity-50'
+                >
+                  {subSubmitting ? 'Отправляем...' : 'Подтвердить подписку'}
+                </button>
+              </>
+            )}
 
-      {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <div style={{ maxWidth: 680, margin: '32px auto 0', padding: '0 16px 40px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: 8 }}>
-          <img src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/14.png'
-            alt='Шаңырақ' style={{ width: 20, height: 20, objectFit: 'contain', opacity: 0.5 }} />
-          <span style={{ fontSize: 12, color: '#bbb' }}>Платежи через платформу Шаңырақ</span>
+            {subStep === 'done' && (
+              <div className='text-center py-4'>
+                <div className='w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <Icon name="check" size={32} className="text-[var(--primary-color)]" />
+                </div>
+                <p className='font-semibold mb-2'>Запрос на оплату отправлен!</p>
+                <p className='text-sm text-[var(--text-secondary)] mb-4'>Откройте Kaspi и подтвердите платёж. Каждый месяц будет приходить новый запрос.</p>
+                <a href='https://kaspi.kz' target='_blank' rel='noopener noreferrer'
+                  className='block w-full py-3 bg-[var(--primary-color)] text-white font-bold rounded-xl text-sm text-center'>
+                  Готово
+                </a>
+              </div>
+            )}
+          </div>
         </div>
-        <p style={{ fontSize: 11, color: '#ccc', margin: 0 }}>
-          <a href='https://shanyrak.world' target='_blank' rel='noopener noreferrer' style={{ color: '#aaa', textDecoration: 'none' }}>
-            shanyrak.world
-          </a>
-          {' · '}
-          <a href='https://shanyrak.world/policy' target='_blank' rel='noopener noreferrer' style={{ color: '#aaa', textDecoration: 'none' }}>
-            Политика конфиденциальности
-          </a>
-        </p>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
+
+export default FundLandingPage;
