@@ -158,7 +158,12 @@ function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
         const { qr_token } = resData;
 
         onClose();
-        window.location.href = qr_token;
+        // On standalone fund pages (/f/...) keep the page open — open Kaspi in a new tab
+        if (window.location.pathname.startsWith('/f/')) {
+          window.open(qr_token, '_blank');
+        } else {
+          window.location.href = qr_token;
+        }
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');

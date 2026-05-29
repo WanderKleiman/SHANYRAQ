@@ -145,21 +145,6 @@ function FundLandingPage() {
     <>
       <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
       <div className='min-h-screen bg-[var(--bg-secondary)]'>
-        {/* Minimal header — no back button */}
-        <header className='bg-[var(--bg-primary)] border-b border-[var(--border-color)] p-4'>
-          <div className='flex items-center justify-between'>
-            <h1 className='text-xl font-bold'>{fund.name}</h1>
-            <div className='flex items-center gap-1.5 opacity-50'>
-              <img
-                src={`${SUPABASE_IMG}/14.png`}
-                alt='Шаңырақ'
-                className='w-5 h-5 object-contain'
-              />
-              <span className='text-xs text-[var(--text-secondary)]'>Шаңырақ</span>
-            </div>
-          </div>
-        </header>
-
         <div className='p-4 pb-8'>
           {/* Fund card */}
           <div className='card mb-6'>
@@ -173,8 +158,8 @@ function FundLandingPage() {
                   e.target.src = 'https://via.placeholder.com/96?text=' + fund.name.charAt(0);
                 }}
               />
-              <div className='flex items-center space-x-2 mb-3'>
-                <h2 className='text-xl font-bold'>{fund.name}</h2>
+              <div className='flex items-center space-x-2 mb-3 max-w-full'>
+                <h2 className='text-xl font-bold truncate max-w-[calc(100vw-80px)]'>{fund.name}</h2>
                 {fund.is_verified && (
                   <img
                     src='https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/Galochka.png'
@@ -479,7 +464,7 @@ function FundLandingPage() {
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Ошибка');
                   setShowDonateModal(false);
-                  window.location.href = data.qr_token;
+                  window.open(data.qr_token, '_blank');
                 } catch (err) {
                   toast.error(err.message || 'Произошла ошибка');
                 } finally {
