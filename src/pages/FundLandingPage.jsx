@@ -92,6 +92,14 @@ function FundLandingPage() {
         }));
 
         setBeneficiaries(formatted);
+
+        // Auto-open beneficiary from ?beneficiary=ID query param (shared link)
+        const params = new URLSearchParams(window.location.search);
+        const sharedBenId = params.get('beneficiary');
+        if (sharedBenId) {
+          const match = formatted.find(b => String(b.id) === sharedBenId);
+          if (match) setSelectedCharity(match);
+        }
       } catch (err) {
         console.error('Ошибка загрузки данных:', err);
       } finally {
@@ -408,6 +416,7 @@ function FundLandingPage() {
         <CharityModal
           data={selectedCharity}
           onClose={() => setSelectedCharity(null)}
+          shareBaseUrl={`https://shanyrak.world/f/${fundId}`}
         />
       )}
 

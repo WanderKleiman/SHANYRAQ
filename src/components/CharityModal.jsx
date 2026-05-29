@@ -4,7 +4,7 @@ import Icon from '../components/Icon';
 import PaymentModal from '../components/PaymentModal';
 import { Share } from '@capacitor/share';
 
-function CharityModal({ data, onClose }) {
+function CharityModal({ data, onClose, shareBaseUrl }) {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -53,7 +53,8 @@ function CharityModal({ data, onClose }) {
   const handleShare = async () => {
     const { getVisitorId } = await import('../utils/fingerprint');
     const visitorId = await getVisitorId();
-    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
+    const base = shareBaseUrl || 'https://shanyrak.world/';
+    const shareUrl = `${base}${base.includes('?') ? '&' : '?'}beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
     try {
       await Share.share({
         title: data.title,
