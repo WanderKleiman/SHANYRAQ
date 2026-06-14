@@ -108,6 +108,12 @@
       openModal(BASE_URL + '/widget-sub/' + encodeURIComponent(fundId));
     },
 
+    // Простой виджет: только выбор суммы + оплата Kaspi (без подопечных, без подписки)
+    openDom: function (fundId) {
+      if (!fundId) { console.warn('[Shanyrak] fundId is required'); return; }
+      openModal(BASE_URL + '/widget-dom/' + encodeURIComponent(fundId));
+    },
+
     close: function () {
       var modal = document.getElementById(MODAL_ID);
       if (modal) modal.classList.remove('visible');
