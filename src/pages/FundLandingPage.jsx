@@ -405,6 +405,7 @@ function FundLandingPage() {
                   key={item.id}
                   data={item}
                   onCardClick={() => setSelectedCharity(item)}
+                  shareBaseUrl={`https://shanyrak.world/f/${fundId}`}
                 />
               ))}
             </div>

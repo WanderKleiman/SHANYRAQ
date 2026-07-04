@@ -5,7 +5,7 @@ import Icon from '../components/Icon';
 import PaymentModal from '../components/PaymentModal';
 import { Share } from '@capacitor/share';
 
-function CharityCard({ data, onCardClick, index = 0 }) {
+function CharityCard({ data, onCardClick, index = 0, shareBaseUrl }) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const progressPercentage = (data.raised / data.target) * 100;
   const remainingAmount = Math.max(0, data.target - data.raised);
@@ -18,7 +18,8 @@ function CharityCard({ data, onCardClick, index = 0 }) {
     ymTrackShareClick(data.id, data.title);
     const { getVisitorId } = await import('../utils/fingerprint');
     const visitorId = await getVisitorId();
-    const shareUrl = `https://shanyrak.world/?beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
+    const base = shareBaseUrl || 'https://shanyrak.world/';
+    const shareUrl = `${base}${base.includes('?') ? '&' : '?'}beneficiary=${data.id}${visitorId ? `&ref=${visitorId}` : ''}`;
     try {
       await Share.share({
         title: data.title,
