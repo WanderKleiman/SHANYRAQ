@@ -8,6 +8,7 @@ import PaymentModal from '../components/PaymentModal';
 import Icon from '../components/Icon';
 import { getCategoryName } from '../utils/charityData';
 import { getVisitorId } from '../utils/fingerprint';
+import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 const SUPABASE_IMG = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images';
@@ -465,6 +466,8 @@ function FundLandingPage() {
               onClick={async () => {
                 const amount = donateAmount || parseInt(customDonateAmount);
                 if (!amount || amount < 100) { toast.error('Минимальная сумма — 100 ₸'); return; }
+                const isNative = Capacitor.isNativePlatform();
+                const newTab = isNative ? null : window.open('', '_blank');
                 setDonateSubmitting(true);
                 try {
                   const visitorId = await getVisitorId();
@@ -476,8 +479,15 @@ function FundLandingPage() {
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Ошибка');
                   setShowDonateModal(false);
-                  await Browser.open({ url: data.qr_token });
+                  if (isNative) {
+                    await Browser.open({ url: data.qr_token });
+                  } else if (newTab) {
+                    newTab.location.href = data.qr_token;
+                  } else {
+                    window.location.href = data.qr_token;
+                  }
                 } catch (err) {
+                  if (newTab) newTab.close();
                   toast.error(err.message || 'Произошла ошибка');
                 } finally {
                   setDonateSubmitting(false);

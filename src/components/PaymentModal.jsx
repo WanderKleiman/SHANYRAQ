@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
 import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
+import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
@@ -122,6 +123,12 @@ function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
 
     if (paymentMethod === 'kaspi') {
       if (isSubmitting) return;
+
+      const isNative = Capacitor.isNativePlatform();
+      // Pre-open blank tab synchronously (before any await) — bypasses popup blockers on web.
+      // On native Capacitor we use Browser.open instead, so no pre-open needed.
+      const newTab = isNative ? null : window.open('', '_blank');
+
       setIsSubmitting(true);
 
       try {
@@ -159,8 +166,15 @@ function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
         const { qr_token } = resData;
 
         onClose();
-        await Browser.open({ url: qr_token });
+        if (isNative) {
+          await Browser.open({ url: qr_token });
+        } else if (newTab) {
+          newTab.location.href = qr_token;
+        } else {
+          window.location.href = qr_token;
+        }
       } catch (error) {
+        if (newTab) newTab.close();
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
       } finally {

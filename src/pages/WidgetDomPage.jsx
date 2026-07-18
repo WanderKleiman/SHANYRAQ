@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { getVisitorId } from '../utils/fingerprint';
 import toast, { Toaster } from 'react-hot-toast';
+import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 const SUPABASE_URL = 'https://bvxccwndrkvnwmfbfhql.supabase.co';
@@ -88,6 +89,11 @@ export default function WidgetDomPage() {
       toast.error('Минимальная сумма — 100 ₸');
       return;
     }
+
+    const isNative = Capacitor.isNativePlatform();
+    // Pre-open blank tab synchronously before any await — bypasses popup blockers on web
+    const newTab = (!IS_POPUP && !isNative) ? window.open('', '_blank') : null;
+
     setPaying(true);
     try {
       const visitorId = await getVisitorId();
@@ -101,11 +107,16 @@ export default function WidgetDomPage() {
 
       if (IS_POPUP) {
         window.parent.postMessage({ type: 'shanyrak:open-url', url: data.qr_token }, '*');
-      } else {
+      } else if (isNative) {
         await Browser.open({ url: data.qr_token });
+      } else if (newTab) {
+        newTab.location.href = data.qr_token;
+      } else {
+        window.location.href = data.qr_token;
       }
       setDone(true);
     } catch (e) {
+      if (newTab) newTab.close();
       toast.error(e.message || 'Произошла ошибка');
     } finally {
       setPaying(false);
