@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { getVisitorId } from '../utils/fingerprint';
 import toast, { Toaster } from 'react-hot-toast';
+import { Browser } from '@capacitor/browser';
 
 const SUPABASE_URL = 'https://bvxccwndrkvnwmfbfhql.supabase.co';
 const KASPI_LOGO   = `${SUPABASE_URL}/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png`;
@@ -101,7 +102,7 @@ export default function WidgetDomPage() {
       if (IS_POPUP) {
         window.parent.postMessage({ type: 'shanyrak:open-url', url: data.qr_token }, '*');
       } else {
-        window.open(data.qr_token, '_blank');
+        await Browser.open({ url: data.qr_token });
       }
       setDone(true);
     } catch (e) {

@@ -8,6 +8,7 @@ import PaymentModal from '../components/PaymentModal';
 import Icon from '../components/Icon';
 import { getCategoryName } from '../utils/charityData';
 import { getVisitorId } from '../utils/fingerprint';
+import { Browser } from '@capacitor/browser';
 
 const SUPABASE_IMG = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images';
 const KASPI_LOGO = `${SUPABASE_IMG}/png-klev-club-xxta-p-kaspii-logotip-png-10.png`;
@@ -89,6 +90,7 @@ function FundLandingPage() {
           collectionStatus: item.collection_status,
           focalX: item.focal_x ?? 50,
           focalY: item.focal_y ?? 50,
+          fundId: fundData.id,
         }));
 
         setBeneficiaries(formatted);
@@ -474,7 +476,7 @@ function FundLandingPage() {
                   const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Ошибка');
                   setShowDonateModal(false);
-                  window.open(data.qr_token, '_blank');
+                  await Browser.open({ url: data.qr_token });
                 } catch (err) {
                   toast.error(err.message || 'Произошла ошибка');
                 } finally {

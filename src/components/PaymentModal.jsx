@@ -6,6 +6,7 @@ import { supabase } from '../supabaseClient';
 import { ymTrackHelpClick } from '../utils/yandexMetrika';
 import { getVisitorId } from '../utils/fingerprint';
 import { useAuth } from '../contexts/AuthContext';
+import { Browser } from '@capacitor/browser';
 
 const KASPI_LOGO = 'https://bvxccwndrkvnwmfbfhql.supabase.co/storage/v1/object/public/images/png-klev-club-xxta-p-kaspii-logotip-png-10.png';
 
@@ -158,12 +159,7 @@ function PaymentModal({ beneficiary, onClose, kaspiBonus = false }) {
         const { qr_token } = resData;
 
         onClose();
-        // On standalone fund pages (/f/...) keep the page open — open Kaspi in a new tab
-        if (window.location.pathname.startsWith('/f/')) {
-          window.open(qr_token, '_blank');
-        } else {
-          window.location.href = qr_token;
-        }
+        await Browser.open({ url: qr_token });
       } catch (error) {
         console.error('Ошибка при отправке:', error);
         toast.error(error.message || 'Произошла ошибка. Попробуйте ещё раз.');
