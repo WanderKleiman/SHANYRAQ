@@ -20,7 +20,10 @@ serve(async (req) => {
       })
     }
 
-    const token = Deno.env.get('XPAYMENT_TOKEN')
+    // Use fund-specific token if available, otherwise fall back to default
+    const numericFundId = fundId && /^\d+$/.test(String(fundId)) ? Number(fundId) : null
+    const fundTokenKey = numericFundId ? `XPAYMENT_TOKEN_FUND_${numericFundId}` : null
+    const token = (fundTokenKey && Deno.env.get(fundTokenKey)) || Deno.env.get('XPAYMENT_TOKEN')
     const merchantOrderId = crypto.randomUUID()
 
     // Send invoice to payer's Kaspi via push notification

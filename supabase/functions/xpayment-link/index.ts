@@ -20,7 +20,13 @@ serve(async (req) => {
       })
     }
 
-    const token = Deno.env.get('XPAYMENT_TOKEN')
+    // beneficiaryId must be a valid integer — 'kaspi-bonus' and similar strings are not real DB IDs
+    const numericBeneficiaryId = beneficiaryId && /^\d+$/.test(String(beneficiaryId)) ? Number(beneficiaryId) : null
+    const numericFundId = fundId && /^\d+$/.test(String(fundId)) ? Number(fundId) : null
+
+    // Use fund-specific token if available, otherwise fall back to default
+    const fundTokenKey = numericFundId ? `XPAYMENT_TOKEN_FUND_${numericFundId}` : null
+    const token = (fundTokenKey && Deno.env.get(fundTokenKey)) || Deno.env.get('XPAYMENT_TOKEN')
     const merchantOrderId = crypto.randomUUID()
 
     const supabase = createClient(
@@ -51,10 +57,6 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    // beneficiaryId must be a valid integer — 'kaspi-bonus' and similar strings are not real DB IDs
-    const numericBeneficiaryId = beneficiaryId && /^\d+$/.test(String(beneficiaryId)) ? Number(beneficiaryId) : null
-    const numericFundId = fundId && /^\d+$/.test(String(fundId)) ? Number(fundId) : null
 
     // DB requires either beneficiary_id OR fund_id to be set (CHECK constraint).
     // Old cached frontend sends beneficiaryId='kaspi-bonus' without fundId — fall back to Shanyraq (3).
